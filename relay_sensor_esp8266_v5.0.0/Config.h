@@ -5,14 +5,15 @@
 #include <WiFiClient.h>
 #include <WebSocketClient.h>
 
-#define SONAR_DYP_ME007Y    0
-#define SONAR_SERIAL        0
-#define SONAR_JSN_SR04T     1
-#define SONAR_TRIG_ECHO     1
-#define SONAR_JSN_SR04TV2   2
-#define SONAR_JSN_SR04M_2   3
-#define LIDAR_TFMINI_I2C    10
-#define LIDAR_TFLUNA_I2C    11
+#define SONAR_DYP_ME007Y    0 //Самые первые пл аты ME007
+#define SONAR_DYP_ME007Y    0 //Самые первые пл аты ME007
+#define SONAR_SERIAL        0 //Все платы работающие по протоколу UART (Полный аналог ME007)
+#define SONAR_JSN_SR04T     1 // SR04T работают по протоколу Trig/Echo
+#define SONAR_TRIG_ECHO     1 // SR04T работают по протоколу Trig/Echo (Полный аналог SONAR_JSN_SR04T)
+#define SONAR_JSN_SR04TV2   2 // Глючные платы  SR04TV2 у которых плывет значение расстояния
+#define SONAR_JSN_SR04M_2   3 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
+#define LIDAR_TFMINI_I2C    10 //LiDAR TF Mini Plus по I2C
+#define LIDAR_TFLUNA_I2C    11 //LiDAR TF Luna по I2C
 
 /*
 Затычка на глючащие датчики SONAR_JSN_SR04TV2
