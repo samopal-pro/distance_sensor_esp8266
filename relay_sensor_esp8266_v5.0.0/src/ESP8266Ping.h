@@ -23,7 +23,8 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-extern "C" {
+extern "C"
+{
   #include <ping.h>
 }
 
@@ -33,7 +34,8 @@ extern "C" {
   #define DEBUG_PING(...)
 #endif
 
-class PingClass {
+class PingClass
+{
   public:
     PingClass();
 
@@ -51,11 +53,12 @@ class PingClass {
     IPAddress _dest;
     ping_option _options;
 
-    static byte _expected_count, _errors, _success;
-    static uint _min_time, _avg_time, _max_time;
+    byte _expected_count, _errors, _success;
+    uint _min_time, _avg_time, _max_time;
+
+    bool _done;
 };
 
-#include "ESP8266Ping.impl.h"
-PingClass Ping;
+extern PingClass Ping;
 
 #endif

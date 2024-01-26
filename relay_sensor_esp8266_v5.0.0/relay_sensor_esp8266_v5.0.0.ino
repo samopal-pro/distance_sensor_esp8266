@@ -193,6 +193,7 @@ void loop() {
       bool flag = false;
       if( w_stat2 == EWS_ON ){
         flag = Ping.ping(EA_Config.SERVER);
+//        flag = true;
         if( flag ){
 // Запрос состояния
            HttpGetStatus();
@@ -210,7 +211,10 @@ void loop() {
                     
               }
            }
-        }      
+        }  
+        else {
+           Serial.printf("!!! No ping %s\n",EA_Config.SERVER);
+        }    
       }
 // Если нету связи, переписываем все значения из памяти в архив      
       while( flag == false && EA_Ram.count() > 0 ){

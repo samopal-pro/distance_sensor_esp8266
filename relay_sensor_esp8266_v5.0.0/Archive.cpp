@@ -4,6 +4,8 @@
 * http://samopal.pro
 */
 
+//#define WIFI_SAV
+
 #include "Archive.h"
 #include "src/RTClib.h"
 
@@ -30,7 +32,9 @@ void EA_begin(void){
    EEPROM.begin(EA_Size);   
    EA_get_count();
    EA_read_config();
-///   EA_default_config();
+#ifdef WIFI_SAV   
+   EA_default_config();
+#endif   
 }
 
 /**
@@ -327,8 +331,10 @@ void EA_default_config(void){
    strcpy(EA_Config.ESP_NAME,"693_SVETOFORBOX.RU_192.168.4.1");
    strcpy(EA_Config.AP_SSID, "none");
    strcpy(EA_Config.AP_PASS, "");
-///   strcpy(EA_Config.AP_SSID, "ASUS_58_2G");
-///   strcpy(EA_Config.AP_PASS, "sav59vas");
+#ifdef WIFI_SAV    
+   strcpy(EA_Config.AP_SSID, "ASUS_58_2G");
+   strcpy(EA_Config.AP_PASS, "sav59vas");
+#endif   
    EA_Config.IP[0]           = 192;   
    EA_Config.IP[1]           = 168;   
    EA_Config.IP[2]           = 1;     
