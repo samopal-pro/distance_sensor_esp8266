@@ -9,7 +9,7 @@
 #include "Archive.h"
 #include "src/RTClib.h"
 
-const char *_VERSION ="VERSION 5.0.4";
+const char *_VERSION = FW_VERSION;
 
 uint16_t      EA_Count;
 size_t        EA_Size;
@@ -34,6 +34,7 @@ void EA_begin(void){
    EA_read_config();
 #ifdef WIFI_SAV   
    EA_default_config();
+   EA_Config.isWiFiAlways = true;
 #endif   
 }
 
@@ -280,6 +281,8 @@ void EA_read_config(){
        Serial.printf("EEPROM Config is correct\n");
        Serial.printf("EEPROM config: level ground = %d\n",EA_Config.GroundLevel);
        sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
+       sensorType   = EA_Config.SensorType;
+       nanValueFlag = EA_Config.NanValueFlag;
     }
     else {
        Serial.printf("EEPROM SRC is not valid: %d %d\n",src,EA_Config.SRC);
@@ -326,9 +329,10 @@ uint16_t EA_SRC(void){
  * Сброс конфиг в значения "по умолчанию"
  */
 void EA_default_config(void){
+   Serial.println("EEPROM Config is Default");
    size_t sz1 = sizeof(EA_Config);
    memset( &EA_Config, '\0',sz1);
-   strcpy(EA_Config.ESP_NAME,"693_SVETOFORBOX.RU_192.168.4.1");
+   strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
    strcpy(EA_Config.AP_SSID, "none");
    strcpy(EA_Config.AP_PASS, "");
 #ifdef WIFI_SAV    
@@ -347,7 +351,11 @@ void EA_default_config(void){
    EA_Config.GW[1]           = 168;   
    EA_Config.GW[2]           = 1;     
    EA_Config.GW[3]           = 1;
-   strcpy(EA_Config.ESP_ADMIN_PASS, "admin");
+   EA_Config.DNS[0]          = 8;   
+   EA_Config.DNS[1]          = 8;   
+   EA_Config.DNS[2]          = 8;     
+   EA_Config.DNS[3]          = 8;
+   strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
    strcpy(EA_Config.ESP_OPER_PASS, "user");
    strcpy(EA_Config.DOGOVOR_ID, "0000");
    strcpy(EA_Config.BOX_ID, "1");
@@ -361,4 +369,9 @@ void EA_default_config(void){
    EA_Config.ZeroDistance    = 11111;
 //   EA_Config.isAP = true;
    EA_Config.isDHCP          = true;
+   EA_Config.SensorType      = DEFAULT_SENSOR_TYPE;
+   EA_Config.NanValueFlag    = DEFAULT_NAN_VALUE_FLAG;
+   EA_Config.isWiFiAlways    = false;
+   EA_Config.TM_BEGIN_CALIBRATE = 5;
+   EA_Config.SAMPLES_CLIBRATE   = 10;
 }

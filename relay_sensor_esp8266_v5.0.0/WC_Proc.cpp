@@ -7,12 +7,9 @@
 #include "Config.h"
 #include "Archive.h"
 
-int   Temp         = 0;
-int   LastTemp     = 0;
-int   Hum          = 0;
-int   LastHum      = 0;
-int   LastDistance = 0;
-int   Distance     = 0;
+float Temp = NAN, LastTemp = NAN, Hum = NAN, LastHum = NAN;;
+float LastDistance = NAN, Distance = NAN;
+
 SonarFake FSonar(DEPTH_DIST_ARRAY);
 
 bool  Button       = false;
@@ -43,193 +40,180 @@ unsigned long t_ws_send = 0;
 unsigned long t_ws_recv = 0;
 
 
-
-uint8_t ws_mode   = 0;
-int      ws_mode_save  = -1;
-uint16_t ws_tm    = WS_TM_DEFAULT;
-int      ws_stat  = 0;
-//strip.Color ws_color = strip.Color(0, 0, 0), ws_color_save;
-bool ws_enable = true;
-
-
 bool RTCFlag  =  true;
 bool FlagWDT  =  false;
 RTC_DS3231 rtc;
 DHT dht(PinDHT22, DHT22);
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(WS_PixelCount, WS_PIN, NEO_GRB + NEO_KHZ800);
 SoftwareSerial ultraSensor(PinDistanceEcho,-1);
 SoftwareSerial lidarTF(PinDistanceTrig,PinDistanceEcho);
 SButton calbtn( PinCalibrateSonar );
 TFMPI2C tfmP;   
 TFLI2C tflI2C;
 
+float L = NAN, H = NAN;
+bool isSonarEnable = false;
+
 /**
  * Инициализация ультразвукового датчика
  */
 void InitSonar(){
 // Иницализация ультразвукового датчика
-   if( SONAR_SENSOR_TYPE == SONAR_TRIG_ECHO || 
-     SONAR_SENSOR_TYPE == SONAR_JSN_SR04TV2 ||
-     SONAR_SENSOR_TYPE == SONAR_JSN_SR04M_2 ){
-      if( PinDistanceTrig >= 0 ){
-         Serial.printf("Init Sonar trig=%d, echo=%d ...\n",
-            PinDistanceTrig,PinDistanceEcho);
-         pinMode(PinDistanceTrig , OUTPUT);
-         pinMode(PinDistanceEcho , INPUT);
-         digitalWrite(PinDistanceEcho , HIGH);         
-      }
-      else {
-         Serial.printf("Sonar is disabled\n");
-      }
-   }
-   else if( SONAR_SENSOR_TYPE == SONAR_SERIAL ){
-      if( PinDistanceEcho >= 0 ){
-//         ultraSensor.begin(9600);
-         Serial.printf("Init Sonar serial type RX=%d ...\n",  PinDistanceEcho);
-      }
-      else {
-         Serial.printf("Sonar is disabled\n");
-      }
-      
-   }
-   else if( SONAR_SENSOR_TYPE == LIDAR_TFMINI_I2C ){
-//     scanI2C();
-//     tfmP.recoverI2CBus();
-//     Wire.stop();
-     Wire.begin(PinDistanceEcho,PinDistanceTrig);
-     if( scanI2C(0x10) == false ){
-         Serial.println("Test UART LiDAR");
-//         Wire.end();
-         lidarSetI2C();
-         Wire.begin(PinDistanceEcho,PinDistanceTrig);
-         scanI2C(0x10);
-     }
-      if( !tfmP.sendCommand( SOFT_RESET, 0) ){
-         Serial.println("ERR ");
-         tfmP.printReply();
-      }
-      else Serial.println("OK");
-    
-   }
-   else if( SONAR_SENSOR_TYPE == LIDAR_TFLUNA_I2C ){
-//     scanI2C();
-//     tfmP.recoverI2CBus();
-//     Wire.stop();
-     Wire.begin(PinDistanceEcho,PinDistanceTrig);
-     scanI2C(0x10);
-     Serial.println("Test TFLuna ");
-      if( !tflI2C.Soft_Reset(0x10) ){
-         Serial.println("ERR ");
-         tflI2C.printStatus();
-      }
-      else Serial.println("OK");
-    
-   }
-   if( PinCalibrateSonar >= 0 ){
-      pinMode(PinCalibrateSonar , INPUT);
-      delay(1000);
-      PinCalibrateSonarState = digitalRead(PinCalibrateSonar);
-      Serial.printf("Pin calibrate sonar %d normal state %d\n",PinCalibrateSonar,PinCalibrateSonarState);
-   }
+   isSonarEnable = false;
+   switch(sensorType){
+       case SONAR_SR04T :
+       case SONAR_SR04TV2 :
+       case SONAR_SR04TM2 :
+          if( PinDistanceTrig >= 0 ){
+             Serial.printf("Init Sonar trig=%d, echo=%d ...\n",PinDistanceTrig,PinDistanceEcho);
+             pinMode(PinDistanceTrig , OUTPUT);
+             pinMode(PinDistanceEcho , INPUT);
+             digitalWrite(PinDistanceEcho , HIGH);  
+             isSonarEnable = true;
+          }       
+          break;
+       case SONAR_SERIAL :
+          if( PinDistanceEcho >= 0 ){
+             Serial.printf("Init Sonar serial type RX=%d ...\n",  PinDistanceEcho);
+             isSonarEnable = true;
+          }
+          break;
+       case SONAR_TFMINI :
+          Wire.begin(PinDistanceEcho,PinDistanceTrig);
+          if( scanI2C(0x10) == false ){
+              Serial.println("Check UART TFMINI...");
+              lidarSetI2C();
+              Wire.begin(PinDistanceEcho,PinDistanceTrig);
+              scanI2C(0x10);
+          }
+          if( tfmP.sendCommand( SOFT_RESET, 0) ){
+              Serial.println("Init LiDAR TFMini");
+              isSonarEnable = true;
+          }
+          else {
+              Serial.println("Error LiDAR TFMini");
+              tfmP.printReply();
+          }
+          break;
+       case SONAR_TFLUNA :
+          Wire.begin(PinDistanceEcho,PinDistanceTrig);
+          scanI2C(0x10);
+          if( tflI2C.Soft_Reset(0x10) ){
+              Serial.println("Init LiDAR TFLuna");
+              isSonarEnable = true;
+          }
+          else {
+              Serial.println("Error LiDAR TFLuna");
+              tflI2C.printStatus();
+          }   
+          break; 
+    }
+    if( !isSonarEnable )Serial.println("Sonar is disabled");
 
-   
+    if( PinCalibrateSonar >= 0 ){
+       pinMode(PinCalibrateSonar , INPUT);
+       delay(1000);
+       PinCalibrateSonarState = digitalRead(PinCalibrateSonar);
+       Serial.printf("Pin calibrate sonar %d normal state %d\n",PinCalibrateSonar,PinCalibrateSonarState);
+    }  
 }  
-
 
 /**
 * Чтение расстояния с ультразвукового датчика
 */
 void GetDistance(){
-   if( SONAR_SENSOR_TYPE == SONAR_TRIG_ECHO ){
-      if( PinDistanceTrig < 0 )return;
-//      ws_enable = false;
-//      digitalWrite(PinDistanceTrig, LOW);
-//      delayMicroseconds(2);
-      digitalWrite(PinDistanceTrig, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(PinDistanceTrig, LOW);
-//      noInterrupts();
-//      delayMicroseconds(2);
-      float d = pulseIn(PinDistanceEcho, HIGH); // max sensor dist ~4m
-//      interrupts();
-      Distance =  d / 5.8;
-//      Distance =  d / 5.88235;
-      
-//      long impulseTime  = pulseIn(PinDistanceEcho, HIGH);
-//      long impulseTime  = pulseIn(PinDistanceEcho, HIGH,100000);
-//      Distance   = (int)(impulseTime / 5.8);
-   }
-   else if( SONAR_SENSOR_TYPE == SONAR_JSN_SR04TV2 ){
-      digitalWrite(PinDistanceTrig, LOW);
-      delayMicroseconds(2);
-      digitalWrite(PinDistanceTrig, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(PinDistanceTrig, LOW);  
-      const unsigned long duration= pulseIn(PinDistanceEcho, HIGH);
-      Distance = (int)((float)duration/5.8);  
-   }  
-   else if( SONAR_SENSOR_TYPE == SONAR_JSN_SR04M_2 ){
-      Distance = 0;
-      int _count = 0;
-      for( int i=0; i<5; i++){
-          digitalWrite(PinDistanceTrig, LOW);
-         delayMicroseconds(2);
-         digitalWrite(PinDistanceTrig, HIGH);
-         delayMicroseconds(500);
-         digitalWrite(PinDistanceTrig, LOW);  
-         const unsigned long duration= pulseIn(PinDistanceEcho, HIGH);
-         float x = (int)((float)duration/5.8);
-         if( x>0 && x < 5000){
-            Distance += x;
-            _count++;
-         }
-         delay(50);
-      }  
-      if( _count > 0)Distance /= _count;
-   }
-   else if( SONAR_SENSOR_TYPE == SONAR_SERIAL ){
-      if( PinDistanceEcho < 0 )return;
-      Distance   = GetDistanceSerial();
-   }
-   else if( SONAR_SENSOR_TYPE == LIDAR_TFLUNA_I2C ){
-      int16_t _dist, _flux, _temp;
-     if( tflI2C.getData( _dist, _flux, _temp, 0x10) ){
-         Serial.printf("TFLuna dist=%d flux=%d temp=%d\n",
-             (int)_dist, (int)_flux, (int)_temp);
-         Distance = _dist*10;    
-      }
-      else {
-         Serial.printf("Error TF Luna dist\n");
-         Distance = -1;    
-      }
-         
-   }
-   else if( SONAR_SENSOR_TYPE == LIDAR_TFMINI_I2C ){
-      int16_t _dist, _flux, _temp;
-      tfmP.getData( _dist, _flux, _temp);
-      if( tfmP.status == TFMP_READY){
-         Serial.printf("TFMini dist=%d flux=%d temp=%d\n",
-             (int)_dist, (int)_flux, (int)_temp);
-         Distance = _dist*10;    
-      }
-      else {
-         Serial.printf("Error LiDAR dist\n");
-         Distance = -1;    
-      }
-         
+   if(!isSonarEnable)return;
+   switch(sensorType){
+       case SONAR_SR04T :
+          GetDistanceSR04(2, 10, 10, 0, 7000);
+          break;        
+       case SONAR_SR04TV2 :
+          GetDistanceSR04(2, 10, 1);
+          break;        
+       case SONAR_SR04TM2 :
+          GetDistanceSR04(2, 500, 10, 0, 5000);
+          break;        
+       case SONAR_SERIAL :
+          GetDistanceSerial();
+          break;
+       case SONAR_TFMINI :
+          GetDistanceTFMini();
+          break;
+       case SONAR_TFLUNA :
+          GetDistanceTFLuna();
+          break;
    }
 }
 
 
+
+void GetDistanceSR04(uint32_t tm1, uint32_t tm2, int samples,float min, float max){
+   L = NAN;
+   float distAvg = 0, distMin = 99999, distMax = 0;
+   float distArray[samples];
+   int n = 0;
+   for( int i=0; i<samples; i++){
+      digitalWrite(PinDistanceTrig, LOW);
+      delayMicroseconds(tm1);
+      digitalWrite(PinDistanceTrig, HIGH);
+      delayMicroseconds(tm2);
+      digitalWrite(PinDistanceTrig, LOW);
+      uint32_t _dur = pulseIn(PinDistanceEcho, HIGH);
+      float   _dist = _dur/5.8;
+      if( !isnan(min) )if(_dist < min)continue;
+      if( !isnan(max) )if(_dist > max)continue;
+      n++;
+      distArray[i]  = _dist;
+      distAvg += _dist;
+      if(  distMin > _dist)distMin = _dist;
+      if(  distMax < _dist)distMax = _dist;
+      delay(50);
+   }
+// Вычислем среднеквадратичное отклонение   
+   if( n == 0 )return;
+   distAvg /= samples;
+   float distDiv = 0;
+   for( int i=0; i<samples; i++){
+      distDiv += (distArray[i]-distAvg)*(distArray[i]-distAvg);
+   }
+   distDiv /= samples;
+   distDiv = sqrt(distDiv);
+// Проверяем на достоверность 
+   if( distDiv/distAvg < RELIABILITY_PROC )L = distAvg;
+}
+
+void GetDistanceTFMini(){
+   int16_t _dist, _flux, _temp;
+   tfmP.getData( _dist, _flux, _temp);
+   if( tfmP.status == TFMP_READY){
+      Serial.printf("TFMini dist=%d flux=%d temp=%d\n",(int)_dist, (int)_flux, (int)_temp);
+      L = (float)_dist*10.0;    
+   }
+   else {
+      Serial.printf("Error LiDAR dist\n");
+      L = NAN;    
+   }
+}
+
+void GetDistanceTFLuna(){
+   int16_t _dist, _flux, _temp;
+   if( tflI2C.getData( _dist, _flux, _temp, 0x10) ){
+      Serial.printf("TFLuna dist=%d flux=%d temp=%d\n",(int)_dist, (int)_flux, (int)_temp);
+      L = (float)_dist*10.0;    
+   }
+   else {
+      Serial.printf("Error LiDAR dist\n");
+      L = NAN;    
+   }
+}
+
 /**
  * Опрос ультразвукового датчика с мигающим светодиодом
  */
-int GetDistanceSerial(){
-
-  
+void GetDistanceSerial(){ 
    byte readByte;
    byte crcCalc;
    word distance = 0;
+   L = NAN;
 
   //
   // Проверка наличия данных в COM порту
@@ -247,68 +231,15 @@ int GetDistanceSerial(){
      byte b2   = ultraSensor.read();
      byte b3   = ultraSensor.read();
      crcCalc   = b0 + b1 + b2;     
-     if( crcCalc == b3 )distance = (b1 * 0xff) + b2;
+     if( crcCalc == b3 ){
+        distance = (b1 * 0xff) + b2;
+        L = (float)distance;
+     }
   }
   ultraSensor.flush();
   ultraSensor.end();
-  return distance;
+}
 
-  
-
-  }
-
-
-int GetDistanceSerial1(){
-  
-   uint32_t ms_first  = millis();
-   uint32_t ms_last  = ms_first;
-   uint8_t b = 0,byte_count = 0;
-   byte crc  = 0;
-   int  val = -1;
-   int  val_avg = 0;
-   int  val_count = 0;
-   ultraSensor.begin(9600);
-   Serial.printf("Get distance\n");
-   for( val_count=0; val_count<1000 && (ms_last-ms_first)<1000;){
-       ESP.wdtFeed();
-       if( ultraSensor.available() < 1 ){
-           b = ultraSensor.read();
-           switch(byte_count){
-              case 0: //0-байт. Метка
-                 if( b == 0xff){
-                     crc = b;
-                     byte_count++; 
-                 }
-                 break;
-              case 1: //1-байт. Старший разряд значения
-                 val = b*0xff;
-                 crc += b;
-                 byte_count++;
-                 break;
-              case 2: //2-байт. Младший разряд значения   
-                 val += b;
-                 crc += b;
-                 byte_count++;
-                 break;
-              default: //3-байт. Контрольная сумма
-                 if( crc != b || val == 255 )val = -1;
-                 else {
-                     val_avg += val;
-                     val_count++;  
-                 }
-                 byte_count = 0;
-                 break;
-           }//end case
-//           Serial.printf("distance = %d\n",val);
-       }//end if
-       ms_last=millis();
-   }//end for
-   if( val_count == 0 )val_avg = 0;
-   else val_avg /= val_count;
-   Serial.printf("Distance = %d mm\n",val_avg);
-   ultraSensor.end();
-   return val_avg;
-} 
 
 
 
@@ -667,7 +598,7 @@ void PrintTime( time_t t ){
    Serial.printf("%02d.%02d.%04d %02d:%02d:%02d\n",dt.day(),dt.month(),dt.year(),dt.hour(),dt.minute(),dt.second());
 }
 
-
+/*
 void WS_set( int mode ){
   if( WS_PIN < 0 )return;
 // Если режим не поменялся  
@@ -725,7 +656,7 @@ void WS_set( uint8_t R, uint8_t G, uint8_t B,bool is_first){
   strip.show();    
 }
 
-
+*/
 
 void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, bool _btn, int _stat ){
    struct EA_SaveType Val;
@@ -747,21 +678,41 @@ void ProcessingDistance(){
 // Опрашиваем ультразвуковой датчик
    uint32_t _ms = millis();
    GetDistance();  
+   if( isnan(L) ){
+      Serial.print("Value is NAN: ");
+      ledSetExtMode(LED_EXT_NAN);
+      switch(nanValueFlag){
+         case NAN_VALUE_IGNORE: 
+            Serial.println("skiping");
+            return;  
+         case NAN_VALUE_ON:
+            Serial.println("ON");
+            Button = SonarGroudState;
+            break;
+         case NAN_VALUE_OFF:
+            Serial.println("OFF");
+            Button = !SonarGroudState;
+            break;         
+      } 
+      Distance = NAN;
+   }
+  else {
+      Distance = (int)L;
 #ifdef SONAR_FAKE
-   FSonar.Set(Distance);
-   if( Distance <  EA_Config.LimitDistance )Distance = EA_Config.ZeroDistance;
-   else if( FSonar.Check() )Distance = EA_Config.ZeroDistance;
+      FSonar.Set(Distance);
+      if( Distance <  EA_Config.LimitDistance )Distance = EA_Config.ZeroDistance;
+      else if( FSonar.Check() )Distance = EA_Config.ZeroDistance;
 #endif   
-   if( Distance == 0 && EA_Config.ZeroDistance )Distance = EA_Config.ZeroDistance;
-   Serial.printf("Distance = %d\n",Distance);
-   if( PinDistanceEcho >= 0 ){
+      if( Distance == 0 && EA_Config.ZeroDistance )Distance = EA_Config.ZeroDistance;
+ ///     Serial.printf("Distance = %d\n",Distance);
+
 // Исправление от 28 марта (Версия 4.0.3)    
-       if( EA_Config.LimitDistanceUp >= 0 && Distance > EA_Config.LimitDistanceUp ||
+      if( EA_Config.LimitDistanceUp >= 0 && Distance > EA_Config.LimitDistanceUp ||
            abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance )
 //      if( Distance > EA_Config.GroundLevel || abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance )
             Button = SonarGroudState;
        else Button = !SonarGroudState;
-   }
+  }
 // Зафиксировано изменение состояния   
    if( Button != LastButton ){
 // Если кнопка включена       
@@ -805,8 +756,8 @@ void ProcessingDistance(){
 }
 
 void WS_setDistance(){
-  if( Button )WS_set(3);
-  else WS_set(4);
+  if( Button )ledSetBaseMode(LED_BASE_BUSY);
+  else ledSetBaseMode(LED_BASE_FREE);
 }
       
 void Relay_setDistance(){
@@ -893,4 +844,49 @@ bool SonarFake::Check(){
        if(data[i] >= data[i+1])ret = false;      
    }
    return ret;
+}
+
+void PrintValue(){
+         Serial.print("!!! Value: Time=");    
+         Serial.print(Time);
+         Serial.print(",T(C)=");    
+         Serial.print(Temp);
+         Serial.print(",H(%)=");
+         Serial.print(Hum);
+         Serial.print(",D(mm)=");
+         Serial.print(Distance);
+         Serial.print(",Bt=");
+         Serial.print(Button);
+         Serial.print(",LastBt=");
+         Serial.println(LastButton);
+}
+
+/**
+* Автокалибровка земли
+*/
+bool CalibrateGround(){
+   setColor(0);
+   delay(EA_Config.TM_BEGIN_CALIBRATE);
+   setColor(strip->Color(127,127,0));   
+   int n = 0;
+   float x = 0.0;
+   for( int i=0; i<EA_Config.SAMPLES_CLIBRATE; i++){
+      ProcessingDistance();
+      if( !isnan(Distance) ){
+        x += Distance;
+        n++;
+        PrintValue();
+      }
+      delay(300);
+   }
+   if( n>0 ){
+      x /= n;
+      Serial.printf("!!! Calibrate ground value %d\n",(int)x);
+      EA_Config.GroundLevel = (int)x;
+      return true;
+   }
+   else {
+      Serial.println("??? Calibrate ground fail");
+      return false;
+   }
 }

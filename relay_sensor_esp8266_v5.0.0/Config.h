@@ -3,19 +3,13 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiClient.h>
-#include <WebSocketClient.h>
+//#include <WebSocketClient.h>
 
-#define SONAR_DYP_ME007Y    0 //Самые первые пл аты ME007
-#define SONAR_DYP_ME007Y    0 //Самые первые пл аты ME007
-#define SONAR_SERIAL        0 //Все платы работающие по протоколу UART (Полный аналог ME007)
-#define SONAR_JSN_SR04T     1 // SR04T работают по протоколу Trig/Echo
-#define SONAR_TRIG_ECHO     1 // SR04T работают по протоколу Trig/Echo (Полный аналог SONAR_JSN_SR04T)
-#define SONAR_JSN_SR04TV2   2 // Глючные платы  SR04TV2 у которых плывет значение расстояния
-#define SONAR_JSN_SR04M_2   3 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
-#define LIDAR_TFMINI_I2C    10 //LiDAR TF Mini Plus по I2C
-#define LIDAR_TFLUNA_I2C    11 //LiDAR TF Luna по I2C
-
-/*
+#define FW_VERSION   "VERSION 5.0.5"
+#define DEVICE_NAME  "693_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_ADMIN "admin"
+//#define WIFI_SAV
+/*                
 Затычка на глючащие датчики SONAR_JSN_SR04TV2
 При дистанции свыше 3000 они начинают показывать 
 постоянно убывающее значение 
@@ -25,6 +19,27 @@ EA_Config.ZeroDistance = 11111
 иногда что-то показывают и возникают ложные срабатывания
 */ 
 //#define SONAR_FAKE
+
+enum T_SENSOR_TYPE {
+  SONAR_SERIAL  = 0, // Все платы работающие по протоколу UART
+  SONAR_SR04T   = 1, // Все платы работающие по протоколу Trig/Echo
+  SONAR_SR04TV2 = 2, // Глючные платы  SR04TV2 у которых плывет значение расстояния
+  SONAR_SR04TM2 = 3, // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
+  SONAR_TFMINI  = 10,// LiDAR TF Mini Plus по I2C
+  SONAR_TFLUNA  = 11 // LiDAR TF Luna по I2C
+};
+
+enum T_NAN_VALUE_FLAG {
+  NAN_VALUE_IGNORE  = 1,  
+  NAN_VALUE_ON      = 2,
+  NAN_VALUE_OFF     = 3
+};
+  
+#define DEFAULT_SENSOR_TYPE SONAR_SR04T
+#define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
+
+extern T_SENSOR_TYPE sensorType;
+extern T_NAN_VALUE_FLAG nanValueFlag;
 
 //#define SONAR_SENSOR_TYPE SONAR_JSN_SR04T
 //#define SONAR_SENSOR_TYPE LIDAR_TFLUNA_I2C
@@ -41,6 +56,7 @@ EA_Config.ZeroDistance = 11111
 // Интервал отправки на сервер в мс
 // Минимальное время опросв датчиков
 #define LoopInterval             1000
+#define LoopIntervalAP           3000
 #define GetStatusInterval        10000
 // Интервал между запросоми состояния
 #define SendInterval             60000
@@ -93,11 +109,8 @@ EA_Config.ZeroDistance = 11111
 /*
    Конфигурация светодиодной ленты
 */
-#define WS_PixelCount     30   //Число светодиодов
-#define WS_PIN            13
-#define WS_TM_DEFAULT     250 //Залержка между эффектами "По умолчанию"
-#define WS_MODE_DEFAULT   1   //Режим "По умолчанию"
-#define WS_MAX_BRIGHTNESS 255 //Максимальная яркость (0-255)
+#define LED_COUNT         13   //Число светодиодов
+#define PinLed            13
 
 
 // Pin WDT

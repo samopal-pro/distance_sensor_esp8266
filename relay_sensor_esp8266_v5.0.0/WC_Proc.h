@@ -16,22 +16,28 @@
 #include "src/SButton.h"
 #include "src/TFMPI2C.h"            // https://github.com/budryerson/TFMini-Plus-I2C
 #include "src/TFLI2C.h"             // https://github.com/budryerson/TFLuna-I2C
+#include "WC_Led.h"
 #define DEPTH_DIST_ARRAY  5
+#define SAMPLE_LEN 10
+#define RELIABILITY_PROC 0.15
 
 
 
 
 #define ReceiveBuferSize         1024
 #define SendBuferSize            10240
-
+/*
 extern int   Temp;
 extern int   LastTemp;
 extern int   Hum;
 extern int   LastHum;
 extern int   LastDistance;
 extern int   Distance;
+*/
+extern float Temp, LastTemp, Hum, LastHum, LastDistance, Distance;
 extern bool  Button;
 extern bool  LastButton;
+
 extern bool  PinCalibrateSonarState;
 extern bool  isAP;
 extern char  sbuf[];
@@ -74,7 +80,6 @@ extern bool RTCFlag;
 extern bool FlagWDT;
 extern RTC_DS3231 rtc;
 extern DHT dht;
-extern Adafruit_NeoPixel strip;
 extern SButton calbtn;
 
 
@@ -82,7 +87,11 @@ extern SButton calbtn;
 bool CheckTime(time_t t);
 void InitSonar();
 void GetDistance();
-int  GetDistanceSerial();
+
+void GetDistanceSR04(uint32_t tm1=2, uint32_t tm2=10, int samples=10, float min=NAN, float max=NAN);
+void GetDistanceTFMini();
+void GetDistanceTFLuna();
+void GetDistanceSerial();
 bool HttpGetStatus(void);
 bool HttpSetParam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, bool _btn, int _stat );
 bool HttpSetStatus(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist );
@@ -93,17 +102,18 @@ void WDT_disable();
 void WDT_reset();
 unsigned long GetRTClock();
 void SetRTClock(unsigned long Time);
-void WS_set( int mode );
+//void WS_set( int mode );
 void WS_set( uint8_t R, uint8_t G, uint8_t B,bool is_first = false );
 void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, bool _btn, int _stat );
 
 void ProcessingDistance();
+void PrintValue();
 void WS_setDistance();
 void Relay_setDistance();
 void PrintTime( time_t t );
 bool scanI2C(int _addr);
 void lidarSetI2C();
-
+bool CalibrateGround();
 
 
 class SonarFake {

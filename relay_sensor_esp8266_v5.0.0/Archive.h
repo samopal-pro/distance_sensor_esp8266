@@ -11,6 +11,7 @@
 #include <WiFiClient.h>
 #include "src/StackArray.h"
 #include <arduino.h>
+#include "Config.h"
 
 struct EA_ConfigType{
    char ESP_NAME[32];
@@ -18,9 +19,11 @@ struct EA_ConfigType{
    char AP_SSID[32];
    char AP_PASS[32];
    bool isDHCP;
+   bool isWiFiAlways;
    IPAddress IP;
    IPAddress MASK;
    IPAddress GW;
+   IPAddress DNS;
    char ESP_ADMIN_PASS[32];
    char ESP_OPER_PASS[32];
    char DOGOVOR_ID[16]; 
@@ -33,6 +36,10 @@ struct EA_ConfigType{
    int ZeroDistance;
    uint8_t TM_ON; // Задержка включения, сек
    uint8_t TM_OFF; //Задержка выключения, сек
+   uint8_t TM_BEGIN_CALIBRATE;
+   uint8_t SAMPLES_CLIBRATE;
+   T_SENSOR_TYPE SensorType;
+   T_NAN_VALUE_FLAG NanValueFlag;
 //   bool isAP;
    uint16_t SRC;   
 };
