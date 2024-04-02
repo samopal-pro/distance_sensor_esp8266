@@ -174,8 +174,10 @@ SBUTTON_CLICK SButtonVirtual::Loop() {
      }
    }
    if( Time <20000 )Time = ms - Ms2;
+   
 // End serial press fixed
-   return SB_NONE;
+   if(is_click == true)return SB_WAIT;
+   else	return SB_NONE;
 }     
 
 //**************************************************************************************************************************************

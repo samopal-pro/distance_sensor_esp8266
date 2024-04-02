@@ -30,9 +30,6 @@ void WiFi_test(){
    uint32_t _ms = millis();
 // Если режим точки доступа
     if( w_stat2 == EWS_AP_MODE ){   
-//       if( msAP > _ms || ( _ms - msAP ) > TM_AP_MODE ){
-//          WiFi_stop("Stop AP Timeout");     
-//       }
        return;
     }
 // WiFi не сконфигурен  
@@ -126,6 +123,9 @@ void HTTP_begin(void){
    server.on ( "/stat3.png", HTTP_handlePngStat3 );
    server.on ( "/wifi1.png", HTTP_handlePngWiFi1 );
    server.on ( "/wifi2.png", HTTP_handlePngWiFi2 );
+   server.on ( "/type1.png", HTTP_handlePngType1 );
+   server.on ( "/type2.png", HTTP_handlePngType2 );
+   server.on ( "/type3.png", HTTP_handlePngType3 );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -148,6 +148,9 @@ void HTTP_handlePngStat2() {  server.send_P(200, PSTR("image/png"), stat2_png, s
 void HTTP_handlePngStat3() {  server.send_P(200, PSTR("image/png"), stat3_png, sizeof(stat3_png));}
 void HTTP_handlePngWiFi1() {  server.send_P(200, PSTR("image/png"), wifi1_png, sizeof(wifi1_png));}
 void HTTP_handlePngWiFi2() {  server.send_P(200, PSTR("image/png"), wifi2_png, sizeof(wifi2_png));}
+void HTTP_handlePngType1() {  server.send_P(200, PSTR("image/png"), type1_png, sizeof(type1_png));}
+void HTTP_handlePngType2() {  server.send_P(200, PSTR("image/png"), type2_png, sizeof(type2_png));}
+void HTTP_handlePngType3() {  server.send_P(200, PSTR("image/png"), type3_png, sizeof(type3_png));}
 
 /**
  * Обработчик событий WEB-сервера
@@ -220,7 +223,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += "<p><img src=/logo.png></p>\n";
 
   out += "<p><br>Сенсор: ";
-  out += SensorID;
+  out += EA_Config.ESP_NAME;
   out += " ";
   out += _VERSION;
   out += "\n";
@@ -316,7 +319,7 @@ void HTTP_handleRoot(void) {
 //   HTTP_printInput(out,"Расстояние от датчика до препятствия сейчас(мм):","xx",str,16,32,false);
   if( isnan(Distance) )strcpy(str,"NAN");
   else sprintf(str,"%d", (int)Distance );
-  out += "<h3>Расстояние от датчика до препятствия сейчас(мм): ";
+  out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
   out += str;
   out += "</h3>";
 
@@ -363,9 +366,9 @@ void HTTP_printConfig(String &out){
   out += "  <legend>Настройка</legend>\n";
   HTTP_printInput1(out,"* Высота датчика без автомобиля (мм):","GroundLevel",s,20,32,HT_TEXT);
   out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
-  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет,выбирает максимально точное расстояние";
-  out += "<p class='t1'>Для ручной астройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
-  out += "Если расстояние NAN то сенсор не видит расстояния или поврежден.";
+  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
+  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
+  out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
@@ -378,8 +381,8 @@ void HTTP_printConfig(String &out){
   out += "></td><td align='center'><input type='radio' name='WiFiMode' value='2'";
   if( EA_Config.isWiFiAlways )out += " checked";
   out += "></td></tr>";
-  out += "<tr><td align='center' class='td1'>(По умолчанию) разлает WiFi до перезапуска</label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам</td></tr></table>";
-  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", веберете ниже сеть WI-FI с доступом";
+  out += "<tr><td align='center' class='td1'>(По умолчанию) раздает WiFi до перезапуска</label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам</td></tr></table>";
+  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", веберите ниже сеть WI-FI с доступом ";
   out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета.";
   out += "ID вы можете получить в технической поддержке.";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
@@ -401,10 +404,32 @@ void HTTP_printConfig(String &out){
   out += " </fieldset>\n";
 
   out += " <fieldset>\n";
+  out += "  <legend>Режимы определения препядсвия</legend>\n";
+  out += "<table botder>";
+  out += "<tr><td><img src='/type1.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
+  if( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Срабатывает при превышение погога высоты</td></tr>";
+  out += "<tr><td><img src='/type2.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='2'";
+  if( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Срабатывает если вне диапазона границ диапазона</td></tr>";
+  out += "<tr><td><img src='/type3.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='3'";
+  if( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Срабатывает если внутри диапазона границ диапазона</td></tr></table>\n";
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
+  out += " <fieldset>\n";
   out += "  <legend>Параметры переключения и калибровки</legend>\n";
   sprintf(s,"%d",EA_Config.LimitDistance);
-  HTTP_printInput1(out,"Высота срабатывания датчика (мм):","LimitDistance",s,16,32,HT_NUMBER);
+  HTTP_printInput1(out,"Высота на срабатывание датчика (мм):","LimitDistance",s,16,32,HT_NUMBER);
+  out += "<p class='t1'>Устанавливается для режима определения препятсвия по высоте (датчик сверху).";
+
+  sprintf(s,"%d",EA_Config.MinDistance);
+  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance);
+  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.TM_ON);
+  out += "<p class='t1'>Устанавливаются для режима определения препятсвия по диапазону значений (датчик сбоку).";
   HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.TM_OFF);
   HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff",s,16,32,HT_NUMBER);
@@ -490,7 +515,15 @@ bool HTTP_checkArgs(){
              case 2: EA_Config.NanValueFlag  = NAN_VALUE_ON; break;
              case 3: EA_Config.NanValueFlag  = NAN_VALUE_OFF; break;
          }
+      if(server.hasArg("MeasureType"))
+         switch(server.arg("MeasureType").toInt()){
+             case 1: EA_Config.MeasureType  = MEASURE_TYPE_NORMAL; break;
+             case 2: EA_Config.MeasureType  = MEASURE_TYPE_OUTSIDE; break;
+             case 3: EA_Config.MeasureType  = MEASURE_TYPE_INSIDE; break;
+         }
       if(server.hasArg("LimitDistance"))EA_Config.LimitDistance      = server.arg("LimitDistance").toInt();
+      if(server.hasArg("MinDistance")  )EA_Config.MinDistance        = server.arg("MinDistance").toInt();
+      if(server.hasArg("MaxDistance")  )EA_Config.MaxDistance        = server.arg("MaxDistance").toInt();
       if(server.hasArg("TMOn")         )EA_Config.TM_ON              = server.arg("TMOn").toInt();
       if(server.hasArg("TMOff")        )EA_Config.TM_OFF             = server.arg("TMOff").toInt();
       if(server.hasArg("TMCalibr")     )EA_Config.TM_BEGIN_CALIBRATE = server.arg("TMCalibr").toInt();
@@ -519,8 +552,10 @@ bool HTTP_checkArgs(){
    }
    if( _save ){
       EA_save_config(); 
-      EA_read_config(); 
+      EA_read_config();      
       HTTP_goto("/", 1000, "Сохранение параметров ...");
+      if( EA_Config.isWiFiAlways)ledSetWiFiMode(LED_WIFI_AP1);
+      else ledSetWiFiMode(LED_WIFI_AP);
       return true;
    }
    return false;

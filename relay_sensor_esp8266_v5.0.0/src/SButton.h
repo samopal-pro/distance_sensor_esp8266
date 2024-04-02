@@ -6,6 +6,7 @@
 
 typedef enum {
    SB_NONE = 0,
+   SB_WAIT,
    SB_CLICK,
    SB_AUTO_CLICK,
    SB_LONG_CLICK,

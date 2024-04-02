@@ -32,7 +32,9 @@ struct EA_ConfigType{
    uint16_t PORT;
    int GroundLevel;   
    int LimitDistance;
-   int LimitDistanceUp;
+   int MinDistance;
+   int MaxDistance;
+//   int LimitDistanceUp;
    int ZeroDistance;
    uint8_t TM_ON; // Задержка включения, сек
    uint8_t TM_OFF; //Задержка выключения, сек
@@ -40,6 +42,7 @@ struct EA_ConfigType{
    uint8_t SAMPLES_CLIBRATE;
    T_SENSOR_TYPE SensorType;
    T_NAN_VALUE_FLAG NanValueFlag;
+   T_MEASURE_TYPE MeasureType;
 //   bool isAP;
    uint16_t SRC;   
 };

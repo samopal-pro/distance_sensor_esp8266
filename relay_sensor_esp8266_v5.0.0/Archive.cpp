@@ -281,8 +281,8 @@ void EA_read_config(){
        Serial.printf("EEPROM Config is correct\n");
        Serial.printf("EEPROM config: level ground = %d\n",EA_Config.GroundLevel);
        sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
-       sensorType   = EA_Config.SensorType;
-       nanValueFlag = EA_Config.NanValueFlag;
+//       sensorType   = EA_Config.SensorType;
+//       nanValueFlag = EA_Config.NanValueFlag;
     }
     else {
        Serial.printf("EEPROM SRC is not valid: %d %d\n",src,EA_Config.SRC);
@@ -361,9 +361,12 @@ void EA_default_config(void){
    strcpy(EA_Config.BOX_ID, "1");
    strcpy(EA_Config.SERVER, "crm.moscow");
    EA_Config.PORT            = 8001;
-   EA_Config.GroundLevel     = 0;  
+   EA_Config.GroundLevel     = 2500;  
    EA_Config.LimitDistance   = 250;
-   EA_Config.LimitDistanceUp = -1;
+//   EA_Config.LimitDistanceUp = -1;
+   EA_Config.MinDistance     = 1000;
+   EA_Config.MaxDistance     = 2000;
+
    EA_Config.TM_ON           = 1;
    EA_Config.TM_OFF          = 1;
    EA_Config.ZeroDistance    = 11111;
@@ -371,6 +374,7 @@ void EA_default_config(void){
    EA_Config.isDHCP          = true;
    EA_Config.SensorType      = DEFAULT_SENSOR_TYPE;
    EA_Config.NanValueFlag    = DEFAULT_NAN_VALUE_FLAG;
+   EA_Config.MeasureType     = DEFAULT_MEASURE_TYPE;
    EA_Config.isWiFiAlways    = false;
    EA_Config.TM_BEGIN_CALIBRATE = 5;
    EA_Config.SAMPLES_CLIBRATE   = 10;

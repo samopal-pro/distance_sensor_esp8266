@@ -678,10 +678,14 @@ void ProcessingDistance(){
 // Опрашиваем ультразвуковой датчик
    uint32_t _ms = millis();
    GetDistance();  
+   Distance = L;
+//   Serial.printf("Distance = %d ",(int)Distance);  
+//   Serial.println(L); 
+
    if( isnan(L) ){
-      Serial.print("Value is NAN: ");
-      ledSetExtMode(LED_EXT_NAN);
-      switch(nanValueFlag){
+//      ledSetBaseMode(LED_BASE_NAN);
+//      Serial.print("Value is NAN: ");
+      switch(EA_Config.NanValueFlag){
          case NAN_VALUE_IGNORE: 
             Serial.println("skiping");
             return;  
@@ -697,20 +701,23 @@ void ProcessingDistance(){
       Distance = NAN;
    }
   else {
-      Distance = (int)L;
+      Distance = L;
 #ifdef SONAR_FAKE
       FSonar.Set(Distance);
       if( Distance <  EA_Config.LimitDistance )Distance = EA_Config.ZeroDistance;
       else if( FSonar.Check() )Distance = EA_Config.ZeroDistance;
 #endif   
-      if( Distance == 0 && EA_Config.ZeroDistance )Distance = EA_Config.ZeroDistance;
- ///     Serial.printf("Distance = %d\n",Distance);
+//      if( Distance == 0 && EA_Config.ZeroDistance )Distance = EA_Config.ZeroDistance;
+//      Serial.printf("Distance = %d\n",Distance);
 
 // Исправление от 28 марта (Версия 4.0.3)    
-      if( EA_Config.LimitDistanceUp >= 0 && Distance > EA_Config.LimitDistanceUp ||
-           abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance )
-//      if( Distance > EA_Config.GroundLevel || abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance )
-            Button = SonarGroudState;
+// Исправление от 02.04.24 (Версия 5.0.5)    
+      if( (EA_Config.MeasureType == MEASURE_TYPE_NORMAL && abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance ) ||
+          (EA_Config.MeasureType == MEASURE_TYPE_OUTSIDE &&  (Distance < EA_Config.MinDistance || Distance > EA_Config.MaxDistance) ) ||
+          (EA_Config.MeasureType == MEASURE_TYPE_INSIDE &&  (Distance > EA_Config.MinDistance && Distance < EA_Config.MaxDistance) ) ){
+//           abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance )
+           Button = SonarGroudState;
+          }
        else Button = !SonarGroudState;
   }
 // Зафиксировано изменение состояния   
@@ -741,6 +748,7 @@ void ProcessingDistance(){
       }
       LastButton = Button;
    } 
+//   WS_setDistance();
    uint32_t _tm = 0;
    if( stat2 == STAT_BT_ON )  _tm = (uint32_t)EA_Config.TM_ON*1000;
    if( stat2 == STAT_BT_OFF ) _tm = (uint32_t)EA_Config.TM_OFF*1000;
@@ -748,7 +756,6 @@ void ProcessingDistance(){
    if( ( stat2 == STAT_BT_ON || stat2 == STAT_BT_OFF ) && (_tm == 0 || _ms < ButtonTime || _ms - ButtonTime >= _tm ) ) {
        Serial.println(F("--->Fixed Button"));
        stat2 = STAT_OFF;
-       WS_setDistance();
        Relay_setDistance();
        pushRam(Time, _ms/1000, Temp, Hum, Distance, Button, 0 );
    }
@@ -756,8 +763,14 @@ void ProcessingDistance(){
 }
 
 void WS_setDistance(){
-  if( Button )ledSetBaseMode(LED_BASE_BUSY);
-  else ledSetBaseMode(LED_BASE_FREE);
+  if( isnan(Distance) ){
+     ledSetBaseMode(LED_BASE_NAN);
+     Serial.println("Led NAN");
+  }
+  else {
+     if( Button )ledSetBaseMode(LED_BASE_BUSY);
+     else ledSetBaseMode(LED_BASE_FREE);
+  }
 }
       
 void Relay_setDistance(){
@@ -865,9 +878,9 @@ void PrintValue(){
 * Автокалибровка земли
 */
 bool CalibrateGround(){
-   setColor(0);
-   delay(EA_Config.TM_BEGIN_CALIBRATE);
-   setColor(strip->Color(127,127,0));   
+   ledSetBaseMode(LED_BASE_NONE);
+   delay(EA_Config.TM_BEGIN_CALIBRATE*1000);
+   ledSetBaseMode(LED_BASE_GROUND);
    int n = 0;
    float x = 0.0;
    for( int i=0; i<EA_Config.SAMPLES_CLIBRATE; i++){
@@ -879,6 +892,7 @@ bool CalibrateGround(){
       }
       delay(300);
    }
+//   ledRestoreMode();
    if( n>0 ){
       x /= n;
       Serial.printf("!!! Calibrate ground value %d\n",(int)x);

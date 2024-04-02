@@ -16,7 +16,7 @@
 WiFiClient ws_client;
 
 T_SENSOR_TYPE sensorType      = DEFAULT_SENSOR_TYPE;
-T_NAN_VALUE_FLAG nanValueFlag = DEFAULT_NAN_VALUE_FLAG;
+//T_NAN_VALUE_FLAG nanValueFlag = DEFAULT_NAN_VALUE_FLAG;
 
 long  t_correct      = 0;
 uint32_t cur_ms, ms0=0, ms1=0, ms2=0, ms3=0, ms4=0, ms5=0, ms6=0, ms7=0;
@@ -26,6 +26,8 @@ unsigned long t_cur  = 0;
 unsigned long t_loop = 0;
 unsigned long t_http = 0;
 unsigned long t_stat2 = 0;
+
+bool is_btn_click = false;
 
 void setup() {
 // Отключаем Serial на GPIO2  
@@ -98,23 +100,28 @@ void loop() {
    if( ms0 == 0 || cur_ms < ms0 || (cur_ms - ms0) > 200  ){
        ms0 = cur_ms;
        switch(calbtn.Loop()){
+          case SB_NONE:
+              is_btn_click = false;
+              break;     
+          case SB_WAIT:
+              is_btn_click = true;
+              ledSetBaseMode(LED_BASE_NONE);
+              break;     
           case SB_CLICK:
               Serial.printf("!!! BTN click %d",calbtn.Time);
               if( calbtn.Time > 1000 ){
-                 ledSetExtMode(LED_EXT_BTN3);
-                 if( w_stat2 == EWS_AP_MODE && EA_Config.isWiFiAlways == false){
-                    WiFi_stop("Stop AP User");     
-                 }
-                 else {
-                    Serial.printf("Calibrate sonar %d\n",Distance);
-                    EA_Config.GroundLevel = Distance;
-                    EA_clear_arh();
-//             EA_default_config();
-                    EA_save_config();
-//                EA_read_config();
-                    WiFi_startAP();
-                 }
+//                 ledSetExtMode(LED_EXT_BTN3);
+                 if( EA_Config.isWiFiAlways == false )
+                    if( w_stat2 == EWS_AP_MODE )WiFi_stop("Stop AP User");
+                    else WiFi_startAP();
+                 Serial.printf("Calibrate sonar %d\n",Distance);
+                 if( CalibrateGround() )EA_save_config();
 
+//                 EA_Config.GroundLevel = Distance;
+                 EA_clear_arh();
+//             EA_default_config();
+//                EA_read_config();
+ 
               }
               break;
           case SB_LONG_CLICK:
@@ -130,10 +137,11 @@ void loop() {
 
 //   uint32_t it1 = LoopInterval;
 //   if( w_stat2 == EWS_AP_MODE )it1 = LoopIntervalAP;
-   if( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval){
+   if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click){
       ms1 = cur_ms;
 // Проверяем дистанцию, устанавливаем значение реле и ленты      
       ProcessingDistance();
+      WS_setDistance();
       if( RTCFlag ){
           RTC_Time = GetRTClock();
           Time     = RTC_Time;
@@ -149,7 +157,7 @@ void loop() {
       
    }
 // Цикл проверки WiFi   
-   if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 )){
+   if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) ){
       ms2 = cur_ms;
       WiFi_test();
    }
@@ -210,10 +218,10 @@ void loop() {
         }
       }
    }
-   if( ms5 == 0 || cur_ms < ms5 || (cur_ms - ms5) > LED_TM_DEFAULT ){
-      ms5 = cur_ms;
-      /*if( w_stat2 != EWS_AP_MODE )*/ledLoop();
-   }  
+//   if( ms5 == 0 || cur_ms < ms5 || (cur_ms - ms5) > LED_TM_DEFAULT ){
+//     ms5 = cur_ms;
+//      /*if( w_stat2 != EWS_AP_MODE )*/ledLoop();
+//   }  
 //   if( ms6 == 0 || cur_ms < ms6 || (cur_ms - ms6) > 10 ){
 //      ms6 = cur_ms;
       if( w_stat2 == EWS_AP_MODE )HTTP_loop();

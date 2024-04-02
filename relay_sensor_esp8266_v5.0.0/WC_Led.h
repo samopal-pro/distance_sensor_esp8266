@@ -25,7 +25,9 @@ enum T_LED_WIFI_MODE {
 enum T_LED_BASE_MODE {
    LED_BASE_NONE    = 0,
    LED_BASE_FREE    = 1,
-   LED_BASE_BUSY    = 2
+   LED_BASE_BUSY    = 2,
+   LED_BASE_NAN     = 3,
+   LED_BASE_GROUND  = 4
 };
 
 enum T_LED_EXT_MODE {
@@ -46,11 +48,12 @@ extern bool ws_enable;
 extern Adafruit_NeoPixel *strip;
 
 void ledInit();
-void ledLoop();
+//void ledLoop();
 void ledSetWiFiMode(T_LED_WIFI_MODE _mode);
-void ledSetBaseMode(T_LED_BASE_MODE _mode);
-void ledSetExtMode(T_LED_EXT_MODE _mode);
-void setColor(uint32_t color);
+void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag = false);
+void ledRestoreMode();
+//void ledSetExtMode(T_LED_EXT_MODE _mode);
+//void setColor(uint32_t color);
 
 
 #endif

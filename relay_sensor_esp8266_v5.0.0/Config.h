@@ -5,7 +5,7 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 5.0.5"
+#define FW_VERSION   "VERSION 5.0.6"
 #define DEVICE_NAME  "693_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "admin"
 //#define WIFI_SAV
@@ -35,6 +35,12 @@ enum T_NAN_VALUE_FLAG {
   NAN_VALUE_OFF     = 3
 };
   
+enum T_MEASURE_TYPE {
+  MEASURE_TYPE_NORMAL  = 1, //Срабатываение датчика в обычном режиме (уменьшение дистанции)
+  MEASURE_TYPE_OUTSIDE = 2, //Срабатывание датчика если вне интервала
+  MEASURE_TYPE_INSIDE  = 3  //Срабатывание датчика если внутри интервала
+};
+
 //#define DEFAULT_SENSOR_TYPE SONAR_SERIAL  // Старые сенсоры ME007Y и другие платы работающие по протоколу SERIAL
 #define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
 //#define DEFAULT_SENSOR_TYPE SONAR_SR04TV2 // Глючные платы  SR04TV2 у которых плывет значение расстояния
@@ -43,9 +49,10 @@ enum T_NAN_VALUE_FLAG {
 //#define DEFAULT_SENSOR_TYPE ONAR_TFLUNA   // LiDAR TF Luna по I2C
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
+#define DEFAULT_MEASURE_TYPE MEASURE_TYPE_NORMAL
 
 extern T_SENSOR_TYPE sensorType;
-extern T_NAN_VALUE_FLAG nanValueFlag;
+//extern T_NAN_VALUE_FLAG nanValueFlag;
 
 // Изменение расстояния до датчика в мм, когда проиходит эмуляция нажатия кнопки
 //#define LimitDistance            500

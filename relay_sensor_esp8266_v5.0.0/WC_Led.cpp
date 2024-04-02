@@ -17,7 +17,7 @@ bool ws_enable = true;
 
 Adafruit_NeoPixel *strip;
 T_LED_WIFI_MODE ledWiFiMode = LED_WIFI_NONE;
-T_LED_BASE_MODE ledBaseMode = LED_BASE_NONE;
+T_LED_BASE_MODE ledBaseMode = LED_BASE_NONE, ledBaseModeSave = LED_BASE_NONE;
 T_LED_EXT_MODE ledExtMode   = LED_EXT_NONE;
 bool changeWiFiMode         = true;
 bool changeMode             = true;
@@ -55,39 +55,40 @@ void ledSetWiFiMode(T_LED_WIFI_MODE _mode){
    if( PinLed < 0 )return;
    if( _mode == ledWiFiMode )return;
    ledWiFiMode    = _mode;
+   switch(ledWiFiMode){
+      case LED_WIFI_NONE: strip->setPixelColor(0,strip->Color(0,0,0));break;
+      case LED_WIFI_OFF:  strip->setPixelColor(0,strip->Color(255,0,0));break;
+      case LED_WIFI_ON:   strip->setPixelColor(0,strip->Color(0,255,0));break;
+      case LED_WIFI_WAIT: strip->setPixelColor(0,strip->Color(127,255,0));break;
+      case LED_WIFI_AP:   strip->setPixelColor(0,strip->Color(255,255,255));break;
+      case LED_WIFI_AP1:  strip->setPixelColor(0,strip->Color(0,255,127));break;    
+      }      
+   strip->show();
    changeWiFiMode = true;
    Serial.printf("Led wifi mode %d\n", ledWiFiMode);
 }
 
-void ledSetBaseMode(T_LED_BASE_MODE _mode){
+void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag ){
    if( PinLed < 0 )return;
+//   Serial.printf("1 Set led mode %d\n",ledBaseMode);
+   if( _saveFlag )ledBaseModeSave = ledBaseMode;
    if( _mode == ledBaseMode )return;
    ledBaseMode    = _mode;
+   switch(ledBaseMode){
+      case LED_BASE_NONE:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,0));break;
+      case LED_BASE_FREE:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,255));break;
+      case LED_BASE_BUSY:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,0,0));break;
+      case LED_BASE_NAN:    for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));break;
+      case LED_BASE_GROUND: for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(165,255,0));break;
+   }
+   strip->show();
+//   Serial.printf("2 Set led mode %d\n",ledBaseMode);
    changeMode = true;
 }
 
-void ledSetExtMode(T_LED_EXT_MODE _mode){
-   if( PinLed < 0 )return;
-   ledExtMode    = _mode;
-   changeExtMode = true;
-   switch(_mode){
-      case LED_EXT_NAN :
-         loopCount = 1;
-         break;
-      case LED_EXT_GROUND :
-         loopCount = 5;
-         break;
-      case LED_EXT_BTN3 :
-         loopCount = 4;
-         break;
-      case LED_EXT_BTN10 :
-         loopCount = 10;
-         break;
-      default:
-         loopCount = 0;
-   }
-}
+void ledRestoreMode(){ ledSetBaseMode(ledBaseModeSave); }
 
+/*
 void ledLoop(){
    if( PinLed < 0 )return;
    if( changeMode == false && changeWiFiMode == false && changeExtMode == false )return;
@@ -157,6 +158,7 @@ void setColor(uint32_t color){
    changeMode = true;
    strip->show();
 }
+*/
 
 /*
 void WS_set( int mode ){
