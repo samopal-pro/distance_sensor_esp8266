@@ -32,8 +32,10 @@ struct EA_ConfigType{
    uint16_t PORT;
    int GroundLevel;   
    int LimitDistance;
-   int MinDistance;
-   int MaxDistance;
+   int MinDistance1;
+   int MaxDistance1;
+   int MinDistance2;
+   int MaxDistance2;
 //   int LimitDistanceUp;
    int ZeroDistance;
    uint8_t TM_ON; // Задержка включения, сек

@@ -126,10 +126,13 @@ void loop() {
               break;
           case SB_LONG_CLICK:
               Serial.println("!!! BTN long click");
-              CalibrateGround();
+//              CalibrateGround();
               strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
               strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
-              EA_save_config();            
+              EA_save_config();     
+              delay(1000);    
+              ESP.reset();  
+   
               break;
        }
    }

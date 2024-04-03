@@ -18,10 +18,10 @@ bool ws_enable = true;
 Adafruit_NeoPixel *strip;
 T_LED_WIFI_MODE ledWiFiMode = LED_WIFI_NONE;
 T_LED_BASE_MODE ledBaseMode = LED_BASE_NONE, ledBaseModeSave = LED_BASE_NONE;
-T_LED_EXT_MODE ledExtMode   = LED_EXT_NONE;
+//T_LED_EXT_MODE ledExtMode   = LED_EXT_NONE;
 bool changeWiFiMode         = true;
 bool changeMode             = true;
-bool changeExtMode          = false;
+//bool changeExtMode          = false;
 bool ledFlag                = true;
 int loopCount = 0;
 
@@ -60,8 +60,8 @@ void ledSetWiFiMode(T_LED_WIFI_MODE _mode){
       case LED_WIFI_OFF:  strip->setPixelColor(0,strip->Color(255,0,0));break;
       case LED_WIFI_ON:   strip->setPixelColor(0,strip->Color(0,255,0));break;
       case LED_WIFI_WAIT: strip->setPixelColor(0,strip->Color(127,255,0));break;
-      case LED_WIFI_AP:   strip->setPixelColor(0,strip->Color(255,255,255));break;
-      case LED_WIFI_AP1:  strip->setPixelColor(0,strip->Color(0,255,127));break;    
+      case LED_WIFI_AP:   strip->setPixelColor(0,strip->Color(0,255,127));break;
+      case LED_WIFI_AP1:  strip->setPixelColor(0,strip->Color(255,255,255));break;    
       }      
    strip->show();
    changeWiFiMode = true;
@@ -80,6 +80,7 @@ void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag ){
       case LED_BASE_BUSY:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,0,0));break;
       case LED_BASE_NAN:    for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));break;
       case LED_BASE_GROUND: for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(165,255,0));break;
+      case LED_BASE_SAVE:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,255,255));break;
    }
    strip->show();
 //   Serial.printf("2 Set led mode %d\n",ledBaseMode);

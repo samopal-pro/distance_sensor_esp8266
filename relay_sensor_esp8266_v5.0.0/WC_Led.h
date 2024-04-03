@@ -27,16 +27,11 @@ enum T_LED_BASE_MODE {
    LED_BASE_FREE    = 1,
    LED_BASE_BUSY    = 2,
    LED_BASE_NAN     = 3,
-   LED_BASE_GROUND  = 4
+   LED_BASE_GROUND  = 4,
+   LED_BASE_SAVE    = 5
 };
 
-enum T_LED_EXT_MODE {
-   LED_EXT_NONE     = 0,
-   LED_EXT_NAN      = 1,
-   LED_EXT_GROUND   = 2, 
-   LED_EXT_BTN3     = 3, 
-   LED_EXT_BTN10    = 4 
-};
+
 
 extern uint8_t ws_mode;
 extern int      ws_mode_save;

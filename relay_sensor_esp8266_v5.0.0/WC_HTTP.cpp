@@ -362,7 +362,9 @@ void HTTP_printConfig(String &out){
  char s[32];
   sprintf(s,"%d",EA_Config.GroundLevel);
   out += "<form action='/' method='PUT'>\n";
+/*   
   out += " <fieldset>\n";
+ 
   out += "  <legend>Настройка</legend>\n";
   HTTP_printInput1(out,"* Высота датчика без автомобиля (мм):","GroundLevel",s,20,32,HT_TEXT);
   out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
@@ -371,10 +373,11 @@ void HTTP_printConfig(String &out){
   out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
+*/
 
   out += " <fieldset>\n";
   out += "  <legend>Конфигурация WI-FI</legend>\n";
-  out += "<table botder>";
+  out += "<table>";
   out += "<tr><td align='center' width=50%><img src='/wifi2.png'></td><td width=50% align='center'><img src='/wifi1.png'></td></tr>";
   out += "<tr><td align='center'><input type='radio' name='WiFiMode' value='1'";
   if( !EA_Config.isWiFiAlways )out += " checked";
@@ -390,7 +393,7 @@ void HTTP_printConfig(String &out){
 
   out += " <fieldset>\n";
   out += "  <legend>Режим определения препятствия</legend>\n";
-  out += "<table botder>";
+  out += "<table>";
   out += "<tr><td><img src='/stat2.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='1'";
   if( EA_Config.NanValueFlag  == NAN_VALUE_IGNORE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Если не видит расстояние не перключается. (в этот момент мигает фиолетовым)</td></tr>";
@@ -404,39 +407,61 @@ void HTTP_printConfig(String &out){
   out += " </fieldset>\n";
 
   out += " <fieldset>\n";
-  out += "  <legend>Режимы определения препядсвия</legend>\n";
-  out += "<table botder>";
-  out += "<tr><td><img src='/type1.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
+  out += "  <legend>Режимы определения препятсвия</legend>\n";
+  
+  out += "<table><tr><td><img src='/type1.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
   if( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Срабатывает при превышение погога высоты</td></tr>";
-  out += "<tr><td><img src='/type2.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='2'";
-  if( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Срабатывает если вне диапазона границ диапазона</td></tr>";
-  out += "<tr><td><img src='/type3.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='3'";
-  if( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Срабатывает если внутри диапазона границ диапазона</td></tr></table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
-
-  out += " <fieldset>\n";
-  out += "  <legend>Параметры переключения и калибровки</legend>\n";
+  out += "></td><td valign='middle' class='td1'>Срабатывает при превышение погога высоты</td></tr></table>";
+  sprintf(s,"%d",EA_Config.GroundLevel);
+  HTTP_printInput1(out,"* Высота датчика без автомобиля (мм):","GroundLevel",s,20,32,HT_TEXT);
   sprintf(s,"%d",EA_Config.LimitDistance);
   HTTP_printInput1(out,"Высота на срабатывание датчика (мм):","LimitDistance",s,16,32,HT_NUMBER);
-  out += "<p class='t1'>Устанавливается для режима определения препятсвия по высоте (датчик сверху).";
 
-  sprintf(s,"%d",EA_Config.MinDistance);
-  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.MaxDistance);
-  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_ON);
-  out += "<p class='t1'>Устанавливаются для режима определения препятсвия по диапазону значений (датчик сбоку).";
-  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_OFF);
-  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff",s,16,32,HT_NUMBER);
+  out += "<table><tr><td><img src='/type2.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='2'";
+  if( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Срабатывает если вне диапазона границ диапазона</td></tr></table>";
+  sprintf(s,"%d",EA_Config.MinDistance1);
+  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance1",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance1);
+  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance1",s,16,32,HT_NUMBER);
+ 
+  out += "<table><tr><td><img src='/type3.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='3'";
+  if( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Срабатывает если внутри диапазона границ диапазона</td></tr></table>\n";
+  sprintf(s,"%d",EA_Config.MinDistance2);
+  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance2",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance2);
+  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance2",s,16,32,HT_NUMBER);
+
   sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
   HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
   HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
+
+  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
+  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
+  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
+  out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
+
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
+  out += " <fieldset>\n";
+  out += "  <legend>Параметры переключения</legend>\n";
+//  sprintf(s,"%d",EA_Config.LimitDistance);
+//  HTTP_printInput1(out,"Высота на срабатывание датчика (мм):","LimitDistance",s,16,32,HT_NUMBER);
+//  out += "<p class='t1'>Устанавливается для режима определения препятсвия по высоте (датчик сверху).";
+
+//  sprintf(s,"%d",EA_Config.MinDistance);
+//  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance",s,16,32,HT_NUMBER);
+//  sprintf(s,"%d",EA_Config.MaxDistance);
+//  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance",s,16,32,HT_NUMBER);
+ //  out += "<p class='t1'>Устанавливаются для режима определения препятсвия по диапазону значений (датчик сбоку).";
+ sprintf(s,"%d",EA_Config.TM_ON);
+  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_OFF);
+  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
@@ -522,8 +547,10 @@ bool HTTP_checkArgs(){
              case 3: EA_Config.MeasureType  = MEASURE_TYPE_INSIDE; break;
          }
       if(server.hasArg("LimitDistance"))EA_Config.LimitDistance      = server.arg("LimitDistance").toInt();
-      if(server.hasArg("MinDistance")  )EA_Config.MinDistance        = server.arg("MinDistance").toInt();
-      if(server.hasArg("MaxDistance")  )EA_Config.MaxDistance        = server.arg("MaxDistance").toInt();
+      if(server.hasArg("MinDistance1")  )EA_Config.MinDistance1      = server.arg("MinDistance1").toInt();
+      if(server.hasArg("MaxDistance1")  )EA_Config.MaxDistance1      = server.arg("MaxDistance1").toInt();
+      if(server.hasArg("MinDistance2")  )EA_Config.MinDistance2      = server.arg("MinDistance2").toInt();
+      if(server.hasArg("MaxDistance2")  )EA_Config.MaxDistance2      = server.arg("MaxDistance2").toInt();
       if(server.hasArg("TMOn")         )EA_Config.TM_ON              = server.arg("TMOn").toInt();
       if(server.hasArg("TMOff")        )EA_Config.TM_OFF             = server.arg("TMOff").toInt();
       if(server.hasArg("TMCalibr")     )EA_Config.TM_BEGIN_CALIBRATE = server.arg("TMCalibr").toInt();
@@ -556,6 +583,9 @@ bool HTTP_checkArgs(){
       HTTP_goto("/", 1000, "Сохранение параметров ...");
       if( EA_Config.isWiFiAlways)ledSetWiFiMode(LED_WIFI_AP1);
       else ledSetWiFiMode(LED_WIFI_AP);
+      ledSetBaseMode(LED_BASE_SAVE,true);
+      delay(300);
+      ledRestoreMode();
       return true;
    }
    return false;

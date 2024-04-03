@@ -364,8 +364,10 @@ void EA_default_config(void){
    EA_Config.GroundLevel     = 2500;  
    EA_Config.LimitDistance   = 250;
 //   EA_Config.LimitDistanceUp = -1;
-   EA_Config.MinDistance     = 1000;
-   EA_Config.MaxDistance     = 2000;
+   EA_Config.MinDistance1     = 1500;
+   EA_Config.MaxDistance1     = 1500;
+   EA_Config.MinDistance2     = 1500;
+   EA_Config.MaxDistance2     = 1500;
 
    EA_Config.TM_ON           = 1;
    EA_Config.TM_OFF          = 1;

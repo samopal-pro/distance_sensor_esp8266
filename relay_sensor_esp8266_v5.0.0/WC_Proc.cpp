@@ -713,8 +713,8 @@ void ProcessingDistance(){
 // Исправление от 28 марта (Версия 4.0.3)    
 // Исправление от 02.04.24 (Версия 5.0.5)    
       if( (EA_Config.MeasureType == MEASURE_TYPE_NORMAL && abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance ) ||
-          (EA_Config.MeasureType == MEASURE_TYPE_OUTSIDE &&  (Distance < EA_Config.MinDistance || Distance > EA_Config.MaxDistance) ) ||
-          (EA_Config.MeasureType == MEASURE_TYPE_INSIDE &&  (Distance > EA_Config.MinDistance && Distance < EA_Config.MaxDistance) ) ){
+          (EA_Config.MeasureType == MEASURE_TYPE_OUTSIDE &&  (Distance < EA_Config.MinDistance1 || Distance > EA_Config.MaxDistance1) ) ||
+          (EA_Config.MeasureType == MEASURE_TYPE_INSIDE &&  (Distance > EA_Config.MinDistance2 && Distance < EA_Config.MaxDistance2) ) ){
 //           abs(EA_Config.GroundLevel - Distance ) < EA_Config.LimitDistance )
            Button = SonarGroudState;
           }
@@ -765,7 +765,7 @@ void ProcessingDistance(){
 void WS_setDistance(){
   if( isnan(Distance) ){
      ledSetBaseMode(LED_BASE_NAN);
-     Serial.println("Led NAN");
+//     Serial.println("Led NAN");
   }
   else {
      if( Button )ledSetBaseMode(LED_BASE_BUSY);
@@ -896,7 +896,11 @@ bool CalibrateGround(){
    if( n>0 ){
       x /= n;
       Serial.printf("!!! Calibrate ground value %d\n",(int)x);
-      EA_Config.GroundLevel = (int)x;
+      EA_Config.GroundLevel  = (int)x;
+      EA_Config.MinDistance1 = (int)x;
+      EA_Config.MaxDistance1 = (int)x;
+      EA_Config.MinDistance2 = (int)x;
+      EA_Config.MaxDistance2 = (int)x;
       return true;
    }
    else {
