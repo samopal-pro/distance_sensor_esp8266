@@ -7,7 +7,8 @@
 
 #define FW_VERSION   "VERSION 5.0.6"
 #define DEVICE_NAME  "693_SVETOFORBOX.RU_192.168.4.1"
-#define DEVICE_ADMIN "admin"
+#define DEVICE_ADMIN "superadmin"
+#define DEVICE_OPER  "admin"
 //#define WIFI_SAV
 /*                
 Затычка на глючащие датчики SONAR_JSN_SR04TV2
@@ -62,8 +63,8 @@ extern T_SENSOR_TYPE sensorType;
 
 // Интервал отправки на сервер в мс
 // Минимальное время опросв датчиков
-#define LoopInterval             1000
-#define LoopIntervalAP           3000
+//#define LoopInterval             1000
+//#define LoopIntervalAP           3000
 #define GetStatusInterval        10000
 // Интервал между запросоми состояния
 #define SendInterval             60000

@@ -281,6 +281,7 @@ void EA_read_config(){
        Serial.printf("EEPROM Config is correct\n");
        Serial.printf("EEPROM config: level ground = %d\n",EA_Config.GroundLevel);
        sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
+       LoopInterval = EA_Config.TM_LOOP_SENSOR*1000;
 //       sensorType   = EA_Config.SensorType;
 //       nanValueFlag = EA_Config.NanValueFlag;
     }
@@ -305,6 +306,7 @@ void EA_save_config(){
    EEPROM.commit();     
    sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
    Serial.printf("EEPROM config write: level ground = %d\n",EA_Config.GroundLevel);
+   LoopInterval = EA_Config.TM_LOOP_SENSOR*1000;
 
   
 }
@@ -356,7 +358,8 @@ void EA_default_config(void){
    EA_Config.DNS[2]          = 8;     
    EA_Config.DNS[3]          = 8;
    strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
-   strcpy(EA_Config.ESP_OPER_PASS, "user");
+   strcpy(EA_Config.ESP_OPER_PASS, DEVICE_OPER);
+   EA_Config.isSendCrmMoscow = true;
    strcpy(EA_Config.DOGOVOR_ID, "0000");
    strcpy(EA_Config.BOX_ID, "1");
    strcpy(EA_Config.SERVER, "crm.moscow");
@@ -380,4 +383,5 @@ void EA_default_config(void){
    EA_Config.isWiFiAlways    = false;
    EA_Config.TM_BEGIN_CALIBRATE = 5;
    EA_Config.SAMPLES_CLIBRATE   = 10;
+   EA_Config.TM_LOOP_SENSOR     = 1;
 }

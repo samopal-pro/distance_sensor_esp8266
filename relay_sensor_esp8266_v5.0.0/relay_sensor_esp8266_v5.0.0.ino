@@ -26,6 +26,7 @@ unsigned long t_cur  = 0;
 unsigned long t_loop = 0;
 unsigned long t_http = 0;
 unsigned long t_stat2 = 0;
+uint32_t LoopInterval = 1000;
 
 bool is_btn_click = false;
 
@@ -129,6 +130,7 @@ void loop() {
 //              CalibrateGround();
               strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
               strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
+              strcpy(EA_Config.ESP_OPER_PASS, DEVICE_OPER);
               EA_save_config();     
               delay(1000);    
               ESP.reset();  
@@ -171,11 +173,11 @@ void loop() {
          PrintValue();
       }
       
-      
-      bool flag = false;
-      if( w_stat2 == EWS_ON ){
-        flag = Ping.ping(EA_Config.SERVER);
-//        flag = true;
+      if( EA_Config.isSendCrmMoscow ){     
+       bool flag = false;
+       if( w_stat2 == EWS_ON ){
+//        flag = Ping.ping(EA_Config.SERVER);
+        flag = true;
         if( flag ){
 // Запрос состояния
            HttpGetStatus();
@@ -210,6 +212,7 @@ void loop() {
             EA_save_last(Val.Time,Val.Uptime,Val.Temp,Val.Hum,Val.Distance,Val.Button,0);
          }
 #endif         
+       }
       }
    }
 // Отправляем состояние по таймеру

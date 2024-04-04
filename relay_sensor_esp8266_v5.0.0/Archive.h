@@ -20,6 +20,7 @@ struct EA_ConfigType{
    char AP_PASS[32];
    bool isDHCP;
    bool isWiFiAlways;
+   bool isSendCrmMoscow;
    IPAddress IP;
    IPAddress MASK;
    IPAddress GW;
@@ -42,6 +43,7 @@ struct EA_ConfigType{
    uint8_t TM_OFF; //Задержка выключения, сек
    uint8_t TM_BEGIN_CALIBRATE;
    uint8_t SAMPLES_CLIBRATE;
+   uint8_t TM_LOOP_SENSOR; //Основной цикл опроса сенсора, в сек
    T_SENSOR_TYPE SensorType;
    T_NAN_VALUE_FLAG NanValueFlag;
    T_MEASURE_TYPE MeasureType;
@@ -86,6 +88,7 @@ extern EA_Value      EA_Buffer[EA_BUFFER_SIZE];
 extern EA_SaveType   EA_Save;
 extern EA_ConfigType EA_Config;
 extern StackArray <struct EA_SaveType> EA_Ram;
+extern uint32_t LoopInterval;
 
 extern char SensorID[];
 

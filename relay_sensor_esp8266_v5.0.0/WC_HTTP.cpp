@@ -227,6 +227,8 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += " ";
   out += _VERSION;
   out += "\n";
+  out += "<p>";
+  out += HTTP_User;
 
   char s[20]; 
 // out += "<br><br>Температура: ";
@@ -272,7 +274,7 @@ bool HTTP_login(String &out){
   if ( server.hasArg("Login") ){
     String pass = server.arg("Password");
     
-    if ( HTTP_checkAuth(pass.c_str()) ==0 ){
+    if ( HTTP_checkAuth(pass.c_str()) >= 0 ){
       String header = "HTTP/1.1 301 OK\r\nSet-Cookie: ESP_PASS="+pass+"\r\nLocation: /\r\nCache-Control: no-cache\r\n\r\n";
       server.sendContent(header);
       Serial.println("!!! HTTP Login Success");
@@ -284,7 +286,7 @@ bool HTTP_login(String &out){
     }
   }
 // Проерка пароля из куков и выдача форма авторизации при необходимости
-  if( HTTP_isAuth() != 0 ){
+  if( HTTP_isAuth() < 0 ){
      out += "<form action='/' method='PUT'>\n";
      out += " <fieldset>\n";
      out += "  <legend>Пароль для доступа в настройки</legend>\n";
@@ -313,6 +315,7 @@ void HTTP_handleRoot(void) {
   HTTP_printHeader(out,"Главная",0);
 
   out += "<form action='/' method='PUT'>\n";
+// Блок №1
   out += " <fieldset>\n";
 //     out += "  <legend>Пароль для доступа в настройки</legend>\n";
 //     HTTP_printInput1(out,"Пароль:","Password","",16,32,HT_PASSWORD);
@@ -342,9 +345,14 @@ void HTTP_handleRoot(void) {
  
    if( HTTP_login(out) )return;
 
-  if( UID == 0 ){
-     HTTP_printConfig(out);
-      out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
+   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+//   Serial.println(out);
+   Serial.printf("!!! HTTP Fragment 1 %d\n", out.length());  
+   server.send ( 200, "text/html", out );
+   out = "";
+  if( UID >= 0 ){
+     HTTP_printConfig();
+     out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
      out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
      out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
      out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
@@ -353,28 +361,21 @@ void HTTP_handleRoot(void) {
   }
 
    HTTP_printTail(out);
-   Serial.printf("!!! HTTP size page %d\n", out.length());  
-   server.send ( 200, "text/html", out );
+   Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
+   server.sendContent(out);
+
+//   Serial.printf("!!! HTTP size page %d\n", out.length());  
+//   Serial.println(out);
+//   server.send ( 200, "text/html", out );
 }
 
 
-void HTTP_printConfig(String &out){
+void HTTP_printConfig(){
+  String out = "";
  char s[32];
   sprintf(s,"%d",EA_Config.GroundLevel);
   out += "<form action='/' method='PUT'>\n";
-/*   
-  out += " <fieldset>\n";
- 
-  out += "  <legend>Настройка</legend>\n";
-  HTTP_printInput1(out,"* Высота датчика без автомобиля (мм):","GroundLevel",s,20,32,HT_TEXT);
-  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
-  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
-  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
-  out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
-*/
-
+// Блок №2
   out += " <fieldset>\n";
   out += "  <legend>Конфигурация WI-FI</legend>\n";
   out += "<table>";
@@ -391,6 +392,38 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
+// Блок №2.5 
+  out += " <fieldset>\n";
+  out += "  <legend>Автокалибровка</legend>\n";
+  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
+  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
+  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
+  out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
+  out += " </fieldset>\n";
+
+// Блок №3 
+  out += " <fieldset>\n";
+  out += "  <legend>Параметры автокалибровки</legend>\n";
+  sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
+  HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
+  HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
+  out += " </fieldset>\n";
+
+// Блок №4 
+  out += " <fieldset>\n";
+  out += "  <legend>Параметры переключения и цикла опроса</legend>\n";
+  sprintf(s,"%d",EA_Config.TM_ON);
+  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_OFF);
+  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_LOOP_SENSOR);
+  HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
+
+// Блок №5
   out += " <fieldset>\n";
   out += "  <legend>Режим определения препятствия</legend>\n";
   out += "<table>";
@@ -406,9 +439,13 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
+   Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
+
+// Блок №6
   out += " <fieldset>\n";
-  out += "  <legend>Режимы определения препятсвия</legend>\n";
-  
+  out += "  <legend>Режимы определения препятсвия</legend>\n"; 
   out += "<table><tr><td><img src='/type1.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
   if( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL )out += " checked";
   out += "></td><td valign='middle' class='td1'>Срабатывает при превышение погога высоты</td></tr></table>";
@@ -433,44 +470,30 @@ void HTTP_printConfig(String &out){
   sprintf(s,"%d",EA_Config.MaxDistance2);
   HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance2",s,16,32,HT_NUMBER);
 
-  sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
-  HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
-  HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
 
-  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
-  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
-  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
-  out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
 
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
-  out += " <fieldset>\n";
-  out += "  <legend>Параметры переключения</legend>\n";
-//  sprintf(s,"%d",EA_Config.LimitDistance);
-//  HTTP_printInput1(out,"Высота на срабатывание датчика (мм):","LimitDistance",s,16,32,HT_NUMBER);
-//  out += "<p class='t1'>Устанавливается для режима определения препятсвия по высоте (датчик сверху).";
 
-//  sprintf(s,"%d",EA_Config.MinDistance);
-//  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance",s,16,32,HT_NUMBER);
-//  sprintf(s,"%d",EA_Config.MaxDistance);
-//  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance",s,16,32,HT_NUMBER);
- //  out += "<p class='t1'>Устанавливаются для режима определения препятсвия по диапазону значений (датчик сбоку).";
- sprintf(s,"%d",EA_Config.TM_ON);
-  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_OFF);
-  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff",s,16,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
-
+// Блок №7
   out += " <fieldset>\n";
   out += "  <legend>Параметры переключения к онлайн мониторингу</legend>\n";
-  HTTP_printInput1(out,"Пароль для входа в настройки устройства:","PasswordESP",EA_Config.ESP_ADMIN_PASS,20,32,HT_PASSWORD);
-  HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
+  HTTP_printInput1(out,"Пароль для входа в настройки устройства:","PasswordUser",EA_Config.ESP_OPER_PASS,20,32,HT_PASSWORD);
+  if( UID == 0 ){
+     HTTP_printInput1(out,"Пароль для входа с правами администратора:","PasswordAdmin",EA_Config.ESP_ADMIN_PASS,20,32,HT_PASSWORD);
+     HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
+  }
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
+
+  out += "    <label>Посылать информацию на удаленный сервер</label>\n";
+  out += "    <input type=\"checkbox\" value=\"send\" name=\"SEND_HTTP\"";
+  if( EA_Config.isSendCrmMoscow  )out += " checked>\n";
+  else out += ">\n";
+
+
   HTTP_printInput1(out,"**Номер договора, идентификатор мойки:","Dogovor",EA_Config.DOGOVOR_ID,20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",EA_Config.BOX_ID,20,16,HT_TEXT);
   out += "<p class='t1'>Ниже идут дополнительные настройки. Посоветуйтесь с технической поддержкой прежде чем их менять.";
@@ -479,6 +502,7 @@ void HTTP_printConfig(String &out){
   HTTP_printInput1(out,"Порт:","Port",s,16,32,HT_NUMBER);
   out += " </fieldset>\n";  
 
+// Блок №8
   out += "   <fieldset>\n";
   out += "  <legend>Параметры DHCP</legend>\n";
   out += "    <label>Статический IP:</label>\n";
@@ -502,12 +526,17 @@ void HTTP_printConfig(String &out){
  
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n</form>\n";  
+
+   Serial.printf("!!! HTTP Fragment 3 %d\n", out.length());  
+   server.sendContent(out);
+
 }
 
 bool HTTP_checkArgs(){
+   if( UID < 0 )return false;
    bool _save = false;
 // Если нажата кнопка "Калибровка"   
-   if ( server.hasArg("Calibrate") ){  
+   if ( server.hasArg("Calibrate")  ){  
        if( CalibrateGround() )_save = true;
    }
    else if( server.hasArg("Default") ){ 
@@ -525,9 +554,9 @@ bool HTTP_checkArgs(){
        return true;
    }
 // Если нажата кнопка "Сохранить"   
-   else if ( server.hasArg("Save") ){
+   else if ( server.hasArg("Save") && UID >= 0){
       EA_Config.isDHCP = true;
-
+      EA_Config.isSendCrmMoscow = false;
       if(server.hasArg("GroundLevel"))EA_Config.GroundLevel = server.arg("GroundLevel").toInt();
       if(server.hasArg("WiFiMode"))
          switch(server.arg("WiFiMode").toInt()){
@@ -553,17 +582,23 @@ bool HTTP_checkArgs(){
       if(server.hasArg("MaxDistance2")  )EA_Config.MaxDistance2      = server.arg("MaxDistance2").toInt();
       if(server.hasArg("TMOn")         )EA_Config.TM_ON              = server.arg("TMOn").toInt();
       if(server.hasArg("TMOff")        )EA_Config.TM_OFF             = server.arg("TMOff").toInt();
+      if(server.hasArg("TMLoop")       )EA_Config.TM_LOOP_SENSOR     = server.arg("TMLoop").toInt();
       if(server.hasArg("TMCalibr")     )EA_Config.TM_BEGIN_CALIBRATE = server.arg("TMCalibr").toInt();
       if(server.hasArg("NumCalibr")    )EA_Config.SAMPLES_CLIBRATE   = server.arg("NumCalibr").toInt();
-      if(server.hasArg("PasswordESP")  )strcpy(EA_Config.ESP_ADMIN_PASS,server.arg("PasswordESP").c_str());
-      if(server.hasArg("NameESP")      )strcpy(EA_Config.ESP_NAME,      server.arg("NameESP").c_str());
+      if(server.hasArg("PasswordAdmin") && UID == 0 )strcpy(EA_Config.ESP_ADMIN_PASS,server.arg("PasswordAdmin").c_str());
+      if(server.hasArg("PasswordOper") )strcpy(EA_Config.ESP_OPER_PASS,server.arg("PasswordOper").c_str());
+      if(server.hasArg("NameESP")      && UID == 0 )strcpy(EA_Config.ESP_NAME,      server.arg("NameESP").c_str());
       if(server.hasArg("WiFiName")     )strcpy(EA_Config.AP_SSID,       server.arg("WiFiName").c_str());
       if(server.hasArg("WiFiPassword") )strcpy(EA_Config.AP_PASS,       server.arg("WiFiPassword").c_str());
+      if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
+
       if(server.hasArg("Dogovor")      )strcpy(EA_Config.DOGOVOR_ID,    server.arg("Dogovor").c_str());
       if(server.hasArg("Box")          )strcpy(EA_Config.BOX_ID,        server.arg("Box").c_str());
       if(server.hasArg("Server")       )strcpy(EA_Config.SERVER,        server.arg("Server").c_str());
       if(server.hasArg("Port")         )EA_Config.PORT              = server.arg("Port").toInt();
       if( server.hasArg("STATIC_IP"))EA_Config.isDHCP = false;
+      if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
+      
 
 //      if(server.hasArg("StaticIP"))
 //         switch(server.arg("StaticIP").toInt()){
@@ -619,20 +654,20 @@ int  HTTP_checkAuth(const char *pass){
 //   Serial.printf("!!! Check auth pass=%s len=%d ",pass,strlen(pass));
    if( strlen(pass) == 0 ){
        UID = -1;
-       HTTP_User = "Анонимный пользователь";
+       HTTP_User = "Минимальный права доступа";
    }
 
    else if( strncmp(pass,EA_Config.ESP_ADMIN_PASS,32 ) ==0 ){
        UID = 0;
-       HTTP_User = "Администратор";
+       HTTP_User = "Права администратора";
    }
-//   else if( strncmp(pass,EA_Config.ESP_OPER_PASS,32) == 0 ){
-//       UID = 1;
-//       HTTP_User = "Клиент";
-//   }
+   else if( strncmp(pass,EA_Config.ESP_OPER_PASS,32) == 0 ){
+       UID = 1;
+       HTTP_User = "Права оператора";
+   }
    else {
        UID = -1;
-       HTTP_User = "Анонимный пользователь";
+       HTTP_User = "Минимальный права доступа";
    }
 //   UID = 0;
 //   HTTP_User = "Администратор";

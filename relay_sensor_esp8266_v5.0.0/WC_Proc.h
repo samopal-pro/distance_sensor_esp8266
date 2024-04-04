@@ -17,8 +17,8 @@
 #include "src/TFMPI2C.h"            // https://github.com/budryerson/TFMini-Plus-I2C
 #include "src/TFLI2C.h"             // https://github.com/budryerson/TFLuna-I2C
 #include "WC_Led.h"
-#define DEPTH_DIST_ARRAY  5
-#define SAMPLE_LEN 10
+#define DEPTH_DIST_ARRAY 5
+#define SAMPLE_LEN       10
 #define RELIABILITY_PROC 0.15
 
 
