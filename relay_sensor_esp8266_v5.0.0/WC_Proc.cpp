@@ -678,6 +678,7 @@ void ProcessingDistance(){
 // Опрашиваем ультразвуковой датчик
    uint32_t _ms = millis();
    GetDistance();  
+//   L = NAN;
    Distance = L;
 //   Serial.printf("Distance = %d ",(int)Distance);  
 //   Serial.println(L); 
@@ -687,14 +688,14 @@ void ProcessingDistance(){
 //      Serial.print("Value is NAN: ");
       switch(EA_Config.NanValueFlag){
          case NAN_VALUE_IGNORE: 
-            Serial.println("skiping");
+            Serial.println("!!! NAN. Skiping");
             return;  
-         case NAN_VALUE_ON:
-            Serial.println("ON");
+         case NAN_VALUE_BUSY:
+            Serial.println("!!! NAN. BUSY");
             Button = SonarGroudState;
             break;
-         case NAN_VALUE_OFF:
-            Serial.println("OFF");
+         case NAN_VALUE_FREE:
+            Serial.println("!!! NAN. FREE");
             Button = !SonarGroudState;
             break;         
       } 
@@ -764,7 +765,15 @@ void ProcessingDistance(){
 
 void WS_setDistance(){
   if( isnan(Distance) ){
-     ledSetBaseMode(LED_BASE_NAN);
+      switch(EA_Config.NanValueFlag){
+         case NAN_VALUE_IGNORE: ledSetBaseMode(LED_BASE_NAN); break;
+         case NAN_VALUE_BUSY:   ledSetBaseMode(LED_BASE_NAN_BUSY); break;
+         case NAN_VALUE_FREE:   ledSetBaseMode(LED_BASE_NAN_FREE); break;
+      } 
+
+
+
+     
 //     Serial.println("Led NAN");
   }
   else {

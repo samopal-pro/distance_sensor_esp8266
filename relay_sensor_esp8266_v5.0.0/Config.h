@@ -32,8 +32,8 @@ enum T_SENSOR_TYPE {
 
 enum T_NAN_VALUE_FLAG {
   NAN_VALUE_IGNORE  = 1,  
-  NAN_VALUE_ON      = 2,
-  NAN_VALUE_OFF     = 3
+  NAN_VALUE_FREE    = 2,
+  NAN_VALUE_BUSY    = 3
 };
   
 enum T_MEASURE_TYPE {

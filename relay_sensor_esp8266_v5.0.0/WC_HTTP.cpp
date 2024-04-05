@@ -379,7 +379,7 @@ void HTTP_printConfig(){
   out += " <fieldset>\n";
   out += "  <legend>Конфигурация WI-FI</legend>\n";
   out += "<table>";
-  out += "<tr><td align='center' width=50%><img src='/wifi2.png'></td><td width=50% align='center'><img src='/wifi1.png'></td></tr>";
+  out += "<tr><td align='center' width=50%><img src='/wifi1.png'></td><td width=50% align='center'><img src='/wifi2.png'></td></tr>";
   out += "<tr><td align='center'><input type='radio' name='WiFiMode' value='1'";
   if( !EA_Config.isWiFiAlways )out += " checked";
   out += "></td><td align='center'><input type='radio' name='WiFiMode' value='2'";
@@ -399,11 +399,11 @@ void HTTP_printConfig(){
   out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
   out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
   out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
-  out += " </fieldset>\n";
+//  out += " </fieldset>\n";
 
 // Блок №3 
-  out += " <fieldset>\n";
-  out += "  <legend>Параметры автокалибровки</legend>\n";
+//  out += " <fieldset>\n";
+//  out += "  <legend>Параметры автокалибровки</legend>\n";
   sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
   HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
@@ -431,17 +431,15 @@ void HTTP_printConfig(){
   if( EA_Config.NanValueFlag  == NAN_VALUE_IGNORE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Если не видит расстояние не перключается. (в этот момент мигает фиолетовым)</td></tr>";
   out += "<tr><td><img src='/stat3.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='2'";
-  if( EA_Config.NanValueFlag  == NAN_VALUE_ON )out += " checked";
+  if( EA_Config.NanValueFlag  == NAN_VALUE_BUSY )out += " checked";
   out += "></td><td valign='middle' class='td1'>Если не видит расстояние, переключается в &quot;занято&quot;</td></tr>";
   out += "<tr><td><img src='/stat1.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='3'";
-  if( EA_Config.NanValueFlag  == NAN_VALUE_OFF )out += " checked";
+  if( EA_Config.NanValueFlag  == NAN_VALUE_FREE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Если не видит расстояние, переключается в &quot;свободно&quot;</td></tr></table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
-   Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
-   server.sendContent(out);
-   out = "";
+   
 
 // Блок №6
   out += " <fieldset>\n";
@@ -471,7 +469,9 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance2",s,16,32,HT_NUMBER);
 
 
-
+Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
@@ -480,19 +480,12 @@ void HTTP_printConfig(){
 // Блок №7
   out += " <fieldset>\n";
   out += "  <legend>Параметры переключения к онлайн мониторингу</legend>\n";
-  HTTP_printInput1(out,"Пароль для входа в настройки устройства:","PasswordUser",EA_Config.ESP_OPER_PASS,20,32,HT_PASSWORD);
-  if( UID == 0 ){
-     HTTP_printInput1(out,"Пароль для входа с правами администратора:","PasswordAdmin",EA_Config.ESP_ADMIN_PASS,20,32,HT_PASSWORD);
-     HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
-  }
-  HTTP_printNetworks1(out,"WiFiName");
-  HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
-
   out += "    <label>Посылать информацию на удаленный сервер</label>\n";
   out += "    <input type=\"checkbox\" value=\"send\" name=\"SEND_HTTP\"";
   if( EA_Config.isSendCrmMoscow  )out += " checked>\n";
   else out += ">\n";
-
+  HTTP_printNetworks1(out,"WiFiName");
+  HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
 
   HTTP_printInput1(out,"**Номер договора, идентификатор мойки:","Dogovor",EA_Config.DOGOVOR_ID,20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",EA_Config.BOX_ID,20,16,HT_TEXT);
@@ -525,7 +518,19 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"DNS:",    "IPDns",s,16,32,HT_IP);
  
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";  
+
+  out += "   <fieldset>\n";
+  out += "  <legend>Параметры доступа к контроллеру</legend>\n";
+
+  HTTP_printInput1(out,"Пароль для входа в настройки устройства:","PasswordUser",EA_Config.ESP_OPER_PASS,20,32,HT_PASSWORD);
+  if( UID == 0 ){
+     HTTP_printInput1(out,"Пароль для входа с правами администратора:","PasswordAdmin",EA_Config.ESP_ADMIN_PASS,20,32,HT_PASSWORD);
+     HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
+  }
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n</form>\n";  
+
 
    Serial.printf("!!! HTTP Fragment 3 %d\n", out.length());  
    server.sendContent(out);
@@ -566,8 +571,8 @@ bool HTTP_checkArgs(){
       if(server.hasArg("NoneMode"))
          switch(server.arg("NoneMode").toInt()){
              case 1: EA_Config.NanValueFlag  = NAN_VALUE_IGNORE; break;
-             case 2: EA_Config.NanValueFlag  = NAN_VALUE_ON; break;
-             case 3: EA_Config.NanValueFlag  = NAN_VALUE_OFF; break;
+             case 2: EA_Config.NanValueFlag  = NAN_VALUE_BUSY; break;
+             case 3: EA_Config.NanValueFlag  = NAN_VALUE_FREE; break;
          }
       if(server.hasArg("MeasureType"))
          switch(server.arg("MeasureType").toInt()){

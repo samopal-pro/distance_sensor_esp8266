@@ -75,12 +75,14 @@ void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag ){
    if( _mode == ledBaseMode )return;
    ledBaseMode    = _mode;
    switch(ledBaseMode){
-      case LED_BASE_NONE:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,0));break;
-      case LED_BASE_FREE:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,255));break;
-      case LED_BASE_BUSY:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,0,0));break;
-      case LED_BASE_NAN:    for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));break;
-      case LED_BASE_GROUND: for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(165,255,0));break;
-      case LED_BASE_SAVE:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,255,255));break;
+      case LED_BASE_NONE:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,0));break;
+      case LED_BASE_FREE:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,255));break;
+      case LED_BASE_BUSY:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,0,0));break;
+      case LED_BASE_NAN:      for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));break;
+      case LED_BASE_NAN_FREE: for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));else strip->setPixelColor(i,strip->Color(0,0,255));break;
+      case LED_BASE_NAN_BUSY: for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));else strip->setPixelColor(i,strip->Color(255,0,0));break;
+      case LED_BASE_GROUND:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(165,255,0));break;
+      case LED_BASE_SAVE:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,255,255));break;
    }
    strip->show();
 //   Serial.printf("2 Set led mode %d\n",ledBaseMode);

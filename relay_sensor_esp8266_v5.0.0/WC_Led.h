@@ -23,12 +23,14 @@ enum T_LED_WIFI_MODE {
 };
 
 enum T_LED_BASE_MODE {
-   LED_BASE_NONE    = 0,
-   LED_BASE_FREE    = 1,
-   LED_BASE_BUSY    = 2,
-   LED_BASE_NAN     = 3,
-   LED_BASE_GROUND  = 4,
-   LED_BASE_SAVE    = 5
+   LED_BASE_NONE     = 0,
+   LED_BASE_FREE     = 1,
+   LED_BASE_BUSY     = 2,
+   LED_BASE_NAN      = 3,
+   LED_BASE_NAN_FREE = 4,
+   LED_BASE_NAN_BUSY = 5,
+   LED_BASE_GROUND   = 6,
+   LED_BASE_SAVE     = 7
 };
 
 
