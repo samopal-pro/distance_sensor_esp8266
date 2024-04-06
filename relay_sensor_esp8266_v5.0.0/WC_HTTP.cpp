@@ -35,7 +35,7 @@ void WiFi_test(){
 // WiFi не сконфигурен  
    if ( strcmp(EA_Config.AP_SSID, "none")==0 && w_stat2 != EWS_AP_MODE) {
       if( w_stat2 != EWS_NOT_CONFIG ){
-         Serial.println(F("WiFi is not config"));
+         Serial.println(F("??? WiFi is not config"));
          w_stat2 = EWS_NOT_CONFIG;
          ledSetWiFiMode(LED_WIFI_OFF);
       }         
@@ -50,14 +50,14 @@ void WiFi_test(){
       w_stat2 = EWS_WAIT;
       msSTA = _ms;
       ledSetWiFiMode(LED_WIFI_WAIT);
-      Serial.print(F("WiFi connect wait "));
+      Serial.print(F("!!! WiFi connect wait "));
       Serial.println(EA_Config.AP_SSID);
       return;
    }
 // Проверяем что есть подключение к WiFi   
    if(  WiFi.status() == WL_CONNECTED && w_stat2 == EWS_WAIT ){
-      Serial.print(F("WiFi connect "));
-      Serial.println(WiFi.localIP());
+      Serial.print(F("!!! WiFi connect "));
+      Serial.print(WiFi.localIP());
       Serial.print(" MASK: ");
       Serial.print(WiFi.subnetMask());
       Serial.print(" GW: ");
@@ -73,10 +73,10 @@ void WiFi_test(){
    if( WiFi.status() != WL_CONNECTED ){
 // Проверяем что время соединения вышло    
       if( w_stat2 == EWS_WAIT && ( msSTA > _ms || ( _ms - msSTA ) > TM_WIFI_CONNECT ) ){
-         WiFi_stop("WiFi Connect Timeout");     
+         WiFi_stop("??? WiFi Connect Timeout");     
       }
       if( w_stat2 == EWS_ON ){
-        WiFi_stop("WiFi Connect Lost");             
+        WiFi_stop("??? WiFi Connect Lost");             
       }
    }
 
@@ -86,7 +86,7 @@ void WiFi_startAP(){
    WiFi_ScanNetwork();
    WiFi.mode(WIFI_AP);
    WiFi.softAP(EA_Config.ESP_NAME);
-   Serial.printf("Start AP %s\n",EA_Config.ESP_NAME);
+   Serial.printf("!!! Start AP %s\n",EA_Config.ESP_NAME);
    Serial.println(F("Open http://192.168.4.1 in your browser"));
    HTTP_begin();
    msAP = millis();
@@ -138,7 +138,7 @@ void HTTP_begin(void){
    
    server.begin();
 //   WiFi_ScanNetwork();
-   Serial.printf( "HTTP server started ...\n" );
+   Serial.printf( "!!! HTTP server started ...\n" );
   
 }
 
@@ -205,6 +205,7 @@ void HTTP_printCSS(String &out){
  */
 void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   msAP = millis();
+  HTTP_isAuth();
   out += "<html>\n<head>\n<meta charset=\"utf-8\" />\n";
   if( refresh ){
      char str[10];
@@ -231,21 +232,9 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += HTTP_User;
 
   char s[20]; 
-// out += "<br><br>Температура: ";
-// sprintf(s,"%d",Temp);
-//  out += s;
-//  out += "<br>Влажность(%): ";
-//  sprintf(s,"%d",Hum);
-//  out += s;
-  out += "<br>Время: ";
-  DateTime dt1 = DateTime(Time);
-  int s1 = dt1.second();
-  int m1 = dt1.minute();
-  int h1 = dt1.hour();
-  int d2 = dt1.day();
-  int m2 = dt1.month();
-  int y2 = dt1.year();
-  sprintf(s,"%02d.%02d.%02d %02d:%02d:%02d ",d2,m2,y2,h1,m1,s1);    
+  out += "<p>Время: ";
+  if( CheckTime(now()) )sprintf(s,"%02d.%02d.%04d %02d:%02d:%02d ",day(),month(),year(),hour(),minute(),second());   
+  else sprintf(s,"30.05.2077 12:00:00"); 
   out += s; 
  
 }   
@@ -350,7 +339,7 @@ void HTTP_handleRoot(void) {
    Serial.printf("!!! HTTP Fragment 1 %d\n", out.length());  
    server.send ( 200, "text/html", out );
    out = "";
-  if( UID >= 0 ){
+   if( UID >= 0 ){
      HTTP_printConfig();
      out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
      out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
@@ -395,7 +384,6 @@ void HTTP_printConfig(){
 // Блок №2.5 
   out += " <fieldset>\n";
   out += "  <legend>Автокалибровка</legend>\n";
-  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
   out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
   out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
   out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
@@ -408,6 +396,7 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
   HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
   out += " </fieldset>\n";
 
 // Блок №4 
@@ -493,6 +482,7 @@ Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());
   HTTP_printInput1(out,"Сервер:","Server",EA_Config.SERVER,20,32,HT_TEXT);
   sprintf(s,"%d",EA_Config.PORT);
   HTTP_printInput1(out,"Порт:","Port",s,16,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";  
 
 // Блок №8
@@ -542,7 +532,7 @@ bool HTTP_checkArgs(){
    bool _save = false;
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Calibrate")  ){  
-       if( CalibrateGround() )_save = true;
+       ProcessingCalibrate();
    }
    else if( server.hasArg("Default") ){ 
        EA_default_config();

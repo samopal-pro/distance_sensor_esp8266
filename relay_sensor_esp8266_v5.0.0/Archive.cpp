@@ -33,7 +33,7 @@ void EA_begin(void){
    EA_get_count();
    EA_read_config();
 #ifdef WIFI_SAV   
-   EA_default_config();
+//   EA_default_config();
    EA_Config.isWiFiAlways = true;
 #endif   
 }

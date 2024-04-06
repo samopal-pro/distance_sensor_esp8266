@@ -40,9 +40,11 @@ unsigned long t_ws_send = 0;
 unsigned long t_ws_recv = 0;
 
 
-bool RTCFlag  =  true;
-bool FlagWDT  =  false;
-RTC_DS3231 rtc;
+bool RTCFlag   =  true;
+bool FlagWDT   =  false;
+bool relayStat = false;
+
+//RTC_DS3231 rtc;
 DHT dht(PinDHT22, DHT22);
 SoftwareSerial ultraSensor(PinDistanceEcho,-1);
 SoftwareSerial lidarTF(PinDistanceTrig,PinDistanceEcho);
@@ -253,6 +255,10 @@ bool HttpGetStatus(void){
 //   Serial.print("IP=");
 //   Serial.println(ip1);
 //   strcpy(EA_Config.SERVER,"51.158.190.232");
+   sprintf(sbuf,"GET http://%s:%d%sget_stat/?id=%s HTTP/1.0\r\n\r\n",EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID);
+// Посылаем строку на сервер
+//   Serial.println(sbuf);
+
 // Подключаемся к WEB ерверу
    Serial.printf("HTTP Stat: %s:%d ",EA_Config.SERVER,EA_Config.PORT);
    if (!client.connect(EA_Config.SERVER, EA_Config.PORT)) {
@@ -260,9 +266,6 @@ bool HttpGetStatus(void){
        return false;
    }
 // Формируем строку запроса  
-   sprintf(sbuf,"GET http://%s:%d%sget_stat/?id=%s HTTP/1.0\r\n\r\n",EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID);
-// Посылаем строку на сервер
-//   Serial.println(sbuf);
    ESP.wdtFeed();
    client.print(sbuf);
    delay(100);
@@ -279,7 +282,7 @@ bool HttpGetStatus(void){
    }
    rbuf[i] = '\0';
 // Парсим ответ
-
+//   Serial.println(rbuf);
 /// Находим время
    char *p1 = strstr(rbuf,"TIME=");
    if( p1 == NULL ){
@@ -296,12 +299,25 @@ bool HttpGetStatus(void){
        }
    }
    Time  = atol(p1);
-
-   if( CheckTime(Time) && abs( (long)(Time - GetRTClock()) )>5 ){
-       Serial.print("Set RTC: ");
+   time_t _system = now();
+   Serial.print("!!! Sytem time=");
+   PrintTime(_system);
+   Serial.print(" internet time=");
+   PrintTime(Time);
+   Serial.println();
+   
+   if( CheckTime(Time) && abs( (long)(Time - _system) )>5 ){
+       setTime(Time);
+       Serial.print("Set time=");
        PrintTime(Time);
-       SetRTClock(Time);
+       Serial.println();
    }
+//   if( CheckTime(Time) && abs( (long)(Time - GetRTClock()) )>5 ){
+//       Serial.print("Set RTC: ");
+//       PrintTime(Time);
+//       SetRTClock(Time);
+//   }
+
 // Парсим DO
    if( p2 != NULL ){
       p2 += 3;
@@ -324,8 +340,8 @@ bool HttpGetStatus(void){
       }
       FlagWDT = (bool)atoi(p3);
    } 
-   Serial.printf(" DO=0x%x WDT=%d Time=",DO,FlagWDT); 
-   PrintTime(Time);   
+//   Serial.printf(" DO=0x%x WDT=%d Time=",DO,FlagWDT); 
+//   PrintTime(Time);   
      
    return true;        
 
@@ -349,7 +365,7 @@ bool HttpSetParam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _di
       EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID,_temp,_hum,
       _dist,_time,(int)_btn,_uptime,(int)KeyGen());
 // Посылаем строку на сервер
-   Serial.print(sbuf);
+//   Serial.print(sbuf);
    delay(100);
    ESP.wdtFeed();
    client.print(sbuf);
@@ -396,18 +412,20 @@ bool HttpSetParam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _di
 bool HttpSetStatus(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist ){
    WiFiClient client;
 // Подключаемся к WEB ерверу
+
+
    Serial.printf("HTTP Send: %s:%d ",EA_Config.SERVER,EA_Config.PORT);
    if (!client.connect(EA_Config.SERVER, EA_Config.PORT)) {
        Serial.println(F(" Connection failed"));
        return false;
    }
 // Формируем строку запроса  
-
    sprintf(sbuf,"GET http://%s:%d%s?id=%s&temp=%d&hum=%d&dist=%d&tm=%ld&uptime=%ld&key=%d HTTP/1.0\r\n\r\n",
       EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID,_temp,_hum,
       _dist,_time,_uptime,(int)KeyGen());
 // Посылаем строку на сервер
-   Serial.print(sbuf);
+//   Serial.print(sbuf);
+
    delay(100);
    ESP.wdtFeed();
    client.print(sbuf);
@@ -530,133 +548,19 @@ bool HttpArchiveParam(){
   
 }
 
-/**
- * Функция инициализации WDT
- */
-void WDT_init(){
-   if( PinWDT >= 0 ){ 
-       pinMode(PinWDT , OUTPUT);
-       Serial.printf("WDT init on %d pin ...\n",PinWDT);
-   }  
-}
-
-
-/**
- * Функция выключения WDT
- */
-void WDT_disable(){
-   if( PinWDT >= 0 ){
-       digitalWrite(PinWDT,LOW);
-       Serial.printf("WDT disable ...\n");
-   }   
-}
-
-
-/**
- * Функция перезагрузки сторожевого
- */
-void WDT_reset(){
-   if( PinWDT >= 0 ){
-       if( FlagWDT ){
-          digitalWrite(PinWDT,LOW);
-          delay(300);
-          digitalWrite(PinWDT,HIGH);
-          Serial.printf("WDT reset ...\n");
-          WDT_active = false;
-       }
-       else {
-          WDT_disable();   
-       }
-   }   
-}
-
-
-/**
- * Работа с временем
- */
-unsigned long GetRTClock(){
-  if( RTCFlag == false )return 0;
-  DateTime dt = rtc.now();
-  return dt.unixtime(); 
-}
-
-
-void SetRTClock(unsigned long Time){
-  if( RTCFlag == false )return;
-  rtc.adjust(DateTime(Time));
-}
-
 bool CheckTime(time_t t){
    bool ret = false;
    if( t > 1000000000UL && t < 2000000000UL )ret = true;
-//   Serial.printf("%ld %ld %ld %d\n",t,1000000000UL,2000000000UL,(int)ret);
    return ret;
 }
 
+
 void PrintTime( time_t t ){
-   DateTime dt = DateTime(t);
-   Serial.printf("%02d.%02d.%04d %02d:%02d:%02d\n",dt.day(),dt.month(),dt.year(),dt.hour(),dt.minute(),dt.second());
+//   DateTime dt = DateTime(t);
+//   Serial.printf("%02d.%02d.%04d %02d:%02d:%02d\n",dt.day(),dt.month(),dt.year(),dt.hour(),dt.minute(),dt.second());
+   Serial.printf("%02d.%02d.%04d %02d:%02d:%02d",day(t),month(t),year(t),hour(t),minute(t),second(t));
 }
 
-/*
-void WS_set( int mode ){
-  if( WS_PIN < 0 )return;
-// Если режим не поменялся  
-  if( mode == ws_mode )return;
-  ws_mode_save = ws_mode;
-  ws_mode = mode;
-//  Serial.printf("WS: mode=%d\n",ws_mode);
-   switch( ws_mode ){
-     case 1: //Мигнуть белым, синим, красным и вернуться к старому режиму
-        for( int i=0; i<WS_PixelCount; i++ ){
-           if( i%3 == 0 )strip.setPixelColor(i,strip.Color(127, 127, 127));
-           else if( i%3 == 1 )strip.setPixelColor(i,strip.Color(0, 0, 255));
-           else strip.setPixelColor(i,strip.Color(255, 0, 0));
-        }
-        strip.show();
-        break;
-      case 2: //Мигнуть пять раз и уйти в старый режим (настройка земли)
-         for( int j=0; j<5; j++ ){
-            WS_set(0,0,0);
-            delay(200);
-            WS_set(255,255,255); 
-            delay(200);
-         }
-         WS_set(ws_mode_save);
-         break;
-       case 3: //Зажечь красный цвет (мойка занята)
-         WS_set(255,0,0);            
-         break;
-      case 4: //Горит синим цветом (мойка свободна)
-         WS_set(0,0,255);            
-         break;
-      case 12: //Мигнуть один раз желтым цветом и врнеуться к предыдущему (нет RTC)
-         for( int j=0; j<1; j++ ){
-            WS_set(0,0,0);
-            delay(200);
-            WS_set(255,255,0); 
-            delay(200);
-         }
-         WS_set(ws_mode_save);
-         break;
-      default: 
-         WS_set(0, 0, 0);
-   }
-  
-}
-
-void WS_set( uint8_t R, uint8_t G, uint8_t B,bool is_first){
-  if( WS_PIN < 0 )return;
-  if( is_first ){
-     strip.setPixelColor(0,strip.Color(R,G,B));  
-  }
-  else {
-    for( int i=1; i<WS_PixelCount; i++) strip.setPixelColor(i,strip.Color(R,G,B));
-  }
-  strip.show();    
-}
-
-*/
 
 void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, bool _btn, int _stat ){
    struct EA_SaveType Val;
@@ -679,10 +583,11 @@ void ProcessingDistance(){
    uint32_t _ms = millis();
    GetDistance();  
 //   L = NAN;
+//   if( L < 200 )L = NAN;
    Distance = L;
-//   Serial.printf("Distance = %d ",(int)Distance);  
+//   Serial.printf("!!! Distance = %d \n",(int)Distance);  
 //   Serial.println(L); 
-
+//   PrintValue();
    if( isnan(L) ){
 //      ledSetBaseMode(LED_BASE_NAN);
 //      Serial.print("Value is NAN: ");
@@ -692,11 +597,11 @@ void ProcessingDistance(){
             return;  
          case NAN_VALUE_BUSY:
             Serial.println("!!! NAN. BUSY");
-            Button = SonarGroudState;
+            Button = !SonarGroudState;
             break;
          case NAN_VALUE_FREE:
             Serial.println("!!! NAN. FREE");
-            Button = !SonarGroudState;
+            Button = SonarGroudState;
             break;         
       } 
       Distance = NAN;
@@ -770,11 +675,6 @@ void WS_setDistance(){
          case NAN_VALUE_BUSY:   ledSetBaseMode(LED_BASE_NAN_BUSY); break;
          case NAN_VALUE_FREE:   ledSetBaseMode(LED_BASE_NAN_FREE); break;
       } 
-
-
-
-     
-//     Serial.println("Led NAN");
   }
   else {
      if( Button )ledSetBaseMode(LED_BASE_BUSY);
@@ -786,10 +686,12 @@ void Relay_setDistance(){
   if( Button ){
      if( PinRelay>=0 )digitalWrite(PinRelay,HIGH);
      if( PinController>=0 )digitalWrite(PinController,HIGH);  
+     relayStat = true;
   }
   else {
      if( PinRelay>=0 )digitalWrite(PinRelay,LOW);
      if( PinController>=0 )digitalWrite(PinController,LOW);    
+     relayStat = false;
   }
 }
 
@@ -871,49 +773,77 @@ bool SonarFake::Check(){
 void PrintValue(){
          Serial.print("!!! Value: Time=");    
          Serial.print(Time);
-         Serial.print(",T(C)=");    
-         Serial.print(Temp);
-         Serial.print(",H(%)=");
-         Serial.print(Hum);
-         Serial.print(",D(mm)=");
+         Serial.print(",Distance(mm)=");
          Serial.print(Distance);
          Serial.print(",Bt=");
          Serial.print(Button);
          Serial.print(",LastBt=");
-         Serial.println(LastButton);
+         Serial.print(LastButton);
+         Serial.print(",Relay=");
+         Serial.println(relayStat);
 }
 
 /**
 * Автокалибровка земли
 */
-bool CalibrateGround(){
-   ledSetBaseMode(LED_BASE_NONE);
+float CalibrateGround(){
+   uint32_t ms_start = millis();
+// Макимальное ограничение калиброка 30сек
+   for( uint32_t ms=millis(); ms-ms_start<30000; ms=millis()){
+// Делаем цикл измерения
+      int n = 0;
+      float distArray[EA_Config.SAMPLES_CLIBRATE];
+      float distAvg = 0, distDiv = 0;
+      for( int i=0; i<EA_Config.SAMPLES_CLIBRATE; i++){
+         GetDistance();
+         if( !isnan(L) ){
+            distAvg += L;
+            distArray[n++] = L;
+            PrintValue();
+         }
+         delay(100);
+      }
+      if( n < 2 )continue;
+      distAvg /= n;
+      for( int i=0; i<n; i++)distDiv += (distArray[i]-distAvg)*(distArray[i]-distAvg);
+      distDiv = sqrt(distDiv/n);
+      Serial.print("!!! Avg=");
+      Serial.print(distAvg);
+      Serial.print(",Div=");
+      Serial.print(distDiv);
+      Serial.print(",n=");
+      Serial.println(n);
+      if( distDiv/distAvg < RELIABILITY_PROC )return distAvg;
+      Serial.println("??? Calibrate fail. Skipping ...");
+   }
+   return NAN;
+}
+
+
+bool ProcessingCalibrate(){
+   ledSetBaseMode(LED_BASE_NONE,true);
    delay(EA_Config.TM_BEGIN_CALIBRATE*1000);
    ledSetBaseMode(LED_BASE_GROUND);
-   int n = 0;
-   float x = 0.0;
-   for( int i=0; i<EA_Config.SAMPLES_CLIBRATE; i++){
-      ProcessingDistance();
-      if( !isnan(Distance) ){
-        x += Distance;
-        n++;
-        PrintValue();
-      }
-      delay(300);
+   float x = CalibrateGround();
+   if( isnan(x) ){
+      ledSetBaseMode(LED_BASE_ERROR);
+      delay(2000);
+      ledRestoreMode();
+      Serial.println("??? Calibrate ground fail");
+      return false;
    }
-//   ledRestoreMode();
-   if( n>0 ){
-      x /= n;
+   else {
+      ledSetBaseMode(LED_BASE_SAVE,true);
+      delay(300);
+      ledRestoreMode();
       Serial.printf("!!! Calibrate ground value %d\n",(int)x);
       EA_Config.GroundLevel  = (int)x;
       EA_Config.MinDistance1 = (int)x;
       EA_Config.MaxDistance1 = (int)x;
       EA_Config.MinDistance2 = (int)x;
       EA_Config.MaxDistance2 = (int)x;
+      EA_save_config(); 
+      EA_read_config();      
       return true;
-   }
-   else {
-      Serial.println("??? Calibrate ground fail");
-      return false;
    }
 }

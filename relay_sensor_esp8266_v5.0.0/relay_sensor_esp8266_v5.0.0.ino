@@ -52,8 +52,8 @@ void setup() {
    }
 
 // Проинициализировать WDT
-   WDT_init();
-   WDT_disable();
+//   WDT_init();
+//   WDT_disable();
 
 // Инициализация датчика температуры и влажности
    if( PinDHT22 < 0 ){
@@ -115,8 +115,8 @@ void loop() {
                  if( EA_Config.isWiFiAlways == false )
                     if( w_stat2 == EWS_AP_MODE )WiFi_stop("Stop AP User");
                     else WiFi_startAP();
-                 Serial.printf("Calibrate sonar %d\n",Distance);
-                 if( CalibrateGround() )EA_save_config();
+                 Serial.printf("!!! Calibrate sonar %d\n",(int)Distance);
+                 ProcessingCalibrate();
 
 //                 EA_Config.GroundLevel = Distance;
                  EA_clear_arh();
@@ -147,10 +147,10 @@ void loop() {
 // Проверяем дистанцию, устанавливаем значение реле и ленты      
       ProcessingDistance();
       WS_setDistance();
-      if( RTCFlag ){
-          RTC_Time = GetRTClock();
-          Time     = RTC_Time;
-      }
+//      if( RTCFlag ){
+//          RTC_Time = GetRTClock();
+//          Time     = RTC_Time;
+//      }
       if( PinDHT22 < 0 ){
          Hum  = NAN;
          Temp = NAN;
@@ -169,15 +169,15 @@ void loop() {
 // Основной цикл обмена с сервером   
    if( ( ms3 == 0 || cur_ms < ms3 || (cur_ms - ms3) > GetStatusInterval )){
       ms3 = cur_ms;
-      if(w_stat2 != EWS_AP_MODE){
-         PrintValue();
-      }
+//      if(w_stat2 != EWS_AP_MODE){
+//         PrintValue();
+//      }
       
       if( EA_Config.isSendCrmMoscow ){     
        bool flag = false;
        if( w_stat2 == EWS_ON ){
-//        flag = Ping.ping(EA_Config.SERVER);
-        flag = true;
+        flag = Ping.ping(EA_Config.SERVER);
+//        flag = true;
         if( flag ){
 // Запрос состояния
            HttpGetStatus();
@@ -197,7 +197,7 @@ void loop() {
            }
         }  
         else {
-           Serial.printf("!!! No ping %s\n",EA_Config.SERVER);
+           Serial.printf("??? No ping %s\n",EA_Config.SERVER);
         }    
       }
 // Если нету связи, переписываем все значения из памяти в архив      
@@ -219,9 +219,9 @@ void loop() {
    if( ( ms4 == 0 || cur_ms < ms4 || (cur_ms - ms4) > SendInterval )){
       ms4 = cur_ms;
       if( w_stat2 == EWS_ON ){
-        if( Ping.ping(EA_Config.SERVER) ){
+//        if( Ping.ping(EA_Config.SERVER) ){
            HttpSetStatus(Time,millis()/1000,Temp,Hum,Distance);
-        }
+//        }
       }
    }
 //   if( ms5 == 0 || cur_ms < ms5 || (cur_ms - ms5) > LED_TM_DEFAULT ){

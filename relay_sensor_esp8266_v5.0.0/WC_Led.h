@@ -30,7 +30,8 @@ enum T_LED_BASE_MODE {
    LED_BASE_NAN_FREE = 4,
    LED_BASE_NAN_BUSY = 5,
    LED_BASE_GROUND   = 6,
-   LED_BASE_SAVE     = 7
+   LED_BASE_SAVE     = 7,
+   LED_BASE_ERROR    = -1
 };
 
 

@@ -12,7 +12,8 @@
 
 #include "src/Adafruit_NeoPixel.h"  // https://github.com/adafruit/Adafruit_NeoPixel
 #include "src/DHT.h"                // https://github.com/adafruit/DHT-sensor-library
-#include "src/RTClib.h"             // https://github.com/adafruit/RTClib
+//#include "src/RTClib.h"             // https://github.com/adafruit/RTClib
+#include "src/TimeLib.h"            //https://playground.arduino.cc/Code/Time/
 #include "src/SButton.h"
 #include "src/TFMPI2C.h"            // https://github.com/budryerson/TFMini-Plus-I2C
 #include "src/TFLI2C.h"             // https://github.com/budryerson/TFLuna-I2C
@@ -78,7 +79,7 @@ extern bool ws_enable;
 
 extern bool RTCFlag;
 extern bool FlagWDT;
-extern RTC_DS3231 rtc;
+//extern RTC_DS3231 rtc;
 extern DHT dht;
 extern SButton calbtn;
 
@@ -97,11 +98,11 @@ bool HttpSetParam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _di
 bool HttpSetStatus(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist );
 uint16_t KeyGen();
 bool HttpArchiveParam();
-void WDT_init();
-void WDT_disable();
-void WDT_reset();
-unsigned long GetRTClock();
-void SetRTClock(unsigned long Time);
+//void WDT_init();
+//void WDT_disable();
+//void WDT_reset();
+//unsigned long GetRTClock();
+//void SetRTClock(unsigned long Time);
 //void WS_set( int mode );
 void WS_set( uint8_t R, uint8_t G, uint8_t B,bool is_first = false );
 void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, bool _btn, int _stat );
@@ -113,7 +114,8 @@ void Relay_setDistance();
 void PrintTime( time_t t );
 bool scanI2C(int _addr);
 void lidarSetI2C();
-bool CalibrateGround();
+float CalibrateGround();
+bool ProcessingCalibrate();
 
 
 class SonarFake {
