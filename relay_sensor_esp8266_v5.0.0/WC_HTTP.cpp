@@ -385,8 +385,10 @@ void HTTP_printConfig(){
   out += " <fieldset>\n";
   out += "  <legend>Автокалибровка</legend>\n";
   out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
+  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
   out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
   out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
+
 //  out += " </fieldset>\n";
 
 // Блок №3 
@@ -396,7 +398,7 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
   HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
 // Блок №4 
