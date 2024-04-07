@@ -5,7 +5,7 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 5.0.6"
+#define FW_VERSION   "VERSION 8.2.0"
 #define DEVICE_NAME  "693_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"

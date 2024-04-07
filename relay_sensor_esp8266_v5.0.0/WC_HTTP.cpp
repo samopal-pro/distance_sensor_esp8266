@@ -220,7 +220,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   HTTP_printCSS(out);
   out += "<body>\n";
   out += " <div class=\"main\" id=\"main\">\n  "; 
-  out += "<h2>ДАТЧИК ПРИСУТСВИЯ АВТОМОБИЛЯ</h2>";
+  out += "<h2>ДАТЧИК ПРИСУТСТВИЯ АВТОМОБИЛЯ</h2>";
   out += "<p><img src=/logo.png></p>\n";
 
   out += "<p><br>Сенсор: ";
@@ -243,7 +243,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
  * Выаод окнчания файла HTML
  */
 void HTTP_printTail(String &out){
-  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2024";
+  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2024⠀⠀⠀⠀⠀⠀⠀⠀Made from Russia";
   out += "</div>";
   out += "</body>\n</html>\n";
 }
@@ -328,8 +328,9 @@ void HTTP_handleRoot(void) {
      out += "</h3>";
   }
   out += " <input type='submit' value='Обновить' class='btn'>"; 
-  out += " <p class='t1'> Обновляйте страницу и в поле выше вы увидете расстояние от датчика до препятствия.</p>";
-  
+  out += " <p class='t1'> Обновляйте страницу и в строке выше вы увидите расстояние от датчика до препятствия. ";
+  out += "Если расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.</p>";
+
   out += " </fieldset>\n</form>\n";
  
    if( HTTP_login(out) )return;
@@ -343,6 +344,9 @@ void HTTP_handleRoot(void) {
      HTTP_printConfig();
      out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
      out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
+     out += "⠀<br>\n";
+     out += "За консультацией рекомендуем Вам обратиться по WhatsApp или Telegram 89060725500.<br>\n";
+     out += "По всем вопросам вы можете прислать видео или позвонить по видеозвонку.<br>\n";
      out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
      out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
      out += "<p><a class='a1' href=/?Reboot=1>Перезагрузка</a>\n";
@@ -374,20 +378,21 @@ void HTTP_printConfig(){
   out += "></td><td align='center'><input type='radio' name='WiFiMode' value='2'";
   if( EA_Config.isWiFiAlways )out += " checked";
   out += "></td></tr>";
-  out += "<tr><td align='center' class='td1'>(По умолчанию) раздает WiFi до перезапуска</label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам</td></tr></table>";
-  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", веберите ниже сеть WI-FI с доступом ";
-  out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета.";
-  out += "ID вы можете получить в технической поддержке.";
+  out += "<tr><td align='center' class='td1'>(По умолчанию) раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам. Первый светодиод белый.</td></tr></table>";
+  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", выберите ниже сеть WI-FI с доступом ";
+  out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета. ";
+  out += "ID вы можете получить в технической поддержке по телефону: 89060525500.<br>\n";
+  out += "⠀<br>\n";
+  out += "После нажатия кнопки &quot;Сохранить&quot, датчик моргнет белым цветом при успешном сохранении.";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
 // Блок №2.5 
   out += " <fieldset>\n";
   out += "  <legend>Автокалибровка</legend>\n";
-  out += "<p class='t1'>Автоматическая калибровка делает паузу в 5 секунд, поле нескольких замеров, пока светится желтый цвет, выбирает максимально точное расстояние.";
+  out += "<p class='t1'>Автоматическая калибровка делает паузу в 10 секунд выключая подсветку. Поcле нескольких замеров, пока светится желтый цвет, определяется максимально точное расстояние.";
   out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
-  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепешите в поле \"* Высота датчика без автомобиля (мм):\".</br>";
-  out += "Если расстояние NAN то сенсор не видит расстояние или поврежден.";
+  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепишите в поле \"* Расстояние от датчика до пола  (мм):\". Этот параметр вы найдете в разделе: &quot;Режимы определения препятствия&quot; </br>";
 
 //  out += " </fieldset>\n";
 
@@ -403,7 +408,7 @@ void HTTP_printConfig(){
 
 // Блок №4 
   out += " <fieldset>\n";
-  out += "  <legend>Параметры переключения и цикла опроса</legend>\n";
+  out += "  <legend>Скорость переключения: Занято - Свободно</legend>\n";
   sprintf(s,"%d",EA_Config.TM_ON);
   HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.TM_OFF);
@@ -416,17 +421,17 @@ void HTTP_printConfig(){
 
 // Блок №5
   out += " <fieldset>\n";
-  out += "  <legend>Режим определения препятствия</legend>\n";
+  out += "  <legend>Если датчик не видит расстояние</legend>\n";
   out += "<table>";
   out += "<tr><td><img src='/stat2.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='1'";
   if( EA_Config.NanValueFlag  == NAN_VALUE_IGNORE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние не перключается. (в этот момент мигает фиолетовым)</td></tr>";
+  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - не переключается. (в этот момент мигает фиолетовым)</td></tr>";
   out += "<tr><td><img src='/stat3.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='2'";
   if( EA_Config.NanValueFlag  == NAN_VALUE_BUSY )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние, переключается в &quot;занято&quot;</td></tr>";
+  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;занято&quot;</td></tr>";
   out += "<tr><td><img src='/stat1.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='3'";
   if( EA_Config.NanValueFlag  == NAN_VALUE_FREE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние, переключается в &quot;свободно&quot;</td></tr></table>\n";
+  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;свободно&quot;</td></tr></table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
@@ -434,30 +439,30 @@ void HTTP_printConfig(){
 
 // Блок №6
   out += " <fieldset>\n";
-  out += "  <legend>Режимы определения препятсвия</legend>\n"; 
-  out += "<table><tr><td><img src='/type1.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
+  out += "  <legend>Режимы определения препятствия</legend>\n"; 
+  out += "<table><tr><td><img src='/type1.png'><br></td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
   if( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Срабатывает при превышение погога высоты</td></tr></table>";
+  out += "></td><td valign='middle' class='td1'>Установка датчика на потолке</td></tr></table>";
   sprintf(s,"%d",EA_Config.GroundLevel);
-  HTTP_printInput1(out,"* Высота датчика без автомобиля (мм):","GroundLevel",s,20,32,HT_TEXT);
+  HTTP_printInput1(out,"*Расстояние от датчика до пола (мм):","GroundLevel",s,20,32,HT_TEXT);
   sprintf(s,"%d",EA_Config.LimitDistance);
-  HTTP_printInput1(out,"Высота на срабатывание датчика (мм):","LimitDistance",s,16,32,HT_NUMBER);
+  HTTP_printInput1(out,"Минимальная высота на срабатывание (мм):","LimitDistance",s,16,32,HT_NUMBER);
 
-  out += "<table><tr><td><img src='/type2.png'><br>&nbsp;</td><td valign='middle'><input type='radio' name='MeasureType' value='2'";
+  out += "<table><tr><td><img src='/type2.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='2'";
   if( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Срабатывает если вне диапазона границ диапазона</td></tr></table>";
+  out += "></td><td valign='middle' class='td1'>Определяет как &quot;занято&quot в заданном диапазоне:</td></tr></table>";
   sprintf(s,"%d",EA_Config.MinDistance1);
-  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance1",s,16,32,HT_NUMBER);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.MaxDistance1);
-  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance1",s,16,32,HT_NUMBER);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",s,16,32,HT_NUMBER);
  
   out += "<table><tr><td><img src='/type3.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='3'";
   if( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Срабатывает если внутри диапазона границ диапазона</td></tr></table>\n";
+  out += "></td><td valign='middle' class='td1'>Определяет как &quot;свободно&quot в заданном диапазоне:</td></tr></table>\n";
   sprintf(s,"%d",EA_Config.MinDistance2);
-  HTTP_printInput1(out,"Минимальное расстояние срабатывание датчика (мм):","MinDistance2",s,16,32,HT_NUMBER);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.MaxDistance2);
-  HTTP_printInput1(out,"Максимальное расстояние срабатывание датчика (мм):","MaxDistance2",s,16,32,HT_NUMBER);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",s,16,32,HT_NUMBER);
 
 
 Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
@@ -470,15 +475,15 @@ Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());
 
 // Блок №7
   out += " <fieldset>\n";
-  out += "  <legend>Параметры переключения к онлайн мониторингу</legend>\n";
-  out += "    <label>Посылать информацию на удаленный сервер</label>\n";
+  out += "  <legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
+  out += "    <labelВвключить онлайн отправку данных</label>\n";
   out += "    <input type=\"checkbox\" value=\"send\" name=\"SEND_HTTP\"";
   if( EA_Config.isSendCrmMoscow  )out += " checked>\n";
   else out += ">\n";
   HTTP_printNetworks1(out,"WiFiName");
-  HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
+  HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
 
-  HTTP_printInput1(out,"**Номер договора, идентификатор мойки:","Dogovor",EA_Config.DOGOVOR_ID,20,16,HT_TEXT);
+  HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",EA_Config.DOGOVOR_ID,20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",EA_Config.BOX_ID,20,16,HT_TEXT);
   out += "<p class='t1'>Ниже идут дополнительные настройки. Посоветуйтесь с технической поддержкой прежде чем их менять.";
   HTTP_printInput1(out,"Сервер:","Server",EA_Config.SERVER,20,32,HT_TEXT);
