@@ -596,8 +596,15 @@ void HTTP_printConfigColor(){
   if( EA_Config.ColorBusy == COLOR_BUSY2 )out += " checked";
   out += "></td>";
   out += "</tr>\n";
+  out += "<tr><td colspan=2>Показ режима &quot;Датчик не видит препятствие&quot;";
+  out += "    <input type=\"checkbox\" value=\"1\" name=\"isColorNan\"";
+  if( EA_Config.isColorNan  )out += " checked>\n";
+  else out += ">";
 
-  out += "</tr></table>";
+  out += "</td></tr>";
+  out += "<tr>\n";
+
+  out += "</table>";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";  
 //  out += "</form>\n";  
@@ -646,6 +653,8 @@ bool HTTP_checkArgs(){
          }
       EA_Config.isColorFreeBlink = false;   
       if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
+      EA_Config.isColorNan = false;   
+      if( server.hasArg("isColorNan"))EA_Config.isColorNan = true;
       if(server.hasArg("Brightness")  )EA_Config.Brightness = server.arg("Brightness").toInt();
 
       EA_Config.isDHCP = true;

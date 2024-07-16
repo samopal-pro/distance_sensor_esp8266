@@ -87,7 +87,7 @@ void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag ){
       case LED_BASE_SAVE:     ledSetColor(COLOR_SAVE);break;
       case LED_BASE_ERROR:    ledSetColor(COLOR_ERROR);break;
    }
-   strip->show();
+   
 //   Serial.printf("2 Set led mode %d\n",ledBaseMode);
    changeMode = true;
 }
@@ -95,6 +95,7 @@ void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag ){
 void ledSetColor(uint32_t _color){
    if( PinLed < 0 )return;
    for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,_color);
+   strip->show();
 }
 
 void ledSetColor2(uint32_t _color1, uint32_t _color2){

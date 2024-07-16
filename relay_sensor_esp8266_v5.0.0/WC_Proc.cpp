@@ -585,7 +585,7 @@ void ProcessingDistance(){
 //   L = NAN;
 //   if( L < 200 )L = NAN;
    Distance = L;
-//   Serial.printf("!!! Distance = %d \n",(int)Distance);  
+   Serial.printf("!!! Distance = %d \n",(int)Distance);  
 //   Serial.println(L); 
 //   PrintValue();
    if( isnan(L) ){
@@ -670,7 +670,8 @@ void ProcessingDistance(){
 
 void WS_setDistance(){
   if( isnan(Distance) ){
-      switch(EA_Config.NanValueFlag){
+      if(EA_Config.isColorNan)
+       switch(EA_Config.NanValueFlag){
          case NAN_VALUE_IGNORE: ledSetBaseMode(LED_BASE_NAN); break;
          case NAN_VALUE_BUSY:   ledSetBaseMode(LED_BASE_NAN_BUSY); break;
          case NAN_VALUE_FREE:   ledSetBaseMode(LED_BASE_NAN_FREE); break;

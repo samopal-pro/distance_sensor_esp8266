@@ -170,6 +170,7 @@ void loop() {
 // Цикл проверки WiFi   
    if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) ){
       ms2 = cur_ms;
+      Serial.printf("!!! Mode = %d flag = %d #%06lX #%06lX\n",ledBaseMode,(int)EA_Config.isColorFreeBlink, EA_Config.ColorBlink,EA_Config.ColorFree);
       if( ledBaseMode == LED_BASE_FREE && EA_Config.isColorFreeBlink ){
          ledSetColor(EA_Config.ColorBlink);
          delay(100);

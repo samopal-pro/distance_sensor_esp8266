@@ -52,6 +52,7 @@ struct EA_ConfigType{
    uint32_t ColorBusy;
    uint32_t ColorBlink;
    bool isColorFreeBlink;
+   bool isColorNan;
    uint8_t Brightness;
 //   bool isAP;
    uint16_t SRC;   

@@ -389,6 +389,7 @@ void EA_default_config(void){
    EA_Config.ColorBusy          = COLOR_BUSY_DEFAULT;
    EA_Config.ColorBlink         = COLOR_BLINK_DEFAULT;
    EA_Config.isColorFreeBlink   = false;
+   EA_Config.isColorNan         = true;
    EA_Config.Brightness         = 10;
    
 }
