@@ -47,6 +47,12 @@ struct EA_ConfigType{
    T_SENSOR_TYPE SensorType;
    T_NAN_VALUE_FLAG NanValueFlag;
    T_MEASURE_TYPE MeasureType;
+
+   uint32_t ColorFree;
+   uint32_t ColorBusy;
+   uint32_t ColorBlink;
+   bool isColorFreeBlink;
+   uint8_t Brightness;
 //   bool isAP;
    uint16_t SRC;   
 };

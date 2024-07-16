@@ -91,6 +91,12 @@ void setup() {
    WS_setDistance();
    Relay_setDistance();
    ms4 = millis();   
+//   while(true){
+//      ledSetBaseMode(LED_BASE_FREE);
+//      delay(3000);
+//      ledSetBaseMode(LED_BASE_BUSY);
+//      delay(3000);
+//   }
 }
 
 
@@ -109,7 +115,7 @@ void loop() {
               ledSetBaseMode(LED_BASE_NONE);
               break;     
           case SB_CLICK:
-              Serial.printf("!!! BTN click %d",calbtn.Time);
+              Serial.printf("!!! BTN click %d\n",calbtn.Time);
               if( calbtn.Time > 1000 ){
 //                 ledSetExtMode(LED_EXT_BTN3);
                  if( EA_Config.isWiFiAlways == false )
@@ -164,10 +170,15 @@ void loop() {
 // Цикл проверки WiFi   
    if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) ){
       ms2 = cur_ms;
+      if( ledBaseMode == LED_BASE_FREE && EA_Config.isColorFreeBlink ){
+         ledSetColor(EA_Config.ColorBlink);
+         delay(100);
+         ledSetColor(EA_Config.ColorFree);
+      }
       WiFi_test();
    }
 // Основной цикл обмена с сервером   
-   if( ( ms3 == 0 || cur_ms < ms3 || (cur_ms - ms3) > GetStatusInterval )){
+   if( ( ms3 == 0 || cur_ms < ms3 || (cur_ms - ms3) > GetStatusInterval )&& (!EWS_AP_MODE )){
       ms3 = cur_ms;
 //      if(w_stat2 != EWS_AP_MODE){
 //         PrintValue();

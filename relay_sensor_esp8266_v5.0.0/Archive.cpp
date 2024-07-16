@@ -384,4 +384,11 @@ void EA_default_config(void){
    EA_Config.TM_BEGIN_CALIBRATE = 5;
    EA_Config.SAMPLES_CLIBRATE   = 10;
    EA_Config.TM_LOOP_SENSOR     = 1;
+
+   EA_Config.ColorFree          = COLOR_FREE_DEFAULT;
+   EA_Config.ColorBusy          = COLOR_BUSY_DEFAULT;
+   EA_Config.ColorBlink         = COLOR_BLINK_DEFAULT;
+   EA_Config.isColorFreeBlink   = false;
+   EA_Config.Brightness         = 10;
+   
 }

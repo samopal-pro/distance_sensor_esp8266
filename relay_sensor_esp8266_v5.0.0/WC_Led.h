@@ -8,6 +8,7 @@
 #include <arduino.h>
 #include "src/Adafruit_NeoPixel.h"  // https://github.com/adafruit/Adafruit_NeoPixel
 #include "Config.h"
+#include "Archive.h"
 
 #define LED_TM_DEFAULT     500 //Залержка между эффектами "По умолчанию"
 #define WLED_MODE_DEFAULT   1   //Режим "По умолчанию"
@@ -35,7 +36,7 @@ enum T_LED_BASE_MODE {
 };
 
 
-
+extern T_LED_BASE_MODE ledBaseMode;
 extern uint8_t ws_mode;
 extern int      ws_mode_save;
 extern uint16_t ws_tm;
@@ -50,6 +51,8 @@ void ledInit();
 void ledSetWiFiMode(T_LED_WIFI_MODE _mode);
 void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag = false);
 void ledRestoreMode();
+void ledSetColor(uint32_t _color);
+void ledSetColor2(uint32_t _color1, uint32_t _color2);
 //void ledSetExtMode(T_LED_EXT_MODE _mode);
 //void setColor(uint32_t color);
 

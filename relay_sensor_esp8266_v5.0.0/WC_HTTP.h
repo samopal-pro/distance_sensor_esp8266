@@ -72,6 +72,7 @@ void HTTP_handlePngType3(void);
 void HTTP_printCSS(String &out);
 bool HTTP_login(String &out);
 void HTTP_printConfig();
+void HTTP_printConfigColor();
 bool HTTP_checkArgs();
 
 

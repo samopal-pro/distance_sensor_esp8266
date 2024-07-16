@@ -137,6 +137,27 @@ extern T_SENSOR_TYPE sensorType;
 #define WS_PATH                  "/"
 #define HTTP_PATH                 "/api/1/sensor/99/"
 
+#define COLOR_NONE             0x000000    //Цвет "никакой" (черный)
+#define COLOR_FREE1            0x0000FF    //Цвет "свободно" №1
+#define COLOR_FREE2            0x00FF00    //Цвет "свободно" №2
+#define COLOR_FREE_DEFAULT     COLOR_FREE1 //Цвет "свободно" по умолчанию
+#define COLOR_BLINK1           0x7F7F7F    //Цвет "свободно мигание" (если включен) №1
+#define COLOR_BLINK2           0xFF007F    //Цвет "свободно мигание" (если включен) №2
+#define COLOR_BLINK_DEFAULT    COLOR_BLINK1//Цвет "свободно мигание" по умолчанию
+#define COLOR_BUSY1            0xFF0000    //Цвет "занято" №1
+#define COLOR_BUSY2            0x000000    //Цвет "занято" №2
+#define COLOR_BUSY_DEFAULT     COLOR_BUSY1 //Цвет "занято" по умолчанию
+#define COLOR_NAN              0xFF007F    //Цвет "NAN"
+#define COLOR_GROUND           0xA5FF00    //Цвет "установка земли"
+#define COLOR_SAVE             0xFFFFFF    //Цвет "сохранение"
+#define COLOR_ERROR            0xFF7F00    //Цвет "ошибка"
+
+#define COLOR_WIFI_NONE        0x000000    //Цвет "WiFi не конфигуен"
+#define COLOR_WIFI_OFF         0xFF0000    //Цвет "WiFi не подключен"
+#define COLOR_WIFI_ON          0x00FF00    //Цвет "WiFi подключен"
+#define COLOR_WIFI_WAIT        0x0FFF00    //Цвет "WiFi попытка подключения"
+#define COLOR_WIFI_AP          0x00FF7F    //Цвет "Режим точки доступа"
+#define COLOR_WIFI_AP1         0xFFFFFF    //Цвет "Точка доступа всегда включена"
 
 
 #endif

@@ -56,12 +56,12 @@ void ledSetWiFiMode(T_LED_WIFI_MODE _mode){
    if( _mode == ledWiFiMode )return;
    ledWiFiMode    = _mode;
    switch(ledWiFiMode){
-      case LED_WIFI_NONE: strip->setPixelColor(0,strip->Color(0,0,0));break;
-      case LED_WIFI_OFF:  strip->setPixelColor(0,strip->Color(255,0,0));break;
-      case LED_WIFI_ON:   strip->setPixelColor(0,strip->Color(0,255,0));break;
-      case LED_WIFI_WAIT: strip->setPixelColor(0,strip->Color(127,255,0));break;
-      case LED_WIFI_AP:   strip->setPixelColor(0,strip->Color(0,255,127));break;
-      case LED_WIFI_AP1:  strip->setPixelColor(0,strip->Color(255,255,255));break;    
+      case LED_WIFI_NONE: strip->setPixelColor(0,COLOR_WIFI_NONE);break;
+      case LED_WIFI_OFF:  strip->setPixelColor(0,COLOR_WIFI_OFF);break;
+      case LED_WIFI_ON:   strip->setPixelColor(0,COLOR_WIFI_ON);break;
+      case LED_WIFI_WAIT: strip->setPixelColor(0,COLOR_WIFI_WAIT);break;
+      case LED_WIFI_AP:   strip->setPixelColor(0,COLOR_WIFI_AP);break;
+      case LED_WIFI_AP1:  strip->setPixelColor(0,COLOR_WIFI_AP1);break;    
       }      
    strip->show();
    changeWiFiMode = true;
@@ -70,24 +70,40 @@ void ledSetWiFiMode(T_LED_WIFI_MODE _mode){
 
 void ledSetBaseMode(T_LED_BASE_MODE _mode, bool _saveFlag ){
    if( PinLed < 0 )return;
+   if( EA_Config.Brightness <= 10 )strip->setBrightness(EA_Config.Brightness*25);
+   else strip->setBrightness(255);
 //   Serial.printf("1 Set led mode %d\n",ledBaseMode);
    if( _saveFlag )ledBaseModeSave = ledBaseMode;
    if( _mode == ledBaseMode )return;
    ledBaseMode    = _mode;
    switch(ledBaseMode){
-      case LED_BASE_NONE:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,0));break;
-      case LED_BASE_FREE:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(0,0,255));break;
-      case LED_BASE_BUSY:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,0,0));break;
-      case LED_BASE_NAN:      for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));break;
-      case LED_BASE_NAN_FREE: for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));else strip->setPixelColor(i,strip->Color(0,0,255));break;
-      case LED_BASE_NAN_BUSY: for( int i=1; i<LED_COUNT; i++)if( i%2 )strip->setPixelColor(i,strip->Color(255,0,127));else strip->setPixelColor(i,strip->Color(255,0,0));break;
-      case LED_BASE_GROUND:   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(165,255,0));break;
-      case LED_BASE_SAVE:     for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,255,255));break;
-      case LED_BASE_ERROR:    for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,strip->Color(255,127,0));break;
+      case LED_BASE_NONE:     ledSetColor(COLOR_NONE);break;
+      case LED_BASE_FREE:     ledSetColor(EA_Config.ColorFree);break;
+      case LED_BASE_BUSY:     ledSetColor(EA_Config.ColorBusy);break;
+      case LED_BASE_NAN:      ledSetColor2(0,COLOR_NAN);break;
+      case LED_BASE_NAN_FREE: ledSetColor2(EA_Config.ColorFree,COLOR_NAN);break;
+      case LED_BASE_NAN_BUSY: ledSetColor2(EA_Config.ColorBusy,COLOR_NAN);break;
+      case LED_BASE_GROUND:   ledSetColor(COLOR_GROUND);break;
+      case LED_BASE_SAVE:     ledSetColor(COLOR_SAVE);break;
+      case LED_BASE_ERROR:    ledSetColor(COLOR_ERROR);break;
    }
    strip->show();
 //   Serial.printf("2 Set led mode %d\n",ledBaseMode);
    changeMode = true;
+}
+
+void ledSetColor(uint32_t _color){
+   if( PinLed < 0 )return;
+   for( int i=1; i<LED_COUNT; i++)strip->setPixelColor(i,_color);
+}
+
+void ledSetColor2(uint32_t _color1, uint32_t _color2){
+   if( PinLed < 0 )return;
+   for( int i=1; i<LED_COUNT; i++)
+      if( i%2 ){
+         if( _color1 > 0 )strip->setPixelColor(i,_color1); 
+      }
+      else strip->setPixelColor(i,_color2);
 }
 
 void ledRestoreMode(){ ledSetBaseMode(ledBaseModeSave); }

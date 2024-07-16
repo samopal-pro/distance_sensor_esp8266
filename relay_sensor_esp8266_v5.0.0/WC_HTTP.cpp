@@ -193,7 +193,7 @@ void HTTP_printCSS(String &out){
     out += " hr {border-top:1px solid #000088;}\n";
     out += " input[type=file]::file-selector-button {border: 2px solid #000088;background:#fceade;color:#c55a11;width:30%;}\n";
     out += " input[type=file]::file-selector-button:hover {background:#000088;}\n";
-  //  out += " input[type=submit] {font-size: 1.2em;color:#000088;}\n";
+    out += " input[type=submit] {font-size: 1.2em;color:#000088;}\n";
     out += "</style>\n";  
 
 }
@@ -339,8 +339,10 @@ void HTTP_handleRoot(void) {
 //   Serial.println(out);
    Serial.printf("!!! HTTP Fragment 1 %d\n", out.length());  
    server.send ( 200, "text/html", out );
+//   HTTP_printConfigColor();
    out = "";
    if( UID >= 0 ){
+     HTTP_printConfigColor();
      HTTP_printConfig();
      out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
      out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
@@ -350,8 +352,8 @@ void HTTP_handleRoot(void) {
      out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
      out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
      out += "<p><a class='a1' href=/?Reboot=1>Перезагрузка</a>\n";
-     out += "<p><a class='a1' href=/?Logout=1>Выход</a>\n";
   }
+  out += "<p><a class='a1' href=/?Logout=1>Выход</a>\n";
 
    HTTP_printTail(out);
    Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
@@ -365,9 +367,9 @@ void HTTP_handleRoot(void) {
 
 void HTTP_printConfig(){
   String out = "";
- char s[32];
+  char s[32];
   sprintf(s,"%d",EA_Config.GroundLevel);
-  out += "<form action='/' method='PUT'>\n";
+//  out += "<form action='/' method='PUT'>\n";
 // Блок №2
   out += " <fieldset>\n";
   out += "  <legend>Конфигурация WI-FI</legend>\n";
@@ -526,13 +528,83 @@ Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());
      HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
   }
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n</form>\n";  
+  out += " </fieldset>\n";  
+
+ // Блок №9 (настройка цветов) 
+  out += "</form>\n";  
 
 
    Serial.printf("!!! HTTP Fragment 3 %d\n", out.length());  
    server.sendContent(out);
 
 }
+
+void HTTP_printConfigColor(){
+  String out="";
+  char s[50];
+  out += "<form action='/' method='PUT'>\n";
+// Блок №1c
+  out += " <fieldset>\n";
+  out += "  <legend>Конфигурация светодиодной ленты</legend>\n";
+  out += "<table width=100%>";
+  sprintf(s,"%d",EA_Config.Brightness);
+  HTTP_printInput1(out,"Яркость 0-10","Brightness",s,16,32,HT_NUMBER);
+
+  out += "<tr><td colspan=2>Цвет в режиме &quot;Свободно&quot;</td></tr>";
+  out += "<tr>\n";
+  sprintf(s,"%06lX",(uint32_t)COLOR_FREE1);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  out += "<input type='radio' name='ColorFree' value='1'";
+  if( EA_Config.ColorFree == COLOR_FREE1 )out += " checked";
+  out += "></td>";
+  sprintf(s,"%06lX",(uint32_t)COLOR_FREE2);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  out += "<input type='radio' name='ColorFree' value='2'";
+  if( EA_Config.ColorFree == COLOR_FREE2 )out += " checked";
+  out += "></td>";
+  out += "</tr>\n";
+
+  out += "<tr><td colspan=2>Мигание в режиме &quot;Свободно&quot;";
+  out += "    <input type=\"checkbox\" value=\"1\" name=\"isFreeBlink\"";
+  if( EA_Config.isColorFreeBlink  )out += " checked>\n";
+  else out += ">";
+
+  out += "</td></tr>";
+  out += "<tr>\n";
+  sprintf(s,"%06lX",(uint32_t)COLOR_BLINK1);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  out += "<input type='radio' name='ColorBlink' value='1'";
+  if( EA_Config.ColorBlink == COLOR_BLINK1 )out += " checked";
+  out += "></td>";
+  sprintf(s,"%06lX",(uint32_t)COLOR_BLINK2);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  out += "<input type='radio' name='ColorBlink' value='2'";
+  if( EA_Config.ColorBlink == COLOR_BLINK2 )out += " checked";
+  out += "></td>";
+  out += "</tr>\n";
+
+  out += "<tr><td colspan=2>Цвет в режиме &quot;Занято&quot;</td></tr>";
+  out += "<tr>";
+  sprintf(s,"%06lX",(uint32_t)COLOR_BUSY1);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  out += "<input type='radio' name='ColorBusy' value='1'";
+  if( EA_Config.ColorBusy == COLOR_BUSY1 )out += " checked";
+  out += "></td>";
+  sprintf(s,"%06lX",(uint32_t)COLOR_BUSY2);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  out += "<input type='radio' name='ColorBusy' value='2'";
+  if( EA_Config.ColorBusy == COLOR_BUSY2 )out += " checked";
+  out += "></td>";
+  out += "</tr>\n";
+
+  out += "</tr></table>";
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";  
+//  out += "</form>\n";  
+  Serial.printf("!!! HTTP Fragment 1c %d\n", out.length());  
+  server.sendContent(out);
+}
+
 
 bool HTTP_checkArgs(){
    if( UID < 0 )return false;
@@ -557,6 +629,25 @@ bool HTTP_checkArgs(){
    }
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
+      if(server.hasArg("ColorFree"))
+         switch(server.arg("ColorFree").toInt()){
+             case 1: EA_Config.ColorFree = COLOR_FREE1; break;
+             case 2: EA_Config.ColorFree = COLOR_FREE2; break;
+         }
+      if(server.hasArg("ColorBusy"))
+         switch(server.arg("ColorBusy").toInt()){
+             case 1: EA_Config.ColorBusy = COLOR_BUSY1; break;
+             case 2: EA_Config.ColorBusy = COLOR_BUSY2; break;
+         }
+      if(server.hasArg("ColorBlink"))
+         switch(server.arg("ColorBlink").toInt()){
+             case 1: EA_Config.ColorBlink = COLOR_BLINK1; break;
+             case 2: EA_Config.ColorBlink = COLOR_BLINK2; break;
+         }
+      EA_Config.isColorFreeBlink = false;   
+      if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
+      if(server.hasArg("Brightness")  )EA_Config.Brightness = server.arg("Brightness").toInt();
+
       EA_Config.isDHCP = true;
       EA_Config.isSendCrmMoscow = false;
       if(server.hasArg("GroundLevel"))EA_Config.GroundLevel = server.arg("GroundLevel").toInt();
