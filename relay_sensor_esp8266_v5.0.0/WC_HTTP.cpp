@@ -433,7 +433,19 @@ void HTTP_printConfig(){
   out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;занято&quot;</td></tr>";
   out += "<tr><td><img src='/stat1.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='3'";
   if( EA_Config.NanValueFlag  == NAN_VALUE_FREE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;свободно&quot;</td></tr></table>\n";
+  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;свободно&quot;</td></tr>";
+
+  sprintf(s,"%06lX",(uint32_t)COLOR_NAN);
+ 
+  out += "<tr><td bgcolor='#"; out += s; out += "'>&nbsp;</td><td>";
+  out += "    <input type=\"checkbox\" value=\"1\" name=\"isColorNan\"";
+  if( EA_Config.isColorNan  )out += " checked>\n";
+  else out += ">";
+  out += "Активация малиновой подсветки если датчик ничего не видит.";
+
+  out += "</td></tr>";
+
+  out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
@@ -545,7 +557,7 @@ void HTTP_printConfigColor(){
   out += "<form action='/' method='PUT'>\n";
 // Блок №1c
   out += " <fieldset>\n";
-  out += "  <legend>Конфигурация светодиодной ленты</legend>\n";
+  out += "  <legend>Настройка подсветки датчика</legend>\n";
   out += "<table width=100%>";
   sprintf(s,"%d",EA_Config.Brightness);
   HTTP_printInput1(out,"Яркость 0-10","Brightness",s,16,32,HT_NUMBER);
@@ -564,10 +576,11 @@ void HTTP_printConfigColor(){
   out += "></td>";
   out += "</tr>\n";
 
-  out += "<tr><td colspan=2>Мигание в режиме &quot;Свободно&quot;";
+  out += "<tr><td colspan=2>";
   out += "    <input type=\"checkbox\" value=\"1\" name=\"isFreeBlink\"";
   if( EA_Config.isColorFreeBlink  )out += " checked>\n";
   else out += ">";
+  out += "Мигание в режиме &quot;Свободно&quot; Чтобы включить, выберите цвет и поставьте галочку.";
 
   out += "</td></tr>";
   out += "<tr>\n";
@@ -596,13 +609,6 @@ void HTTP_printConfigColor(){
   if( EA_Config.ColorBusy == COLOR_BUSY2 )out += " checked";
   out += "></td>";
   out += "</tr>\n";
-  out += "<tr><td colspan=2>Показ режима &quot;Датчик не видит препятствие&quot;";
-  out += "    <input type=\"checkbox\" value=\"1\" name=\"isColorNan\"";
-  if( EA_Config.isColorNan  )out += " checked>\n";
-  else out += ">";
-
-  out += "</td></tr>";
-  out += "<tr>\n";
 
   out += "</table>";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 

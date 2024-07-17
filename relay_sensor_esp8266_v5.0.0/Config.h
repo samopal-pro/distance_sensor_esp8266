@@ -140,7 +140,7 @@ extern T_SENSOR_TYPE sensorType;
 #define COLOR_NONE             0x000000    //Цвет "никакой" (черный)
 #define COLOR_FREE1            0x0000FF    //Цвет "свободно" №1
 #define COLOR_FREE2            0x00FF00    //Цвет "свободно" №2
-#define COLOR_FREE_DEFAULT     COLOR_FREE1 //Цвет "свободно" по умолчанию
+#define COLOR_FREE_DEFAULT     COLOR_FREE2 //Цвет "свободно" по умолчанию
 #define COLOR_BLINK1           0x7F7F7F    //Цвет "свободно мигание" (если включен) №1
 #define COLOR_BLINK2           0xFF007F    //Цвет "свободно мигание" (если включен) №2
 #define COLOR_BLINK_DEFAULT    COLOR_BLINK1//Цвет "свободно мигание" по умолчанию

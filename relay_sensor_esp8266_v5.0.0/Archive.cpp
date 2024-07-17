@@ -364,7 +364,7 @@ void EA_default_config(void){
    strcpy(EA_Config.BOX_ID, "1");
    strcpy(EA_Config.SERVER, "crm.moscow");
    EA_Config.PORT            = 8001;
-   EA_Config.GroundLevel     = 2500;  
+   EA_Config.GroundLevel     = 50;  
    EA_Config.LimitDistance   = 250;
 //   EA_Config.LimitDistanceUp = -1;
    EA_Config.MinDistance1     = 1500;
@@ -388,7 +388,7 @@ void EA_default_config(void){
    EA_Config.ColorFree          = COLOR_FREE_DEFAULT;
    EA_Config.ColorBusy          = COLOR_BUSY_DEFAULT;
    EA_Config.ColorBlink         = COLOR_BLINK_DEFAULT;
-   EA_Config.isColorFreeBlink   = false;
+   EA_Config.isColorFreeBlink   = true;
    EA_Config.isColorNan         = true;
    EA_Config.Brightness         = 10;
    
