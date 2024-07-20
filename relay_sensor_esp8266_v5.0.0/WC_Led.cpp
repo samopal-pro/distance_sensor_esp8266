@@ -105,6 +105,7 @@ void ledSetColor2(uint32_t _color1, uint32_t _color2){
          if( _color1 > 0 )strip->setPixelColor(i,_color1); 
       }
       else strip->setPixelColor(i,_color2);
+   strip->show();
 }
 
 void ledRestoreMode(){ ledSetBaseMode(ledBaseModeSave); }
