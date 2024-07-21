@@ -822,9 +822,9 @@ float CalibrateGround(){
 }
 
 
-bool ProcessingCalibrate(){
+bool ProcessingCalibrate(uint32_t _tm){
    ledSetBaseMode(LED_BASE_NONE,true);
-   delay(EA_Config.TM_BEGIN_CALIBRATE*1000);
+   delay(_tm);
    ledSetBaseMode(LED_BASE_GROUND);
    float x = CalibrateGround();
    if( isnan(x) ){
@@ -836,7 +836,7 @@ bool ProcessingCalibrate(){
    }
    else {
       ledSetBaseMode(LED_BASE_SAVE,true);
-      delay(300);
+      delay(2000);
       ledRestoreMode();
       Serial.printf("!!! Calibrate ground value %d\n",(int)x);
       EA_Config.GroundLevel  = (int)x;

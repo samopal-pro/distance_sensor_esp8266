@@ -54,6 +54,7 @@ struct EA_ConfigType{
    bool isColorFreeBlink;
    bool isColorNan;
    uint8_t Brightness;
+   uint16_t CountBoot; // Число перезагрузок
 //   bool isAP;
    uint16_t SRC;   
 };
@@ -98,7 +99,7 @@ extern StackArray <struct EA_SaveType> EA_Ram;
 extern uint32_t LoopInterval;
 
 extern char SensorID[];
-
+extern bool isWiFiAlways1;
 
 
 void EA_begin(void);

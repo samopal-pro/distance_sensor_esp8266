@@ -18,7 +18,10 @@ EA_Value      EA_Buffer[EA_BUFFER_SIZE];
 EA_SaveType   EA_Save;
 EA_ConfigType EA_Config;
 
+bool isWiFiAlways1 = false;
+
 extern struct WC_Config EC_Config;
+bool isWiFiAlways_save = false;
 
 StackArray <struct EA_SaveType> EA_Ram;
 
@@ -279,7 +282,8 @@ void EA_read_config(){
     uint16_t src = EA_SRC();
     if( EA_Config.SRC == src ){
        Serial.printf("EEPROM Config is correct\n");
-       Serial.printf("EEPROM config: level ground = %d\n",EA_Config.GroundLevel);
+       Serial.printf("EEPROM config: level ground = %d bootcount = %d\n",(int)EA_Config.GroundLevel,(int)EA_Config.CountBoot);       
+
        sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
        LoopInterval = EA_Config.TM_LOOP_SENSOR*1000;
 //       sensorType   = EA_Config.SensorType;
@@ -391,5 +395,6 @@ void EA_default_config(void){
    EA_Config.isColorFreeBlink   = true;
    EA_Config.isColorNan         = true;
    EA_Config.Brightness         = 10;
+   EA_Config.CountBoot          = 0;
    
 }

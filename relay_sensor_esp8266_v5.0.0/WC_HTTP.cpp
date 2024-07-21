@@ -91,7 +91,7 @@ void WiFi_startAP(){
    HTTP_begin();
    msAP = millis();
    w_stat2 = EWS_AP_MODE;
-   if( EA_Config.isWiFiAlways)ledSetWiFiMode(LED_WIFI_AP1);
+   if( EA_Config.isWiFiAlways || isWiFiAlways1 )ledSetWiFiMode(LED_WIFI_AP1);
    else ledSetWiFiMode(LED_WIFI_AP);
    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
    dnsServer.start(53, "*", WiFi.softAPIP());
@@ -624,7 +624,7 @@ bool HTTP_checkArgs(){
    bool _save = false;
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Calibrate")  ){  
-       ProcessingCalibrate();
+       ProcessingCalibrate(1000);
    }
    else if( server.hasArg("Default") ){ 
        EA_default_config();
@@ -724,7 +724,7 @@ bool HTTP_checkArgs(){
       EA_save_config(); 
       EA_read_config();      
       HTTP_goto("/", 1000, "Сохранение параметров ...");
-      if( EA_Config.isWiFiAlways)ledSetWiFiMode(LED_WIFI_AP1);
+      if( EA_Config.isWiFiAlways || isWiFiAlways1)ledSetWiFiMode(LED_WIFI_AP1);
       else ledSetWiFiMode(LED_WIFI_AP);
       ledSetBaseMode(LED_BASE_SAVE,true);
       delay(300);

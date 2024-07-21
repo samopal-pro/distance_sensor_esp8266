@@ -85,7 +85,6 @@ void setup() {
 
 // WiFi при старте отключен   
    WiFi_stop("WiFi is Off");
-   if( EA_Config.isWiFiAlways)WiFi_startAP();
 // Инициализация сонара   
    InitSonar();   
    WS_setDistance();
@@ -97,6 +96,15 @@ void setup() {
 //      ledSetBaseMode(LED_BASE_BUSY);
 //      delay(3000);
 //   }
+   if( EA_Config.CountBoot < 2 ){
+       EA_Config.CountBoot++;
+       EA_save_config();
+       Serial.printf("!!! Calibrate sonar %d\n",(int)Distance);
+       ProcessingCalibrate(0);
+       isWiFiAlways1 = true;
+//       WiFi_startAP();
+   }
+   if( EA_Config.isWiFiAlways ||  isWiFiAlways1)WiFi_startAP();
 }
 
 
@@ -118,11 +126,11 @@ void loop() {
               Serial.printf("!!! BTN click %d\n",calbtn.Time);
               if( calbtn.Time > 1000 ){
 //                 ledSetExtMode(LED_EXT_BTN3);
-                 if( EA_Config.isWiFiAlways == false )
+                 if( EA_Config.isWiFiAlways == false  && isWiFiAlways1 == false )
                     if( w_stat2 == EWS_AP_MODE )WiFi_stop("Stop AP User");
                     else WiFi_startAP();
                  Serial.printf("!!! Calibrate sonar %d\n",(int)Distance);
-                 ProcessingCalibrate();
+                 ProcessingCalibrate(EA_Config.TM_BEGIN_CALIBRATE*1000);
 
 //                 EA_Config.GroundLevel = Distance;
                  EA_clear_arh();
@@ -137,6 +145,7 @@ void loop() {
               strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
               strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
               strcpy(EA_Config.ESP_OPER_PASS, DEVICE_OPER);
+              EA_Config.CountBoot          = 0;
               EA_save_config();     
               delay(1000);    
               ESP.reset();  

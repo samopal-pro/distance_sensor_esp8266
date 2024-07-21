@@ -115,7 +115,7 @@ void PrintTime( time_t t );
 bool scanI2C(int _addr);
 void lidarSetI2C();
 float CalibrateGround();
-bool ProcessingCalibrate();
+bool ProcessingCalibrate(uint32_t _tm = 5000);
 
 
 class SonarFake {
