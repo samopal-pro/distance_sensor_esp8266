@@ -219,6 +219,7 @@ void loop() {
         }  
         else {
            Serial.printf("??? No ping %s\n",EA_Config.SERVER);
+
         }    
       }
 // Если нету связи, переписываем все значения из памяти в архив      
@@ -241,7 +242,8 @@ void loop() {
       ms4 = cur_ms;
       if( w_stat2 == EWS_ON ){
 //        if( Ping.ping(EA_Config.SERVER) ){
-           HttpSetStatus(Time,millis()/1000,Temp,Hum,Distance);
+//           HttpSetStatus(Time,millis()/1000,Temp,Hum,Distance);
+           HttpSetParam(Time,millis()/1000,Temp,Hum,Distance,Button,1); 
 //        }
       }
    }
