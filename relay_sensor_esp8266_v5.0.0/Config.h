@@ -6,7 +6,7 @@
 //#include <WebSocketClient.h>
 
 #define FW_VERSION   "VERSION 8.2.0"
-#define DEVICE_NAME  "693_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_NAME  "2789_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
 //#define WIFI_SAV
@@ -43,11 +43,11 @@ enum T_MEASURE_TYPE {
 };
 
 //#define DEFAULT_SENSOR_TYPE SONAR_SERIAL  // Старые сенсоры ME007Y и другие платы работающие по протоколу SERIAL
-#define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
+//#define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
 //#define DEFAULT_SENSOR_TYPE SONAR_SR04TV2 // Глючные платы  SR04TV2 у которых плывет значение расстояния
-//#define DEFAULT_SENSOR_TYPE SONAR_SR04TM2 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
+#define DEFAULT_SENSOR_TYPE SONAR_SR04TM2 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
 //#define DEFAULT_SENSOR_TYPE SONAR_TFMINI  // LiDAR TF Mini Plus по I2C
-//#define DEFAULT_SENSOR_TYPE ONAR_TFLUNA   // LiDAR TF Luna по I2C
+//#define DEFAULT_SENSOR_TYPE SONAR_TFLUNA   // LiDAR TF Luna по I2C
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 #define DEFAULT_MEASURE_TYPE MEASURE_TYPE_NORMAL
@@ -117,7 +117,7 @@ extern T_SENSOR_TYPE sensorType;
 /*
    Конфигурация светодиодной ленты
 */
-#define LED_COUNT         13   //Число светодиодов
+#define LED_COUNT         30   //Число светодиодов
 #define PinLed            13
 
 
@@ -140,7 +140,7 @@ extern T_SENSOR_TYPE sensorType;
 #define COLOR_NONE             0x000000    //Цвет "никакой" (черный)
 #define COLOR_FREE1            0x0000FF    //Цвет "свободно" №1
 #define COLOR_FREE2            0x00FF00    //Цвет "свободно" №2
-#define COLOR_FREE_DEFAULT     COLOR_FREE2 //Цвет "свободно" по умолчанию
+#define COLOR_FREE_DEFAULT     COLOR_FREE1 //Цвет "свободно" по умолчанию
 #define COLOR_BLINK1           0x7F7F7F    //Цвет "свободно мигание" (если включен) №1
 #define COLOR_BLINK2           0xFF007F    //Цвет "свободно мигание" (если включен) №2
 #define COLOR_BLINK_DEFAULT    COLOR_BLINK1//Цвет "свободно мигание" по умолчанию
