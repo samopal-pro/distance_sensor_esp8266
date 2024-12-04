@@ -115,6 +115,7 @@ void HTTP_begin(void){
    
  // Поднимаем WEB-сервер  
    server.on ( "/", HTTP_handleRoot );
+   server.on ( "/distance", HTTP_handleDistance );
 //   server.on ( "/config", HTTP_handleConfig );
 //   server.on ( "/login", HTTP_handleLogin );
    server.on ( "/logo.png", HTTP_handleLogo );
@@ -126,6 +127,9 @@ void HTTP_begin(void){
    server.on ( "/type1.png", HTTP_handlePngType1 );
    server.on ( "/type2.png", HTTP_handlePngType2 );
    server.on ( "/type3.png", HTTP_handlePngType3 );
+   server.on ( "/relay0.png", HTTP_handlePngRelay0 );
+   server.on ( "/relay1.png", HTTP_handlePngRelay1 );
+   server.on ( "/relay2.png", HTTP_handlePngRelay2 );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -151,6 +155,9 @@ void HTTP_handlePngWiFi2() {  server.send_P(200, PSTR("image/png"), wifi2_png, s
 void HTTP_handlePngType1() {  server.send_P(200, PSTR("image/png"), type1_png, sizeof(type1_png));}
 void HTTP_handlePngType2() {  server.send_P(200, PSTR("image/png"), type2_png, sizeof(type2_png));}
 void HTTP_handlePngType3() {  server.send_P(200, PSTR("image/png"), type3_png, sizeof(type3_png));}
+void HTTP_handlePngRelay0(){  server.send_P(200, PSTR("image/png"), relay0_png, sizeof(type3_png));}
+void HTTP_handlePngRelay1(){  server.send_P(200, PSTR("image/png"), relay1_png, sizeof(type3_png));}
+void HTTP_handlePngRelay2(){  server.send_P(200, PSTR("image/png"), relay2_png, sizeof(type3_png));}
 
 /**
  * Обработчик событий WEB-сервера
@@ -292,6 +299,49 @@ bool HTTP_login(String &out){
 
 
 /*
+ * Оработчик страницы с расстоянием
+ */
+void HTTP_handleDistance(void) {
+  String out = "";
+  char str[50];
+
+  out += "<html>\n<head>\n<meta charset=\"utf-8\" />\n";
+//  out += "<meta http-equiv='refresh' content='5'>\n";
+
+  out += "<title>Расстояние от датчика</title>";
+  out += "<style>\n";
+  out += " body { background-color:#cccccc; color:#000088;}\n";
+  out += " input[type=submit] {font-size: 1.2em;color:#000088;}\n";
+  out += "</style>\n";    
+  out += "<body>\n";
+  out += "<form action='/distance' method='PUT'>\n";
+  if( isnan(Distance) )strcpy(str,"NAN");
+  else sprintf(str,"%d", (int)Distance );
+  out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
+  out += str;
+  out += "</h3>";
+/*
+  if( !isnan(Temp)){
+     sprintf(str,"%d", (int)Temp );
+     out += "<h3>Температура (С): ";
+     out += str;
+     out += "</h3>";
+  }
+  if( !isnan(Hum)){
+     sprintf(str,"%d", (int)Hum );
+     out += "<h3>Влажность воздуха (%): ";
+     out += str;
+     out += "</h3>";
+  }
+*/  
+  out += " <input type='submit' value='Обновить' class='btn'>"; 
+
+  out += "</form>\n";
+  out += "</body>\n</html>\n";
+   server.send(200, "text/html", out);
+}
+
+/*
  * Оработчик главной страницы сервера
  */
 void HTTP_handleRoot(void) {
@@ -303,12 +353,13 @@ void HTTP_handleRoot(void) {
    String out = "";
   HTTP_printHeader(out,"Главная",0);
 
-  out += "<form action='/' method='PUT'>\n";
+//  out += "<form action='/' method='PUT'>\n";
 // Блок №1
   out += " <fieldset>\n";
 //     out += "  <legend>Пароль для доступа в настройки</legend>\n";
 //     HTTP_printInput1(out,"Пароль:","Password","",16,32,HT_PASSWORD);
 //   HTTP_printInput(out,"Расстояние от датчика до препятствия сейчас(мм):","xx",str,16,32,false);
+/*
   if( isnan(Distance) )strcpy(str,"NAN");
   else sprintf(str,"%d", (int)Distance );
   out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
@@ -328,11 +379,15 @@ void HTTP_handleRoot(void) {
      out += "</h3>";
   }
   out += " <input type='submit' value='Обновить' class='btn'>"; 
+*/  
+  out += "<iframe src='/distance' width=100% height=80 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
   out += " <p class='t1'> Обновляйте страницу и в строке выше вы увидите расстояние от датчика до препятствия. ";
   out += "Если расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.</p>";
 
-  out += " </fieldset>\n</form>\n";
- 
+//  out += " </fieldset>\n</form>\n";
+  out += " </fieldset>\n";
+
+
    if( HTTP_login(out) )return;
 
    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -380,7 +435,7 @@ void HTTP_printConfig(){
   out += "></td><td align='center'><input type='radio' name='WiFiMode' value='2'";
   if( EA_Config.isWiFiAlways )out += " checked";
   out += "></td></tr>";
-  out += "<tr><td align='center' class='td1'>(По умолчанию) раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам. Первый светодиод белый.</td></tr></table>";
+  out += "<tr><td align='center' class='td1'>Раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам. Первый светодиод белый.</td></tr></table>";
   out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", выберите ниже сеть WI-FI с доступом ";
   out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета. ";
   out += "ID вы можете получить в технической поддержке по телефону: 89060525500.<br>\n";
@@ -419,6 +474,65 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
+
+   Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
+
+// Блок №4.1 
+  out += " <fieldset>\n";
+  out += "  <legend>Режим работы реле №1</legend>\n";
+  
+  out += "<table><tr><td><img src='/relay0.png'><br></td><td valign='middle'><input type='radio' name='ModeRelay1' value='0'";
+  if( EA_Config.ModeRelay1  == RELAY_NONE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Не используется</td></tr></table>";
+
+  out += "<table><tr><td><img src='/relay1.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='1'";
+  if( EA_Config.ModeRelay1  == RELAY_NORMAL )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно</td></tr></table>";
+ 
+  out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='2'";
+  if( EA_Config.ModeRelay1  == RELAY_PULSE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
+  sprintf(s,"%d",EA_Config.TM_PulseRelay1);
+  HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay1",s,16,32,HT_NUMBER);
+
+  out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
+  if( EA_Config.isInverseRelay1  )out += " checked>\n";
+  else out += ">";
+  out += "<label>Инверсия работы реле 1</label>";
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+
+  out += " </fieldset>\n";
+
+// Блок №4.2
+  out += " <fieldset>\n";
+  out += "  <legend>Режим работы реле №2</legend>\n";
+  
+  out += "<table><tr><td><img src='/relay0.png'><br></td><td valign='middle'><input type='radio' name='ModeRelay2' value='0'";
+  if( EA_Config.ModeRelay2  == RELAY_NONE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Не используется</td></tr></table>";
+
+  out += "<table><tr><td><img src='/relay1.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='1'";
+  if( EA_Config.ModeRelay2  == RELAY_NORMAL )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно</td></tr></table>";
+ 
+  out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='2'";
+  if( EA_Config.ModeRelay2  == RELAY_PULSE )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
+  sprintf(s,"%d",EA_Config.TM_PulseRelay2);
+  HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay2",s,16,32,HT_NUMBER);
+
+  out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
+  if( EA_Config.isInverseRelay2  )out += " checked>\n";
+  else out += ">";
+  out += "<label>Инверсия работы реле 2</label>";
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+
+  out += " </fieldset>\n";
+
 
 
 // Блок №5
@@ -479,13 +593,13 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",s,16,32,HT_NUMBER);
 
 
-Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
-   server.sendContent(out);
-   out = "";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
+   Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
 
 // Блок №7
   out += " <fieldset>\n";
@@ -503,6 +617,10 @@ Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());
   HTTP_printInput1(out,"Сервер:","Server",EA_Config.SERVER,20,32,HT_TEXT);
   sprintf(s,"%d",EA_Config.PORT);
   HTTP_printInput1(out,"Порт:","Port",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_HTTP_SEND);
+  HTTP_printInput1(out,"Связь с сервером через, сек:","TM_HTTP_SEND",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_HTTP_RETRY_ERROR);
+  HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";  
 
@@ -511,14 +629,9 @@ Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());
   out += "  <legend>Параметры DHCP</legend>\n";
   out += "    <label>Статический IP:</label>\n";
   out += "    <input type=\"checkbox\" value=\"static\" name=\"STATIC_IP\"";
-  if( !EA_Config.isDHCP  ){
-     out += " checked>\n";
-     out += " <input type='hidden' name='StaticIP' value='0'>\n";
-  }
-  else { 
-     out += ">\n";
-     out += " <input type='hidden' name='StaticIP' value='1'>\n";
-  }  
+  if( !EA_Config.isDHCP  )out += " checked";
+  out += ">\n";
+  
   sprintf(s,"%d.%d.%d.%d",EA_Config.IP[0],EA_Config.IP[1],EA_Config.IP[2],EA_Config.IP[3]);
   HTTP_printInput1(out,"Адрес:","IPAddr",s,16,32,HT_IP);
   sprintf(s,"%d.%d.%d.%d",EA_Config.MASK[0],EA_Config.MASK[1],EA_Config.MASK[2],EA_Config.MASK[3]);
@@ -631,7 +744,8 @@ bool HTTP_checkArgs(){
        EA_clear_arh();
        EA_save_config();
        EA_read_config();
-       HTTP_goto("/", 5000, "Загрузка заводских параметров ...");
+       HTTP_goto("/", 2000, "Загрузка заводских параметров. Перезагрузка ..."); //1.12.24
+       ESP.reset();  
        return true;
    }
    else if( server.hasArg("Reboot") ){ 
@@ -703,7 +817,12 @@ bool HTTP_checkArgs(){
       if(server.hasArg("Dogovor")      )strcpy(EA_Config.DOGOVOR_ID,    server.arg("Dogovor").c_str());
       if(server.hasArg("Box")          )strcpy(EA_Config.BOX_ID,        server.arg("Box").c_str());
       if(server.hasArg("Server")       )strcpy(EA_Config.SERVER,        server.arg("Server").c_str());
-      if(server.hasArg("Port")         )EA_Config.PORT              = server.arg("Port").toInt();
+      if(server.hasArg("Port")         )EA_Config.PORT                      = server.arg("Port").toInt();
+      if(server.hasArg("TM_HTTP_SEND") )EA_Config.TM_HTTP_SEND              = server.arg("TM_HTTP_SEND").toInt();
+      if(server.hasArg("TM_HTTP_RETRY_ERROR"))EA_Config.TM_HTTP_RETRY_ERROR = server.arg("TM_HTTP_RETRY_ERROR").toInt();
+
+
+
       if( server.hasArg("STATIC_IP"))EA_Config.isDHCP = false;
       if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
       
@@ -717,6 +836,27 @@ bool HTTP_checkArgs(){
       if(server.hasArg("IPMask"))EA_Config.MASK.fromString(server.arg("IPMask").c_str());
       if(server.hasArg("IPGate"))EA_Config.GW.fromString(server.arg("IPGate").c_str());
       if(server.hasArg("IPDns") )EA_Config.DNS.fromString(server.arg("IPDns").c_str());
+
+      if(server.hasArg("ModeRelay1"))
+         switch(server.arg("ModeRelay1").toInt()){
+             case 0: EA_Config.ModeRelay1  = RELAY_NONE; break;
+             case 1: EA_Config.ModeRelay1  = RELAY_NORMAL; break;
+             case 2: EA_Config.ModeRelay1  = RELAY_PULSE; break;
+         }
+      if(server.hasArg("TM_PulseRelay1"))EA_Config.TM_PulseRelay1 = server.arg("TM_PulseRelay1").toInt();   
+      if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
+      else EA_Config.isInverseRelay1 = false;
+
+      if(server.hasArg("ModeRelay2"))
+         switch(server.arg("ModeRelay2").toInt()){
+             case 0: EA_Config.ModeRelay2  = RELAY_NONE; break;
+             case 1: EA_Config.ModeRelay2  = RELAY_NORMAL; break;
+             case 2: EA_Config.ModeRelay2  = RELAY_PULSE; break;
+         }
+      if(server.hasArg("TM_PulseRelay2"))EA_Config.TM_PulseRelay2 = server.arg("TM_PulseRelay2").toInt();   
+      if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
+      else EA_Config.isInverseRelay2 = false;
+
    
       _save = true;
    }

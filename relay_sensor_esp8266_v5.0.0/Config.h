@@ -5,11 +5,12 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 8.2.0"
+#define FW_VERSION   "VERSION 8.8.0"
 #define DEVICE_NAME  "2789_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
-//#define WIFI_SAV
+#define WIFI_SAV
+#define DEBUG1
 /*                
 Затычка на глючащие датчики SONAR_JSN_SR04TV2
 При дистанции свыше 3000 они начинают показывать 
@@ -42,10 +43,16 @@ enum T_MEASURE_TYPE {
   MEASURE_TYPE_INSIDE  = 3  //Срабатывание датчика если внутри интервала
 };
 
+enum T_RELAY_MODE {
+  RELAY_NONE  =  0, //Реле отключено
+  RELAY_NORMAL = 1, //Реле работает на ON/OFF
+  RELAY_PULSE  = 2  //Реое при срабатывание выдает имульс на заданное время 
+};
+
 //#define DEFAULT_SENSOR_TYPE SONAR_SERIAL  // Старые сенсоры ME007Y и другие платы работающие по протоколу SERIAL
-//#define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
+#define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
 //#define DEFAULT_SENSOR_TYPE SONAR_SR04TV2 // Глючные платы  SR04TV2 у которых плывет значение расстояния
-#define DEFAULT_SENSOR_TYPE SONAR_SR04TM2 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
+//#define DEFAULT_SENSOR_TYPE SONAR_SR04TM2 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
 //#define DEFAULT_SENSOR_TYPE SONAR_TFMINI  // LiDAR TF Mini Plus по I2C
 //#define DEFAULT_SENSOR_TYPE SONAR_TFLUNA   // LiDAR TF Luna по I2C
 
@@ -159,5 +166,8 @@ extern T_SENSOR_TYPE sensorType;
 #define COLOR_WIFI_AP          0x00FF7F    //Цвет "Режим точки доступа"
 #define COLOR_WIFI_AP1         0xFFFFFF    //Цвет "Точка доступа всегда включена"
 
+#define SAVE_DISTANCE_DELTA    100.0        //Изменене дистанции при котором сохраняется последнее значение в EEPROM
+#define NUMBER_DISTANCE_ATT    5            //Число попыток повторения в случае неудачного измерения
+#define PING_SERVER
 
 #endif

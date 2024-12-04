@@ -47,7 +47,7 @@ void ledInit(){
       delay(50);
    }
    ledSetWiFiMode(LED_WIFI_OFF);
-   ledSetBaseMode(LED_BASE_NONE);
+   ledSetBaseMode(LED_BASE_BUSY );
 }
 
 

@@ -38,6 +38,7 @@ extern int   Distance;
 extern float Temp, LastTemp, Hum, LastHum, LastDistance, Distance;
 extern bool  Button;
 extern bool  LastButton;
+extern bool isChangeStat;
 
 extern bool  PinCalibrateSonarState;
 extern bool  isAP;
@@ -111,6 +112,7 @@ void ProcessingDistance();
 void PrintValue();
 void WS_setDistance();
 void Relay_setDistance();
+void  Relay_setPin(uint8_t pin, bool stat, bool is_inverse);
 void PrintTime( time_t t );
 bool scanI2C(int _addr);
 void lidarSetI2C();

@@ -57,6 +57,7 @@ bool ConnectWiFi(void);
 
 void HTTP_begin(void);
 void HTTP_handleRoot(void);
+void HTTP_handleDistance(void);
 void HTTP_handleConfig(void);
 void HTTP_handleDefault(void);
 void HTTP_handleReboot(void);
@@ -69,6 +70,11 @@ void HTTP_handlePngWiFi2(void);
 void HTTP_handlePngType1(void);
 void HTTP_handlePngType2(void);
 void HTTP_handlePngType3(void);
+void HTTP_handlePngRelay0(void);
+void HTTP_handlePngRelay1(void);
+void HTTP_handlePngRelay2(void);
+
+
 void HTTP_printCSS(String &out);
 bool HTTP_login(String &out);
 void HTTP_printConfig();

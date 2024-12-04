@@ -15,7 +15,7 @@ uint16_t      EA_Count;
 size_t        EA_Size;
 size_t        EA_Offset;
 EA_Value      EA_Buffer[EA_BUFFER_SIZE];
-EA_SaveType   EA_Save;
+EA_SaveType   EA_Save, EA_Save_b;
 EA_ConfigType EA_Config;
 
 bool isWiFiAlways1 = false;
@@ -35,10 +35,6 @@ void EA_begin(void){
    EEPROM.begin(EA_Size);   
    EA_get_count();
    EA_read_config();
-#ifdef WIFI_SAV   
-//   EA_default_config();
-   EA_Config.isWiFiAlways = true;
-#endif   
 }
 
 /**
@@ -235,20 +231,22 @@ void EA_shift( int count ){
 /**
  * Сохраняем текущее значение в память
  */
-void EA_save_last(uint32_t tm,uint32_t uptime,int t,int h,int d,bool bt,int flag){
+bool EA_save_last(uint32_t tm,uint32_t uptime, bool bt, float d, float delta_d){
+// Проверка были ли изменения
+   if( EA_Save.Button  == bt && abs(EA_Save.Distance - d)<delta_d )return false;    
    EA_Save.Time     = tm;
    EA_Save.Uptime   = uptime;
-   EA_Save.Temp     = t;
-   EA_Save.Hum      = h;
+//   EA_Save.Temp     = t;
+//   EA_Save.Hum      = h;
    EA_Save.Distance = d;
    EA_Save.Button   = bt;
-   EA_Save.Flag     = flag;
+//   EA_Save.Flag     = flag;
    for( int i=0; i<sizeof(EA_Save);i++)
       EEPROM.write(sizeof(EA_Count)+i, *((uint8_t*)&EA_Save + i));
    EEPROM.commit();     
-   Serial.printf("Save last to EEPROM: time=%ld uptime=%ld temp=%d hum=%d dist=%d butt=%d flag=%d\n",
-       EA_Save.Time, EA_Save.Uptime, EA_Save.Temp, EA_Save.Hum ,
-       EA_Save.Distance ,(int)EA_Save.Button ,EA_Save.Flag);
+   Serial.printf("!!! Save last to EEPROM: time=%ld uptime=%ld dist=%d butt=%d\n",
+       EA_Save.Time, EA_Save.Uptime,  (int)EA_Save.Distance, (int)EA_Save.Button);
+   return true;    
 }
 
 
@@ -263,10 +261,9 @@ void EA_read_last(){
 //         Serial.print(offset);
 //         Serial.print(" 0x");
 //         Serial.println(c); 
-    }  
-   Serial.printf("Last EEPROM value: time=%ld uptime=%ld temp=%d hum=%d dist=%d butt=%d flag=%d\n",
-       EA_Save.Time, EA_Save.Uptime, EA_Save.Temp, EA_Save.Hum ,
-       EA_Save.Distance ,(int)EA_Save.Button ,EA_Save.Flag);
+   }  
+   Serial.printf("!!! Last EEPROM value: time=%ld uptime=%ld dist=%d butt=%d\n",
+       EA_Save.Time, EA_Save.Uptime, (int)EA_Save.Distance ,(int)EA_Save.Button);
          
 }
 
@@ -281,8 +278,8 @@ void EA_read_config(){
     }  
     uint16_t src = EA_SRC();
     if( EA_Config.SRC == src ){
-       Serial.printf("EEPROM Config is correct\n");
-       Serial.printf("EEPROM config: level ground = %d bootcount = %d\n",(int)EA_Config.GroundLevel,(int)EA_Config.CountBoot);       
+       Serial.printf("!!! EEPROM Config is correct\n");
+       Serial.printf("!!! EEPROM config: level ground = %d bootcount = %d src=%d\n",(int)EA_Config.GroundLevel,(int)EA_Config.CountBoot,(int)src);       
 
        sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
        LoopInterval = EA_Config.TM_LOOP_SENSOR*1000;
@@ -290,7 +287,7 @@ void EA_read_config(){
 //       nanValueFlag = EA_Config.NanValueFlag;
     }
     else {
-       Serial.printf("EEPROM SRC is not valid: %d %d\n",src,EA_Config.SRC);
+       Serial.printf("??? EEPROM SRC is not valid: %d %d\n",src,EA_Config.SRC);
        EA_default_config();
        EA_save_config();
     }            
@@ -309,7 +306,7 @@ void EA_save_config(){
     }  
    EEPROM.commit();     
    sprintf(SensorID,"%s_%s",EA_Config.DOGOVOR_ID,EA_Config.BOX_ID);
-   Serial.printf("EEPROM config write: level ground = %d\n",EA_Config.GroundLevel);
+   Serial.printf("!!! EEPROM config write: level ground = %d\n",EA_Config.GroundLevel);
    LoopInterval = EA_Config.TM_LOOP_SENSOR*1000;
 
   
@@ -325,7 +322,7 @@ uint16_t EA_SRC(void){
    uint16_t src_save = EA_Config.SRC;
    EA_Config.SRC = 0;
    for( int i=0; i<sz1; i++)src +=*((uint8_t*)&EA_Config + i);
-   Serial.printf("SCR=%d\n",src); 
+   Serial.printf("!!! SCR=%d\n",src); 
    EA_Config.SRC = src_save;
  
    return src;  
@@ -335,15 +332,19 @@ uint16_t EA_SRC(void){
  * Сброс конфиг в значения "по умолчанию"
  */
 void EA_default_config(void){
-   Serial.println("EEPROM Config is Default");
    size_t sz1 = sizeof(EA_Config);
    memset( &EA_Config, '\0',sz1);
    strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
    strcpy(EA_Config.AP_SSID, "none");
    strcpy(EA_Config.AP_PASS, "");
-#ifdef WIFI_SAV    
+   EA_Config.isSendCrmMoscow = false; // 01.12.24 поменял true на false
+   EA_Config.isWiFiAlways    = true; // 01.12.24 помянл false на true
+#if defined(WIFI_SAV)  //Этот флаг использую только для отладки у себя. В обычной жизни он не работает
    strcpy(EA_Config.AP_SSID, "ASUS_58_2G");
    strcpy(EA_Config.AP_PASS, "sav59vas");
+   EA_Config.isSendCrmMoscow = true; 
+   EA_Config.isWiFiAlways    = false;
+   Serial.println("!!! Sav Wifi flag is on"); 
 #endif   
    EA_Config.IP[0]           = 192;   
    EA_Config.IP[1]           = 168;   
@@ -363,11 +364,13 @@ void EA_default_config(void){
    EA_Config.DNS[3]          = 8;
    strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
    strcpy(EA_Config.ESP_OPER_PASS, DEVICE_OPER);
-   EA_Config.isSendCrmMoscow = true;
    strcpy(EA_Config.DOGOVOR_ID, "0000");
    strcpy(EA_Config.BOX_ID, "1");
    strcpy(EA_Config.SERVER, "crm.moscow");
    EA_Config.PORT            = 8001;
+   EA_Config.TM_HTTP_SEND         = 1000; //01.12.24 Таймаут отправки на сервер
+   EA_Config.TM_HTTP_RETRY_ERROR  = 10; //01.12.24 Повторная попытка, если при отправке не вернулся статус HTTP 200 
+
    EA_Config.GroundLevel     = 50;  
    EA_Config.LimitDistance   = 250;
 //   EA_Config.LimitDistanceUp = -1;
@@ -384,7 +387,6 @@ void EA_default_config(void){
    EA_Config.SensorType      = DEFAULT_SENSOR_TYPE;
    EA_Config.NanValueFlag    = DEFAULT_NAN_VALUE_FLAG;
    EA_Config.MeasureType     = DEFAULT_MEASURE_TYPE;
-   EA_Config.isWiFiAlways    = false;
    EA_Config.TM_BEGIN_CALIBRATE = 5;
    EA_Config.SAMPLES_CLIBRATE   = 10;
    EA_Config.TM_LOOP_SENSOR     = 1;
@@ -396,5 +398,14 @@ void EA_default_config(void){
    EA_Config.isColorNan         = true;
    EA_Config.Brightness         = 10;
    EA_Config.CountBoot          = 0;
+
+   EA_Config.ModeRelay1         = RELAY_NORMAL; //Режим работы реле
+   EA_Config.isInverseRelay1    = false;    //Инвертирование работы реле
+   EA_Config.TM_PulseRelay1     = 1; //длительность импульса при имитации нажатия кнопки
+   EA_Config.ModeRelay2         = RELAY_NONE; //Режим работы реле
+   EA_Config.isInverseRelay2    = false;    //Инвертирование работы реле
+   EA_Config.TM_PulseRelay2     = 1; //длительность импульса при имитации нажатия кнопки
+
+  Serial.println("!!! EEPROM Config is Default.");
    
 }

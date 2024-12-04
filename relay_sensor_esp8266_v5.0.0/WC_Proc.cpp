@@ -54,6 +54,8 @@ TFLI2C tflI2C;
 
 float L = NAN, H = NAN;
 bool isSonarEnable = false;
+bool isChangeStat  = false; //Изменение отслеживания изменения состояния для немедленной отправки 
+
 
 /**
  * Инициализация ультразвукового датчика
@@ -354,7 +356,7 @@ bool HttpGetStatus(void){
 bool HttpSetParam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, bool _btn, int _stat ){
    WiFiClient client;
 // Подключаемся к WEB ерверу
-   Serial.printf("HTTP Send: %s:%d ",EA_Config.SERVER,EA_Config.PORT);
+   Serial.printf("HTTP Send Param: %s:%d ",EA_Config.SERVER,EA_Config.PORT);
    if (!client.connect(EA_Config.SERVER, EA_Config.PORT)) {
        Serial.println(F(" Connection failed"));
        return false;
@@ -414,7 +416,7 @@ bool HttpSetStatus(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _d
 // Подключаемся к WEB ерверу
 
 
-   Serial.printf("HTTP Send: %s:%d ",EA_Config.SERVER,EA_Config.PORT);
+   Serial.printf("HTTP Send Status: %s:%d ",EA_Config.SERVER,EA_Config.PORT);
    if (!client.connect(EA_Config.SERVER, EA_Config.PORT)) {
        Serial.println(F(" Connection failed"));
        return false;
@@ -566,8 +568,8 @@ void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, b
    struct EA_SaveType Val;
    Val.Time     = _time;
    Val.Uptime   = _uptime;
-   Val.Temp     = _temp;
-   Val.Hum      = _hum;
+//   Val.Temp     = _temp;
+//   Val.Hum      = _hum;
    Val.Distance = _dist;
    Val.Button   = _btn;
    Val.Flag     = _stat;  
@@ -581,11 +583,16 @@ void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, b
 void ProcessingDistance(){
 // Опрашиваем ультразвуковой датчик
    uint32_t _ms = millis();
-   GetDistance();  
+   for( int i=0; i<NUMBER_DISTANCE_ATT; i++){
+      GetDistance();
+      if( !isnan(L) )break;
+   } 
 //   L = NAN;
 //   if( L < 200 )L = NAN;
    Distance = L;
-   Serial.printf("!!! Distance = %d \n",(int)Distance);  
+#if defined(DEBUG1)   
+   Serial.printf("!!! Distance = %d \n",(int)Distance);
+#endif     
 //   Serial.println(L); 
 //   PrintValue();
    if( isnan(L) ){
@@ -663,7 +670,8 @@ void ProcessingDistance(){
        Serial.println(F("--->Fixed Button"));
        stat2 = STAT_OFF;
        Relay_setDistance();
-       pushRam(Time, _ms/1000, Temp, Hum, Distance, Button, 0 );
+//       pushRam(Time, _ms/1000, Temp, Hum, Distance, Button, 0 );
+       isChangeStat = true;
    }
   
 }
@@ -685,17 +693,72 @@ void WS_setDistance(){
 }
       
 void Relay_setDistance(){
-  if( Button ){
-     if( PinRelay>=0 )digitalWrite(PinRelay,HIGH);
-     if( PinController>=0 )digitalWrite(PinController,HIGH);  
-     relayStat = true;
+  if( PinRelay>=0 ){
+     if( Button ){
+        relayStat = true;
+        switch(EA_Config.ModeRelay1 ){
+           case RELAY_NORMAL :
+              Relay_setPin(PinRelay, HIGH, EA_Config.isInverseRelay1);
+              break;
+           case RELAY_PULSE :
+              Relay_setPin(PinRelay, HIGH, EA_Config.isInverseRelay1);
+              delay(EA_Config.TM_PulseRelay1 * 1000);
+              Relay_setPin(PinRelay, LOW, EA_Config.isInverseRelay1);
+              break;
+        }
+     }
+     else {
+        relayStat = false;
+        switch(EA_Config.ModeRelay1 ){
+           case RELAY_NORMAL :
+              Relay_setPin(PinRelay, LOW, EA_Config.isInverseRelay1);
+              break;
+           case RELAY_PULSE :
+              break;
+        }
+     }
   }
   else {
-     if( PinRelay>=0 )digitalWrite(PinRelay,LOW);
-     if( PinController>=0 )digitalWrite(PinController,LOW);    
-     relayStat = false;
+     Serial.println("!!! Relay 1 not config");
   }
+  if( PinController>=0 ){
+     if( Button ){
+        switch(EA_Config.ModeRelay2 ){
+           case RELAY_NORMAL :
+              Relay_setPin(PinController, HIGH, EA_Config.isInverseRelay2);
+              break;
+           case RELAY_PULSE :
+              Relay_setPin(PinController, HIGH, EA_Config.isInverseRelay2);
+              delay(EA_Config.TM_PulseRelay2 * 1000);
+              Relay_setPin(PinController, LOW, EA_Config.isInverseRelay2);
+              break;
+        }
+     }
+     else {
+        switch(EA_Config.ModeRelay2 ){
+           case RELAY_NORMAL :
+              Relay_setPin(PinController, LOW, EA_Config.isInverseRelay2);
+              break;
+           case RELAY_PULSE :
+              break;
+        }
+     }
+  }
+  else {
+     Serial.println("!!! Relay 2 not config");
+  }
+    
 }
+
+void  Relay_setPin(uint8_t pin, bool stat, bool is_inverse){
+   bool stat1;
+   if( is_inverse )stat1 = !stat;
+   else stat1 = stat;
+   Serial.printf("!!! Set Relay pin=%d stat=%d\n",(int)pin,(int)stat1);
+   digitalWrite(pin, stat1);
+}
+
+
 
 bool scanI2C(int _addr){
    Serial.println("Scanning...");
