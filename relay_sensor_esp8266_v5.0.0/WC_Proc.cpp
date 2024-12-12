@@ -19,6 +19,7 @@ int   ButtonCountOff = 0;
 bool   PinCalibrateSonarState = false;
 char sbuf[SendBuferSize];
 char rbuf[ReceiveBuferSize];
+extern uint32_t msLoad;
 
 unsigned long Time   = 0;
 unsigned long RTC_Time   = 0;
@@ -31,9 +32,15 @@ bool     ResetByErr   = false;
 const char KeyGenStrParam[]      = "%s;%ld;%d;%d;%d";
 char SensorID[32];
 
-unsigned long ButtonTime  = 0;
+unsigned long ButtonTime1  = 0, ButtonTime2 = 0;
+
+bool statRelay1 = false, statRelay2 = false;
+bool inverseRelay1 = false, inverseRelay2 = false;
+uint16_t eventRelay1 = 0, eventRelay2 = 0;
+uint32_t msRelay1 = 0, msRelay2 = 0;
 
 
+ES_STAT stat1           = STAT_OFF;
 ES_STAT stat2           = STAT_OFF;
 bool is_first_flag   = true;
 unsigned long t_ws_send = 0;
@@ -42,7 +49,7 @@ unsigned long t_ws_recv = 0;
 
 bool RTCFlag   =  true;
 bool FlagWDT   =  false;
-bool relayStat = false;
+//bool relayStat = false;
 
 //RTC_DS3231 rtc;
 DHT dht(PinDHT22, DHT22);
@@ -591,7 +598,7 @@ void ProcessingDistance(){
 //   if( L < 200 )L = NAN;
    Distance = L;
 #if defined(DEBUG1)   
-   Serial.printf("!!! Distance = %d \n",(int)Distance);
+   Serial.printf("!!! Distance = %d tm = %ld\n",(int)Distance,(long)msLoad);
 #endif     
 //   Serial.println(L); 
 //   PrintValue();
@@ -633,47 +640,81 @@ void ProcessingDistance(){
           }
        else Button = !SonarGroudState;
   }
+  checkChangeButton();
+  
+}
+
+
+void checkChangeButton(){
+  uint32_t _ms = millis();
 // Зафиксировано изменение состояния   
    if( Button != LastButton ){
 // Если кнопка включена       
       if( Button ){
 // Если не прошел таймаут от предыдущего состояния      
+         if( stat1 == STAT_OFF ){
+             stat1 = STAT_BT_ON;
+             ButtonTime1 = _ms;  
+             Serial.println(F("--->Button1 ON"));
+         }
+         else {
+             stat1 = STAT_OFF;
+             Serial.println(F("--->Reset Button1 ON"));
+         }
          if( stat2 == STAT_OFF ){
              stat2 = STAT_BT_ON;
-             ButtonTime = _ms;  
-             Serial.println(F("--->Button ON"));
+             ButtonTime2 = _ms;  
+             Serial.println(F("--->Button2 ON"));
          }
          else {
              stat2 = STAT_OFF;
-             Serial.println(F("--->Reset Button ON"));
+             Serial.println(F("--->Reset Button2 ON"));
          }
       }
       else {
+         if( stat1 == STAT_OFF ){
+             stat1 = STAT_BT_OFF;
+             ButtonTime1 = _ms;  
+             Serial.println(F("--->Button1 OFF"));
+         }
+         else {
+             stat1 = STAT_OFF;
+             Serial.println(F("--->Reset Button1 OFF"));
+         }
          if( stat2 == STAT_OFF ){
              stat2 = STAT_BT_OFF;
-             ButtonTime = _ms;  
-             Serial.println(F("--->Button OFF"));
+             ButtonTime2 = _ms;  
+             Serial.println(F("--->Button2 OFF"));
          }
          else {
              stat2 = STAT_OFF;
-             Serial.println(F("--->Reset Button OFF"));
+             Serial.println(F("--->Reset Button2 OFF"));
          }
       }
       LastButton = Button;
    } 
 //   WS_setDistance();
    uint32_t _tm = 0;
-   if( stat2 == STAT_BT_ON )  _tm = (uint32_t)EA_Config.TM_ON*1000;
-   if( stat2 == STAT_BT_OFF ) _tm = (uint32_t)EA_Config.TM_OFF*1000;
-//   Serial.printf("stat2=%d _tm = %ld\n",stat2,_tm);
-   if( ( stat2 == STAT_BT_ON || stat2 == STAT_BT_OFF ) && (_tm == 0 || _ms < ButtonTime || _ms - ButtonTime >= _tm ) ) {
-       Serial.println(F("--->Fixed Button"));
-       stat2 = STAT_OFF;
-       Relay_setDistance();
+   if( stat1 == STAT_BT_ON )  _tm = (uint32_t)EA_Config.TM_DelayON1*1000;
+   if( stat1 == STAT_BT_OFF ) _tm = (uint32_t)EA_Config.TM_DelayOFF1*1000;
+   if( ( stat1 == STAT_BT_ON || stat1 == STAT_BT_OFF ) && (_tm == 0 || _ms < ButtonTime1 || _ms - ButtonTime1 >= _tm ) ) {
+       Serial.println(F("--->Fixed Button1"));
+       stat1 = STAT_OFF;
+//       Relay_setDistance1();
+       eventRelay1 = 1;
 //       pushRam(Time, _ms/1000, Temp, Hum, Distance, Button, 0 );
        isChangeStat = true;
    }
-  
+   _tm = 0;
+   if( stat2 == STAT_BT_ON )  _tm = (uint32_t)EA_Config.TM_DelayON2*1000;
+   if( stat2 == STAT_BT_OFF ) _tm = (uint32_t)EA_Config.TM_DelayOFF2*1000;
+   if( ( stat2 == STAT_BT_ON || stat2 == STAT_BT_OFF ) && (_tm == 0 || _ms < ButtonTime2 || _ms - ButtonTime2 >= _tm ) ) {
+       Serial.println(F("--->Fixed Button2"));
+       stat2 = STAT_OFF;
+       eventRelay2 = 1;
+//       Relay_setDistance2();
+   }
+
 }
 
 void WS_setDistance(){
@@ -692,70 +733,138 @@ void WS_setDistance(){
   }
 }
       
-void Relay_setDistance(){
-  if( PinRelay>=0 ){
-     if( Button ){
-        relayStat = true;
-        switch(EA_Config.ModeRelay1 ){
-           case RELAY_NORMAL :
-              Relay_setPin(PinRelay, HIGH, EA_Config.isInverseRelay1);
-              break;
-           case RELAY_PULSE :
-              Relay_setPin(PinRelay, HIGH, EA_Config.isInverseRelay1);
-              delay(EA_Config.TM_PulseRelay1 * 1000);
-              Relay_setPin(PinRelay, LOW, EA_Config.isInverseRelay1);
-              break;
-        }
-     }
-     else {
-        relayStat = false;
-        switch(EA_Config.ModeRelay1 ){
-           case RELAY_NORMAL :
-              Relay_setPin(PinRelay, LOW, EA_Config.isInverseRelay1);
-              break;
-           case RELAY_PULSE :
-              break;
-        }
-     }
-  }
-  else {
-     Serial.println("!!! Relay 1 not config");
-  }
-  if( PinController>=0 ){
-     if( Button ){
-        switch(EA_Config.ModeRelay2 ){
-           case RELAY_NORMAL :
-              Relay_setPin(PinController, HIGH, EA_Config.isInverseRelay2);
-              break;
-           case RELAY_PULSE :
-              Relay_setPin(PinController, HIGH, EA_Config.isInverseRelay2);
-              delay(EA_Config.TM_PulseRelay2 * 1000);
-              Relay_setPin(PinController, LOW, EA_Config.isInverseRelay2);
-              break;
-        }
-     }
-     else {
-        switch(EA_Config.ModeRelay2 ){
-           case RELAY_NORMAL :
-              Relay_setPin(PinController, LOW, EA_Config.isInverseRelay2);
-              break;
-           case RELAY_PULSE :
-              break;
-        }
-     }
-  }
-  else {
-     Serial.println("!!! Relay 2 not config");
-  }
-    
+void Relay_setDistance1(){
+   if( PinController < 0 )return;
+// Проверяем не менялся ли флаг инверсии
+   if( EA_Config.isInverseRelay1 != inverseRelay1 )Relay_set1(statRelay1);   
+   if( eventRelay1 == 0 )return;
+   uint32_t ms = millis();
+   if( Button ){
+      switch(EA_Config.ModeRelay1 ){
+         case RELAY_NORMAL : //Один раз включить и больше не трогать
+            Relay_set1(true);
+            eventRelay1 = 0; 
+            break;
+         case RELAY_PULSE : //Если задан одиночный импульс
+            if( eventRelay1 == 1 ){ //Включить и задать время горения
+               msRelay1 = ms + EA_Config.TM_PulseRelay1 * 1000;
+               Relay_set1(true);
+               eventRelay1 = 2;   
+            }
+            else if( msRelay1 == 0 || ms > msRelay1 ){ //Если прошло время отключить и больше не трогать
+               msRelay1 = 0;
+               eventRelay1 = 0;
+               Relay_set1(false);              
+            }
+            break;
+         case RELAY_PWM : //Если задан повторяющийся импульс
+            if( eventRelay1 == 1 && (msRelay1 == 0 || ms > msRelay1) ){ //Включить и задать время горения
+               msRelay1 = ms + EA_Config.TM_PulseRelay1 * 1000;
+               Relay_set1(true);
+               eventRelay1 = 2;   
+            }
+            else if( eventRelay1 > 1 && (msRelay1 == 0 || ms > msRelay1) ){ //Выключить и задать время паузы
+               msRelay1 = ms + EA_Config.TM_PauseRelay1 * 1000;
+               eventRelay1 = 1;
+               Relay_set1(false);              
+            }
+            break;
+      }
+   }
+   else {
+      switch(EA_Config.ModeRelay1 ){  
+         case RELAY_NORMAL : //Во всех режимах отключить и больше не трогать
+         case RELAY_PULSE :
+         case RELAY_PWM :
+             Relay_set1(false);
+             msRelay1 = 0;
+             eventRelay1 = 0;
+             break;
+      }
+   }
 }
 
+void Relay_setDistance2(){
+   if( PinRelay < 0 )return;
+// Проверяем не менялся ли флаг инверсии
+   if( EA_Config.isInverseRelay2 != inverseRelay2 )Relay_set2(statRelay2);   
+   if( eventRelay2 == 0 )return;
+   uint32_t ms = millis();
+   if( Button ){
+      switch(EA_Config.ModeRelay2 ){
+         case RELAY_NORMAL : //Один раз включить и больше не трогать
+            Relay_set2(true);
+            eventRelay2 = 0; 
+            break;
+         case RELAY_PULSE : //Если задан одиночный импульс
+            if( eventRelay2 == 1 ){ //Включить и задать время горения
+               msRelay2 = ms + EA_Config.TM_PulseRelay2 * 1000;
+               Relay_set2(true);
+               eventRelay2 = 2;   
+            }
+            else if( msRelay2 == 0 || ms > msRelay2 ){ //Если прошло время отключить и больше не трогать
+               msRelay2 = 0;
+               eventRelay2 = 0;
+               Relay_set2(false);              
+            }
+            break;
+         case RELAY_PWM : //Если задан повторяющийся импульс
+            if( eventRelay2 == 1 && (msRelay2 == 0 || ms > msRelay2) ){ //Включить и задать время горения
+               msRelay2 = ms + EA_Config.TM_PulseRelay2 * 1000;
+               Relay_set2(true);
+               eventRelay2 = 2;   
+            }
+            else if( eventRelay2 > 1 && (msRelay2 == 0 || ms > msRelay2) ){ //Выключить и задать время паузы
+               msRelay2 = ms + EA_Config.TM_PauseRelay2 * 1000;
+               eventRelay2 = 1;
+               Relay_set2(false);              
+            }
+            break;
+      }
+   }
+   else {
+      switch(EA_Config.ModeRelay2 ){  
+         case RELAY_NORMAL : //Во всех режимах отключить и больше не трогать
+         case RELAY_PULSE :
+         case RELAY_PWM :
+             Relay_set2(false);
+             msRelay2 = 0;
+             eventRelay2 = 0;
+             break;
+      }
+   }
+}
+
+
+void  Relay_set1( bool stat){
+   bool _stat;
+   if( EA_Config.isInverseRelay1 )_stat = !stat;
+   else _stat = stat;
+   Serial.printf("!!! Set Relay1 pin=%d stat=%d\n",(int)PinController,(int)_stat);
+   digitalWrite(PinController, _stat);
+// Сохраняем значения
+   statRelay1    = stat;
+   inverseRelay1 = EA_Config.isInverseRelay1;
+}
+
+void  Relay_set2( bool stat){
+   bool _stat;
+   if( EA_Config.isInverseRelay2 )_stat = !stat;
+   else _stat = stat;
+   Serial.printf("!!! Set Relay2 pin=%d stat=%d\n",(int)PinRelay,(int)_stat);
+   digitalWrite(PinRelay, _stat);
+// Сохраняем значения
+   statRelay2    = stat;
+   inverseRelay2 = EA_Config.isInverseRelay2;
+}
+
+
 void  Relay_setPin(uint8_t pin, bool stat, bool is_inverse){
-   bool stat1;
-   if( is_inverse )stat1 = !stat;
-   else stat1 = stat;
-   Serial.printf("!!! Set Relay pin=%d stat=%d\n",(int)pin,(int)stat1);
-   digitalWrite(pin, stat1);
+   bool _stat;
+   if( is_inverse )_stat = !stat;
+   else _stat = stat;
+   Serial.printf("!!! Set Relay pin=%d stat=%d\n",(int)pin,(int)_stat);
+   digitalWrite(pin, _stat);
 }
 
 
@@ -835,6 +944,7 @@ bool SonarFake::Check(){
    return ret;
 }
 
+
 void PrintValue(){
          Serial.print("!!! Value: Time=");    
          Serial.print(Time);
@@ -843,10 +953,11 @@ void PrintValue(){
          Serial.print(",Bt=");
          Serial.print(Button);
          Serial.print(",LastBt=");
-         Serial.print(LastButton);
-         Serial.print(",Relay=");
-         Serial.println(relayStat);
+         Serial.println(LastButton);
+//         Serial.print(",Relay=");
+//         Serial.println(relayStat);
 }
+
 
 /**
 * Автокалибровка земли

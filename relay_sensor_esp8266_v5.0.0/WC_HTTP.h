@@ -26,7 +26,7 @@ extern char SensorID[];
 extern bool isAP;
 extern float Temp, LastTemp, Hum, LastHum, LastDistance, Distance;
 extern unsigned long Time;
-extern uint32_t msAP,msSTA;
+extern uint32_t msAP, msSTA, msLoad;
 
 enum ES_WIFI_STAT {
   EWS_OFF,
@@ -73,6 +73,7 @@ void HTTP_handlePngType3(void);
 void HTTP_handlePngRelay0(void);
 void HTTP_handlePngRelay1(void);
 void HTTP_handlePngRelay2(void);
+void HTTP_handlePngRelay3(void);
 
 
 void HTTP_printCSS(String &out);

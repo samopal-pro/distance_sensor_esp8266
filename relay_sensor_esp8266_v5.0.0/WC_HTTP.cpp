@@ -21,6 +21,7 @@ String HTTP_User = "";
 int    UID       = -1;
 
 uint32_t msScan = 0;
+uint32_t msLoad = 0;
 std::vector <String> n_ssid;
 std::vector <int> n_rssi;
 
@@ -130,6 +131,7 @@ void HTTP_begin(void){
    server.on ( "/relay0.png", HTTP_handlePngRelay0 );
    server.on ( "/relay1.png", HTTP_handlePngRelay1 );
    server.on ( "/relay2.png", HTTP_handlePngRelay2 );
+   server.on ( "/relay3.png", HTTP_handlePngRelay3 );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -155,9 +157,10 @@ void HTTP_handlePngWiFi2() {  server.send_P(200, PSTR("image/png"), wifi2_png, s
 void HTTP_handlePngType1() {  server.send_P(200, PSTR("image/png"), type1_png, sizeof(type1_png));}
 void HTTP_handlePngType2() {  server.send_P(200, PSTR("image/png"), type2_png, sizeof(type2_png));}
 void HTTP_handlePngType3() {  server.send_P(200, PSTR("image/png"), type3_png, sizeof(type3_png));}
-void HTTP_handlePngRelay0(){  server.send_P(200, PSTR("image/png"), relay0_png, sizeof(type3_png));}
-void HTTP_handlePngRelay1(){  server.send_P(200, PSTR("image/png"), relay1_png, sizeof(type3_png));}
-void HTTP_handlePngRelay2(){  server.send_P(200, PSTR("image/png"), relay2_png, sizeof(type3_png));}
+void HTTP_handlePngRelay0(){  server.send_P(200, PSTR("image/png"), relay0_png, sizeof(relay0_png));}
+void HTTP_handlePngRelay1(){  server.send_P(200, PSTR("image/png"), relay1_png, sizeof(relay1_png));}
+void HTTP_handlePngRelay2(){  server.send_P(200, PSTR("image/png"), relay2_png, sizeof(relay2_png));}
+void HTTP_handlePngRelay3(){  server.send_P(200, PSTR("image/png"), relay3_png, sizeof(relay3_png));}
 
 /**
  * Обработчик событий WEB-сервера
@@ -345,8 +348,13 @@ void HTTP_handleDistance(void) {
  * Оработчик главной страницы сервера
  */
 void HTTP_handleRoot(void) {
-    if( HTTP_redirect() )return;
-    if( HTTP_checkArgs() )return;
+  if( HTTP_redirect() )return;
+  if( HTTP_checkArgs() )return;
+  if( msLoad != 0 ){
+     Serial.println(F("!!! Skip HTTP root ..."));
+     return;
+  }
+  msLoad = millis();
   char str[50];
 //  int gid = HTTP_isAuth();  
 
@@ -413,7 +421,7 @@ void HTTP_handleRoot(void) {
    HTTP_printTail(out);
    Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
    server.sendContent(out);
-
+   msLoad = 0;
 //   Serial.printf("!!! HTTP size page %d\n", out.length());  
 //   Serial.println(out);
 //   server.send ( 200, "text/html", out );
@@ -462,7 +470,7 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
-
+/*
 // Блок №4 
   out += " <fieldset>\n";
   out += "  <legend>Скорость переключения: Занято - Свободно</legend>\n";
@@ -476,13 +484,23 @@ void HTTP_printConfig(){
   out += " </fieldset>\n";
 
    Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+*/
+//   server.sendContent(out);
+//   out = "";
+   Serial.printf("!!! HTTP Fragment 2a %d\n", out.length());  
    server.sendContent(out);
    out = "";
 
 // Блок №4.1 
   out += " <fieldset>\n";
   out += "  <legend>Режим работы реле №1</legend>\n";
-  
+
+  sprintf(s,"%d",EA_Config.TM_DelayON1);
+  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn1",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_DelayON2);
+  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff1",s,16,32,HT_NUMBER);
+
+
   out += "<table><tr><td><img src='/relay0.png'><br></td><td valign='middle'><input type='radio' name='ModeRelay1' value='0'";
   if( EA_Config.ModeRelay1  == RELAY_NONE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Не используется</td></tr></table>";
@@ -494,8 +512,15 @@ void HTTP_printConfig(){
   out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='2'";
   if( EA_Config.ModeRelay1  == RELAY_PULSE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
+
+  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='3'";
+  if( EA_Config.ModeRelay1  == RELAY_PWM )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
+
   sprintf(s,"%d",EA_Config.TM_PulseRelay1);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay1",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_PauseRelay1);
+  HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay1",s,16,32,HT_NUMBER);
 
   out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
   if( EA_Config.isInverseRelay1  )out += " checked>\n";
@@ -504,12 +529,18 @@ void HTTP_printConfig(){
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
 
-  out += " </fieldset>\n";
+  out += " </fieldset>\n";  
 
 // Блок №4.2
   out += " <fieldset>\n";
   out += "  <legend>Режим работы реле №2</legend>\n";
-  
+
+  sprintf(s,"%d",EA_Config.TM_DelayON2);
+  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn2",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.TM_DelayON2);
+  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff2",s,16,32,HT_NUMBER);
+
+
   out += "<table><tr><td><img src='/relay0.png'><br></td><td valign='middle'><input type='radio' name='ModeRelay2' value='0'";
   if( EA_Config.ModeRelay2  == RELAY_NONE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Не используется</td></tr></table>";
@@ -522,7 +553,16 @@ void HTTP_printConfig(){
   if( EA_Config.ModeRelay2  == RELAY_PULSE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
   sprintf(s,"%d",EA_Config.TM_PulseRelay2);
+
+  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='3'";
+  if( EA_Config.ModeRelay2  == RELAY_PWM )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
+
+  sprintf(s,"%d",EA_Config.TM_PulseRelay2);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay2",s,16,32,HT_NUMBER);
+
+  sprintf(s,"%d",EA_Config.TM_PauseRelay2);
+  HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay2",s,16,32,HT_NUMBER);
 
   out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
   if( EA_Config.isInverseRelay2  )out += " checked>\n";
@@ -533,6 +573,9 @@ void HTTP_printConfig(){
 
   out += " </fieldset>\n";
 
+   Serial.printf("!!! HTTP Fragment 2b %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
 
 
 // Блок №5
@@ -556,10 +599,11 @@ void HTTP_printConfig(){
   if( EA_Config.isColorNan  )out += " checked>\n";
   else out += ">";
   out += "Активация малиновой подсветки если датчик ничего не видит.";
-
   out += "</td></tr>";
-
   out += "</table>\n";
+  sprintf(s,"%d",EA_Config.TM_LOOP_SENSOR);
+  HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
+
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
@@ -597,7 +641,7 @@ void HTTP_printConfig(){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
-   Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+   Serial.printf("!!! HTTP Fragment 2c %d\n", out.length());  
    server.sendContent(out);
    out = "";
 
@@ -802,8 +846,6 @@ bool HTTP_checkArgs(){
       if(server.hasArg("MaxDistance1")  )EA_Config.MaxDistance1      = server.arg("MaxDistance1").toInt();
       if(server.hasArg("MinDistance2")  )EA_Config.MinDistance2      = server.arg("MinDistance2").toInt();
       if(server.hasArg("MaxDistance2")  )EA_Config.MaxDistance2      = server.arg("MaxDistance2").toInt();
-      if(server.hasArg("TMOn")         )EA_Config.TM_ON              = server.arg("TMOn").toInt();
-      if(server.hasArg("TMOff")        )EA_Config.TM_OFF             = server.arg("TMOff").toInt();
       if(server.hasArg("TMLoop")       )EA_Config.TM_LOOP_SENSOR     = server.arg("TMLoop").toInt();
       if(server.hasArg("TMCalibr")     )EA_Config.TM_BEGIN_CALIBRATE = server.arg("TMCalibr").toInt();
       if(server.hasArg("NumCalibr")    )EA_Config.SAMPLES_CLIBRATE   = server.arg("NumCalibr").toInt();
@@ -837,23 +879,19 @@ bool HTTP_checkArgs(){
       if(server.hasArg("IPGate"))EA_Config.GW.fromString(server.arg("IPGate").c_str());
       if(server.hasArg("IPDns") )EA_Config.DNS.fromString(server.arg("IPDns").c_str());
 
-      if(server.hasArg("ModeRelay1"))
-         switch(server.arg("ModeRelay1").toInt()){
-             case 0: EA_Config.ModeRelay1  = RELAY_NONE; break;
-             case 1: EA_Config.ModeRelay1  = RELAY_NORMAL; break;
-             case 2: EA_Config.ModeRelay1  = RELAY_PULSE; break;
-         }
+      if(server.hasArg("TMOn1")         )EA_Config.TM_DelayON1              = server.arg("TMOn1").toInt();
+      if(server.hasArg("TMOff1")        )EA_Config.TM_DelayOFF1             = server.arg("TMOff1").toInt();
+      if(server.hasArg("ModeRelay1")    )EA_Config.ModeRelay1               = (T_RELAY_MODE)server.arg("ModeRelay1").toInt();
       if(server.hasArg("TM_PulseRelay1"))EA_Config.TM_PulseRelay1 = server.arg("TM_PulseRelay1").toInt();   
+      if(server.hasArg("TM_PauseRelay1"))EA_Config.TM_PauseRelay1 = server.arg("TM_PauseRelay1").toInt();    
       if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
       else EA_Config.isInverseRelay1 = false;
 
-      if(server.hasArg("ModeRelay2"))
-         switch(server.arg("ModeRelay2").toInt()){
-             case 0: EA_Config.ModeRelay2  = RELAY_NONE; break;
-             case 1: EA_Config.ModeRelay2  = RELAY_NORMAL; break;
-             case 2: EA_Config.ModeRelay2  = RELAY_PULSE; break;
-         }
+      if(server.hasArg("TMOn2")         )EA_Config.TM_DelayON2              = server.arg("TMOn2").toInt();
+      if(server.hasArg("TMOff2")        )EA_Config.TM_DelayOFF2             = server.arg("TMOff2").toInt();
+      if(server.hasArg("ModeRelay2")    )EA_Config.ModeRelay2               = (T_RELAY_MODE)server.arg("ModeRelay2").toInt();
       if(server.hasArg("TM_PulseRelay2"))EA_Config.TM_PulseRelay2 = server.arg("TM_PulseRelay2").toInt();   
+      if(server.hasArg("TM_PauseRelay2"))EA_Config.TM_PauseRelay2 = server.arg("TM_PauseRelay2").toInt();   
       if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
       else EA_Config.isInverseRelay2 = false;
 

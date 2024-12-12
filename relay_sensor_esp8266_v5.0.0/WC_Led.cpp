@@ -47,7 +47,8 @@ void ledInit(){
       delay(50);
    }
    ledSetWiFiMode(LED_WIFI_OFF);
-   ledSetBaseMode(LED_BASE_BUSY );
+// Чтобы до первого нормального измерения лета горела малиновым
+   ledSetColor(COLOR_NAN);
 }
 
 

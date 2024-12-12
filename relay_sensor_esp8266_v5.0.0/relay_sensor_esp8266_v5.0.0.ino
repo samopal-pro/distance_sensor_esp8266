@@ -91,7 +91,8 @@ void setup() {
 // Инициализация сонара   
    InitSonar();   
    WS_setDistance();
-   Relay_setDistance();
+   Relay_setDistance1();
+   Relay_setDistance2();
    ms4 = millis();   
 //   while(true){
 //      ledSetBaseMode(LED_BASE_FREE);
@@ -162,11 +163,13 @@ void loop() {
 
 //   uint32_t it1 = LoopInterval;
 //   if( w_stat2 == EWS_AP_MODE )it1 = LoopIntervalAP;
-   if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click){
+   if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click && msLoad == 0 ){
       ms1 = cur_ms;
 // Проверяем дистанцию, устанавливаем значение реле и ленты      
       ProcessingDistance();
       WS_setDistance();
+      Relay_setDistance1();
+      Relay_setDistance2();
 //      if( RTCFlag ){
 //          RTC_Time = GetRTClock();
 //          Time     = RTC_Time;
@@ -186,6 +189,7 @@ void loop() {
 // Цикл проверки WiFi   
    if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) ){
       ms2 = cur_ms;
+      if( msLoad != 0 && (millis()-msLoad > TM_HTTP_LOAD) )msLoad = 0;
 #if defined(DEBUG1)         
       Serial.printf("!!! Mode = %d flag = %d #%06lX #%06lX\n",ledBaseMode,(int)EA_Config.isColorFreeBlink, EA_Config.ColorBlink,EA_Config.ColorFree);
 #endif

@@ -66,7 +66,7 @@ enum ES_STAT {
   STAT_WAIT_OFF
 };
 
-extern ES_STAT stat2;
+extern ES_STAT stat1,stat2;
 extern bool is_first_flag;
 extern unsigned long t_ws_send;
 extern unsigned long t_ws_recv;
@@ -111,14 +111,17 @@ void pushRam(uint32_t _time, uint32_t _uptime, int _temp, int _hum, int _dist, b
 void ProcessingDistance();
 void PrintValue();
 void WS_setDistance();
-void Relay_setDistance();
-void  Relay_setPin(uint8_t pin, bool stat, bool is_inverse);
+void Relay_setDistance1();
+void Relay_setDistance2();
+//void  Relay_setPin(uint8_t pin, bool stat, bool is_inverse);
+void  Relay_set1(bool stat);
+void  Relay_set2(bool stat);
 void PrintTime( time_t t );
 bool scanI2C(int _addr);
 void lidarSetI2C();
 float CalibrateGround();
 bool ProcessingCalibrate(uint32_t _tm = 5000);
-
+void checkChangeButton();
 
 class SonarFake {
    private:

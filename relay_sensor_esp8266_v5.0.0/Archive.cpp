@@ -342,8 +342,8 @@ void EA_default_config(void){
 #if defined(WIFI_SAV)  //Этот флаг использую только для отладки у себя. В обычной жизни он не работает
    strcpy(EA_Config.AP_SSID, "ASUS_58_2G");
    strcpy(EA_Config.AP_PASS, "sav59vas");
-   EA_Config.isSendCrmMoscow = true; 
-   EA_Config.isWiFiAlways    = false;
+   EA_Config.isSendCrmMoscow = false; 
+   EA_Config.isWiFiAlways    = true;
    Serial.println("!!! Sav Wifi flag is on"); 
 #endif   
    EA_Config.IP[0]           = 192;   
@@ -379,8 +379,8 @@ void EA_default_config(void){
    EA_Config.MinDistance2     = 1500;
    EA_Config.MaxDistance2     = 1500;
 
-   EA_Config.TM_ON           = 1;
-   EA_Config.TM_OFF          = 1;
+//   EA_Config.TM_ON           = 1;
+//   EA_Config.TM_OFF          = 1;
    EA_Config.ZeroDistance    = 11111;
 //   EA_Config.isAP = true;
    EA_Config.isDHCP          = true;
@@ -401,10 +401,18 @@ void EA_default_config(void){
 
    EA_Config.ModeRelay1         = RELAY_NORMAL; //Режим работы реле
    EA_Config.isInverseRelay1    = false;    //Инвертирование работы реле
-   EA_Config.TM_PulseRelay1     = 1; //длительность импульса при имитации нажатия кнопки
-   EA_Config.ModeRelay2         = RELAY_NONE; //Режим работы реле
+   EA_Config.TM_PulseRelay1     = 1; //длительность импульса при имитации нажатия кнопки и циклическом режиме
+   EA_Config.TM_PauseRelay1     = 1; //длительность паузы при циклическом режиме
+   EA_Config.TM_DelayON1        = 1; // Задержка включения, сек
+   EA_Config.TM_DelayOFF1       = 1; //Задержка выключения, сек
+
+
+   EA_Config.ModeRelay2         = RELAY_NORMAL; //Режим работы реле
    EA_Config.isInverseRelay2    = false;    //Инвертирование работы реле
-   EA_Config.TM_PulseRelay2     = 1; //длительность импульса при имитации нажатия кнопки
+   EA_Config.TM_PulseRelay2     = 1; //длительность импульса при имитации нажатия кнопки и циклическом режиме  
+   EA_Config.TM_PauseRelay2     = 1; //длительность паузы при циклическом режиме
+   EA_Config.TM_DelayON2        = 1; // Задержка включения, сек
+   EA_Config.TM_DelayOFF2       = 1; //Задержка выключения, сек
 
   Serial.println("!!! EEPROM Config is Default.");
    
