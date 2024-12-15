@@ -168,7 +168,7 @@ extern T_SENSOR_TYPE sensorType;
 #define COLOR_WIFI_AP1         0xFFFFFF    //Цвет "Точка доступа всегда включена"
 
 #define SAVE_DISTANCE_DELTA    100.0        //Изменене дистанции при котором сохраняется последнее значение в EEPROM
-#define NUMBER_DISTANCE_ATT    5            //Число попыток повторения в случае неудачного измерения
+#define NUMBER_DISTANCE_ATT    2            //Число попыток повторения в случае неудачного измерения
 #define PING_SERVER
 #define TM_HTTP_LOAD           20000        //Максимальное время загрузки главной страницы, блокирующее опрос датчиков
 

@@ -230,19 +230,19 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   HTTP_printCSS(out);
   out += "<body>\n";
   out += " <div class=\"main\" id=\"main\">\n  "; 
-  out += "<h2>ДАТЧИК ПРИСУТСТВИЯ АВТОМОБИЛЯ</h2>";
+  out += "<h2>ДАТЧИК ПРИСУТСТВИЯ</h2>";
   out += "<p><img src=/logo.png></p>\n";
 
-  out += "<p><br>Сенсор: ";
-  out += EA_Config.ESP_NAME;
-  out += " ";
+  //out += "<p><br>Сенсор: ";
+  //out += EA_Config.ESP_NAME;
+  //out += " ";
   out += _VERSION;
   out += "\n";
   out += "<p>";
   out += HTTP_User;
 
   char s[20]; 
-  out += "<p>Время: ";
+  out += "<p>Дата: ";
   if( CheckTime(now()) )sprintf(s,"%02d.%02d.%04d %02d:%02d:%02d ",day(),month(),year(),hour(),minute(),second());   
   else sprintf(s,"30.05.2077 12:00:00"); 
   out += s; 
@@ -389,8 +389,8 @@ void HTTP_handleRoot(void) {
   out += " <input type='submit' value='Обновить' class='btn'>"; 
 */  
   out += "<iframe src='/distance' width=100% height=80 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
-  out += " <p class='t1'> Обновляйте страницу и в строке выше вы увидите расстояние от датчика до препятствия. ";
-  out += "Если расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.</p>";
+  out += " <p class='t1'> расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.";
+  out += "Если датчик светится МАЛИНОВЫМ - НЕ ОБНОВЛЯЙТЕ СТРАНИЦУ Сначала расположите датчик так, чтобы он стабильно замерял, видел расстояние и не светился малиновым.</p>";
 
 //  out += " </fieldset>\n</form>\n";
   out += " </fieldset>\n";
@@ -407,11 +407,11 @@ void HTTP_handleRoot(void) {
    if( UID >= 0 ){
      HTTP_printConfigColor();
      HTTP_printConfig();
-     out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
-     out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
-     out += "⠀<br>\n";
-     out += "За консультацией рекомендуем Вам обратиться по WhatsApp или Telegram 89060725500.<br>\n";
-     out += "По всем вопросам вы можете прислать видео или позвонить по видеозвонку.<br>\n";
+//     out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
+//     out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
+//     out += "⠀<br>\n";
+//     out += "За консультацией рекомендуем Вам обратиться по WhatsApp или Telegram 89060725500.<br>\n";
+//     out += "По всем вопросам вы можете прислать видео или позвонить по видеозвонку.<br>\n";
      out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
      out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
      out += "<p><a class='a1' href=/?Reboot=1>Перезагрузка</a>\n";
@@ -443,21 +443,21 @@ void HTTP_printConfig(){
   out += "></td><td align='center'><input type='radio' name='WiFiMode' value='2'";
   if( EA_Config.isWiFiAlways )out += " checked";
   out += "></td></tr>";
-  out += "<tr><td align='center' class='td1'>Раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Бесконечный доступ к настройкам. Первый светодиод белый.</td></tr></table>";
-  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", выберите ниже сеть WI-FI с доступом ";
-  out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета. ";
-  out += "ID вы можете получить в технической поддержке по телефону: 89060525500.<br>\n";
-  out += "⠀<br>\n";
-  out += "После нажатия кнопки &quot;Сохранить&quot, датчик моргнет белым цветом при успешном сохранении.";
+  out += "<tr><td align='center' class='td1'>Раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Всегда раздает WiFi. Первый светодиод белый.</td></tr></table>";
+//  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", выберите ниже сеть WI-FI с доступом ";
+//  out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета. ";
+//  out += "ID вы можете получить в технической поддержке по телефону: 89060525500.<br>\n";
+//  out += "⠀<br>\n";
+//  out += "После нажатия кнопки &quot;Сохранить&quot, датчик моргнет белым цветом при успешном сохранении.";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
 // Блок №2.5 
   out += " <fieldset>\n";
   out += "  <legend>Автокалибровка</legend>\n";
-  out += "<p class='t1'>Автоматическая калибровка делает паузу в 10 секунд выключая подсветку. Поcле нескольких замеров, пока светится желтый цвет, определяется максимально точное расстояние.";
-  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка' class='btn'>"; 
-  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепишите в поле \"* Расстояние от датчика до пола  (мм):\". Этот параметр вы найдете в разделе: &quot;Режимы определения препятствия&quot; </br>";
+//  out += "<p class='t1'>Автоматическая калибровка делает паузу в 10 секунд выключая подсветку. Поcле нескольких замеров, пока светится желтый цвет, определяется максимально точное расстояние.";
+  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка расстояния' class='btn'>"; 
+//  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепишите в поле \"* Расстояние от датчика до пола  (мм):\". Этот параметр вы найдете в разделе: &quot;Режимы определения препятствия&quot; </br>";
 
 //  out += " </fieldset>\n";
 
@@ -732,12 +732,11 @@ void HTTP_printConfigColor(){
   if( EA_Config.ColorFree == COLOR_FREE2 )out += " checked";
   out += "></td>";
   out += "</tr>\n";
-
   out += "<tr><td colspan=2>";
   out += "    <input type=\"checkbox\" value=\"1\" name=\"isFreeBlink\"";
   if( EA_Config.isColorFreeBlink  )out += " checked>\n";
   else out += ">";
-  out += "Мигание в режиме &quot;Свободно&quot; Чтобы включить, выберите цвет и поставьте галочку.";
+  out += "<br>Мигание в режиме &quot;Свободно&quot; ";
 
   out += "</td></tr>";
   out += "<tr>\n";
@@ -753,7 +752,7 @@ void HTTP_printConfigColor(){
   out += "></td>";
   out += "</tr>\n";
 
-  out += "<tr><td colspan=2>Цвет в режиме &quot;Занято&quot;</td></tr>";
+  out += "<tr><td colspan=2><br>Цвет в режиме &quot;Занято&quot;</td></tr>";
   out += "<tr>";
   sprintf(s,"%06lX",(uint32_t)COLOR_BUSY1);
   out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
