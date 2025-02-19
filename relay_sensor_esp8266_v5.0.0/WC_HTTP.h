@@ -74,6 +74,7 @@ void HTTP_handlePngRelay0(void);
 void HTTP_handlePngRelay1(void);
 void HTTP_handlePngRelay2(void);
 void HTTP_handlePngRelay3(void);
+void HTTP_handlePngRelay4(void);
 
 
 void HTTP_printCSS(String &out);

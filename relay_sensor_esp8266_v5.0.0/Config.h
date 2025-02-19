@@ -5,7 +5,7 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 8.8.1"
+#define FW_VERSION   "VERSION 8.8.2"
 #define DEVICE_NAME  "2789_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
@@ -44,10 +44,11 @@ enum T_MEASURE_TYPE {
 };
 
 enum T_RELAY_MODE {
-  RELAY_NONE  =  0, //Реле отключено
-  RELAY_NORMAL = 1, //Реле работает на ON/OFF
-  RELAY_PULSE  = 2,  //Реле при срабатывание выдает имульс на заданное время 
-  RELAY_PWM    = 3  //Реле при срабатывание выдает имульсы с заданной длительностью и паузой
+  RELAY_NONE       = 0, //Реле отключено
+  RELAY_NORMAL     = 1, //Реле работает на ON/OFF
+  RELAY_PULSE      = 2, //Реле при срабатывание выдает имульс на заданное время 
+  RELAY_PULSE_OFF  = 3, //Реле при сбрасываниее выдает имульс на заданное время 
+  RELAY_PWM        = 4  //Реле при срабатывание выдает имульсы с заданной длительностью и паузой
 };
 
 //#define DEFAULT_SENSOR_TYPE SONAR_SERIAL  // Старые сенсоры ME007Y и другие платы работающие по протоколу SERIAL
@@ -171,5 +172,5 @@ extern T_SENSOR_TYPE sensorType;
 #define NUMBER_DISTANCE_ATT    2            //Число попыток повторения в случае неудачного измерения
 #define PING_SERVER
 #define TM_HTTP_LOAD           20000        //Максимальное время загрузки главной страницы, блокирующее опрос датчиков
-
+#define TM_ECHO                100000        //Таймаут pulseIn в мкс
 #endif

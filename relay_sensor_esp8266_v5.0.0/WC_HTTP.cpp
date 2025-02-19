@@ -132,6 +132,7 @@ void HTTP_begin(void){
    server.on ( "/relay1.png", HTTP_handlePngRelay1 );
    server.on ( "/relay2.png", HTTP_handlePngRelay2 );
    server.on ( "/relay3.png", HTTP_handlePngRelay3 );
+   server.on ( "/relay4.png", HTTP_handlePngRelay4 );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -161,6 +162,7 @@ void HTTP_handlePngRelay0(){  server.send_P(200, PSTR("image/png"), relay0_png, 
 void HTTP_handlePngRelay1(){  server.send_P(200, PSTR("image/png"), relay1_png, sizeof(relay1_png));}
 void HTTP_handlePngRelay2(){  server.send_P(200, PSTR("image/png"), relay2_png, sizeof(relay2_png));}
 void HTTP_handlePngRelay3(){  server.send_P(200, PSTR("image/png"), relay3_png, sizeof(relay3_png));}
+void HTTP_handlePngRelay4(){  server.send_P(200, PSTR("image/png"), relay4_png, sizeof(relay4_png));}
 
 /**
  * Обработчик событий WEB-сервера
@@ -514,6 +516,10 @@ void HTTP_printConfig(){
   out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
 
   out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='3'";
+  if( EA_Config.ModeRelay1  == RELAY_PULSE_OFF )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
+
+  out += "<table><tr><td><img src='/relay4.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='4'";
   if( EA_Config.ModeRelay1  == RELAY_PWM )out += " checked";
   out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
 
@@ -531,6 +537,9 @@ void HTTP_printConfig(){
 
   out += " </fieldset>\n";  
 
+   Serial.printf("!!! HTTP Fragment 2b %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
 // Блок №4.2
   out += " <fieldset>\n";
   out += "  <legend>Режим работы реле №2</legend>\n";
@@ -552,9 +561,12 @@ void HTTP_printConfig(){
   out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='2'";
   if( EA_Config.ModeRelay2  == RELAY_PULSE )out += " checked";
   out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
-  sprintf(s,"%d",EA_Config.TM_PulseRelay2);
 
   out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='3'";
+  if( EA_Config.ModeRelay2  == RELAY_PULSE_OFF )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
+
+  out += "<table><tr><td><img src='/relay4.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='4'";
   if( EA_Config.ModeRelay2  == RELAY_PWM )out += " checked";
   out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
 

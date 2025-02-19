@@ -135,13 +135,13 @@ void GetDistance(){
    if(!isSonarEnable)return;
    switch(sensorType){
        case SONAR_SR04T :
-          GetDistanceSR04(2, 10, 4, 0, 7000);
+          GetDistanceSR04(2, 10, 2, 0, 7000);
           break;        
        case SONAR_SR04TV2 :
           GetDistanceSR04(2, 10, 1);
           break;        
        case SONAR_SR04TM2 :
-          GetDistanceSR04(2, 500, 4, 0, 5000);
+          GetDistanceSR04(2, 500, 2, 0, 5000);
           break;        
        case SONAR_SERIAL :
           GetDistanceSerial();
@@ -153,6 +153,8 @@ void GetDistance(){
           GetDistanceTFLuna();
           break;
    }
+//   Serial.print(F("!!! Distance ="));
+//   Serial.println(L);
 }
 
 
@@ -168,7 +170,7 @@ void GetDistanceSR04(uint32_t tm1, uint32_t tm2, int samples,float min, float ma
       digitalWrite(PinDistanceTrig, HIGH);
       delayMicroseconds(tm2);
       digitalWrite(PinDistanceTrig, LOW);
-      uint32_t _dur = pulseIn(PinDistanceEcho, HIGH);
+      uint32_t _dur = pulseIn(PinDistanceEcho, HIGH, TM_ECHO);
       float   _dist = _dur/5.8;
       if( !isnan(min) )if(_dist < min)continue;
       if( !isnan(max) )if(_dist > max)continue;
@@ -757,6 +759,11 @@ void Relay_setDistance1(){
                Relay_set1(false);              
             }
             break;
+         case RELAY_PULSE_OFF  :   
+             Relay_set1(false);
+             msRelay1 = 0;
+             eventRelay1 = 0;
+             break;
          case RELAY_PWM : //Если задан повторяющийся импульс
             if( eventRelay1 == 1 && (msRelay1 == 0 || ms > msRelay1) ){ //Включить и задать время горения
                msRelay1 = ms + EA_Config.TM_PulseRelay1 * 1000;
@@ -773,6 +780,18 @@ void Relay_setDistance1(){
    }
    else {
       switch(EA_Config.ModeRelay1 ){  
+         case RELAY_PULSE_OFF : //Если задан одиночный импульс
+            if( eventRelay1 == 1 ){ //Включить и задать время горения
+               msRelay1 = ms + EA_Config.TM_PulseRelay1 * 1000;
+               Relay_set1(true);
+               eventRelay1 = 2;   
+            }
+            else if( msRelay1 == 0 || ms > msRelay1 ){ //Если прошло время отключить и больше не трогать
+               msRelay1 = 0;
+               eventRelay1 = 0;
+               Relay_set1(false);              
+            }
+            break;
          case RELAY_NORMAL : //Во всех режимах отключить и больше не трогать
          case RELAY_PULSE :
          case RELAY_PWM :
@@ -808,6 +827,11 @@ void Relay_setDistance2(){
                Relay_set2(false);              
             }
             break;
+         case RELAY_PULSE_OFF  :   
+             Relay_set2(false);
+             msRelay2 = 0;
+             eventRelay2 = 0;
+             break;
          case RELAY_PWM : //Если задан повторяющийся импульс
             if( eventRelay2 == 1 && (msRelay2 == 0 || ms > msRelay2) ){ //Включить и задать время горения
                msRelay2 = ms + EA_Config.TM_PulseRelay2 * 1000;
@@ -824,6 +848,18 @@ void Relay_setDistance2(){
    }
    else {
       switch(EA_Config.ModeRelay2 ){  
+         case RELAY_PULSE_OFF : //Если задан одиночный импульс
+            if( eventRelay2 == 1 ){ //Включить и задать время горения
+               msRelay2 = ms + EA_Config.TM_PulseRelay2 * 1000;
+               Relay_set2(true);
+               eventRelay2 = 2;   
+            }
+            else if( msRelay2 == 0 || ms > msRelay2 ){ //Если прошло время отключить и больше не трогать
+               msRelay2 = 0;
+               eventRelay2 = 0;
+               Relay_set2(false);              
+            }
+            break;
          case RELAY_NORMAL : //Во всех режимах отключить и больше не трогать
          case RELAY_PULSE :
          case RELAY_PWM :
