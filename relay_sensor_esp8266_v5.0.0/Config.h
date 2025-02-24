@@ -52,9 +52,9 @@ enum T_RELAY_MODE {
 };
 
 //#define DEFAULT_SENSOR_TYPE SONAR_SERIAL  // Старые сенсоры ME007Y и другие платы работающие по протоколу SERIAL
-#define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
+//#define DEFAULT_SENSOR_TYPE SONAR_SR04T   // Большинство датчиков SR04T (работаю посылая сигнал на Trih и ловя отраженный сигнал на Echo)
 //#define DEFAULT_SENSOR_TYPE SONAR_SR04TV2 // Глючные платы  SR04TV2 у которых плывет значение расстояния
-//#define DEFAULT_SENSOR_TYPE SONAR_SR04TM2 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
+#define DEFAULT_SENSOR_TYPE SONAR_SR04TM2 // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
 //#define DEFAULT_SENSOR_TYPE SONAR_TFMINI  // LiDAR TF Mini Plus по I2C
 //#define DEFAULT_SENSOR_TYPE SONAR_TFLUNA   // LiDAR TF Luna по I2C
 
