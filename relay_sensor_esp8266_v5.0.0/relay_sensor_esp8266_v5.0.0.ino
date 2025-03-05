@@ -35,7 +35,8 @@ void setup() {
 // Отключаем Serial на GPIO2  
    Serial1.end();
    Serial.begin(115200);
-   for( int i=0; i<5;i++){delay(1000);Serial.print(".");}
+   delay(500);
+//   for( int i=0; i<5;i++){delay(1000);Serial.print(".");}
    Serial.printf("\n\nFree memory %d\n",ESP.getFreeHeap());
    Serial.printf("Flash memoty size %d\n",ESP.getFlashChipSize());
    Serial.printf("Flash chip ID %d\n",ESP.getFlashChipId());

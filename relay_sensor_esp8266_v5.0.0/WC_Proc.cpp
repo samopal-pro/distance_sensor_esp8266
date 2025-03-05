@@ -135,13 +135,13 @@ void GetDistance(){
    if(!isSonarEnable)return;
    switch(sensorType){
        case SONAR_SR04T :
-          GetDistanceSR04(2, 10, 2, 0, 7000);
+          GetDistanceSR04(2, 10, 2, 0, 5000);
           break;        
        case SONAR_SR04TV2 :
           GetDistanceSR04(2, 10, 1);
           break;        
        case SONAR_SR04TM2 :
-          GetDistanceSR04(2, 500, 2, 0, 5000);
+          GetDistanceSR04(2, 500, 2, 0, 5500);
           break;        
        case SONAR_SERIAL :
           GetDistanceSerial();
