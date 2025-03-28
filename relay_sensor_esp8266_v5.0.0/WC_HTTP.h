@@ -45,7 +45,7 @@ typedef enum {
 }HTTP_input_type_t;
 
 extern ES_WIFI_STAT w_stat2;
-
+extern bool is_load_page;
 
 void WiFi_test();
 void WiFi_stop(const char * msg);
@@ -79,8 +79,8 @@ void HTTP_handlePngRelay4(void);
 
 void HTTP_printCSS(String &out);
 bool HTTP_login(String &out);
-void HTTP_printConfig();
-void HTTP_printConfigColor();
+void HTTP_printConfig(String &out);
+void HTTP_printConfigColor(String &out);
 bool HTTP_checkArgs();
 
 

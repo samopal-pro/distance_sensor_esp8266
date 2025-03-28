@@ -9,9 +9,12 @@
 #include "crmlogo.h"
 
 
+
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
+#ifdef DNS_SERVER
 DNSServer dnsServer;
+#endif
 
 ES_WIFI_STAT w_stat2 = EWS_OFF;
 bool isAP = false;
@@ -26,6 +29,7 @@ std::vector <String> n_ssid;
 std::vector <int> n_rssi;
 
 bool is_update     = false;
+bool is_load_page = false;
 
 void WiFi_test(){
    uint32_t _ms = millis();
@@ -94,12 +98,16 @@ void WiFi_startAP(){
    w_stat2 = EWS_AP_MODE;
    if( EA_Config.isWiFiAlways || isWiFiAlways1 )ledSetWiFiMode(LED_WIFI_AP1);
    else ledSetWiFiMode(LED_WIFI_AP);
+#ifdef DNS_SERVER
    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
    dnsServer.start(53, "*", WiFi.softAPIP());
+#endif
 }
 
 void WiFi_stop(const char *msg){
+#ifdef DNS_SERVER
    dnsServer.stop();
+#endif
    WiFi.disconnect(); //  this alone is not enough to stop the autoconnecter
    WiFi.mode(WIFI_OFF);
    Serial.println(msg);
@@ -170,7 +178,9 @@ void HTTP_handlePngRelay4(){  server.send_P(200, PSTR("image/png"), relay4_png, 
 void HTTP_loop(void){
 //  WiFi_ScanNetwork();
   server.handleClient();
+#ifdef DNS_SERVER
   dnsServer.processNextRequest();
+#endif  
 }
 
 /**
@@ -315,8 +325,8 @@ void HTTP_handleDistance(void) {
 
   out += "<title>Расстояние от датчика</title>";
   out += "<style>\n";
-  out += " body { background-color:#cccccc; color:#000088;}\n";
-  out += " input[type=submit] {font-size: 1.2em;color:#000088;}\n";
+  out += "body { background-color:#cccccc; color:#000088;}\n";
+  out += "input[type=submit] {font-size: 1.2em;color:#000088;}\n";
   out += "</style>\n";    
   out += "<body>\n";
   out += "<form action='/distance' method='PUT'>\n";
@@ -339,7 +349,7 @@ void HTTP_handleDistance(void) {
      out += "</h3>";
   }
 */  
-  out += " <input type='submit' value='Обновить' class='btn'>"; 
+  out += "<input type='submit' value='Обновить' class='btn'>"; 
 
   out += "</form>\n";
   out += "</body>\n</html>\n";
@@ -350,7 +360,9 @@ void HTTP_handleDistance(void) {
  * Оработчик главной страницы сервера
  */
 void HTTP_handleRoot(void) {
+#ifdef DNS_SERVER
   if( HTTP_redirect() )return;
+#endif
   if( HTTP_checkArgs() )return;
   if( msLoad != 0 ){
      Serial.println(F("!!! Skip HTTP root ..."));
@@ -360,55 +372,33 @@ void HTTP_handleRoot(void) {
   char str[50];
 //  int gid = HTTP_isAuth();  
 
-   String out = "";
+  String out = "";
+  is_load_page = true;
   HTTP_printHeader(out,"Главная",0);
 
-//  out += "<form action='/' method='PUT'>\n";
 // Блок №1
-  out += " <fieldset>\n";
-//     out += "  <legend>Пароль для доступа в настройки</legend>\n";
-//     HTTP_printInput1(out,"Пароль:","Password","",16,32,HT_PASSWORD);
-//   HTTP_printInput(out,"Расстояние от датчика до препятствия сейчас(мм):","xx",str,16,32,false);
-/*
-  if( isnan(Distance) )strcpy(str,"NAN");
-  else sprintf(str,"%d", (int)Distance );
-  out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
-  out += str;
-  out += "</h3>";
+  out += "<fieldset>\n";
 
-  if( !isnan(Temp)){
-     sprintf(str,"%d", (int)Temp );
-     out += "<h3>Температура (С): ";
-     out += str;
-     out += "</h3>";
-  }
-  if( !isnan(Hum)){
-     sprintf(str,"%d", (int)Hum );
-     out += "<h3>Влажность воздуха (%): ";
-     out += str;
-     out += "</h3>";
-  }
-  out += " <input type='submit' value='Обновить' class='btn'>"; 
-*/  
   out += "<iframe src='/distance' width=100% height=80 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
-  out += " <p class='t1'> расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.";
+  out += "<p class='t1'> расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.";
   out += "Если датчик светится МАЛИНОВЫМ - НЕ ОБНОВЛЯЙТЕ СТРАНИЦУ Сначала расположите датчик так, чтобы он стабильно замерял, видел расстояние и не светился малиновым.</p>";
 
 //  out += " </fieldset>\n</form>\n";
-  out += " </fieldset>\n";
+  out += "</fieldset>\n";
 
 
    if( HTTP_login(out) )return;
 
+#ifdef HTTP_FRAGMETATION
    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-//   Serial.println(out);
    Serial.printf("!!! HTTP Fragment 1 %d\n", out.length());  
    server.send ( 200, "text/html", out );
 //   HTTP_printConfigColor();
    out = "";
+#endif
    if( UID >= 0 ){
-     HTTP_printConfigColor();
-     HTTP_printConfig();
+     HTTP_printConfigColor(out);
+     HTTP_printConfig(out);
 //     out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
 //     out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
 //     out += "⠀<br>\n";
@@ -422,22 +412,30 @@ void HTTP_handleRoot(void) {
 
    HTTP_printTail(out);
    Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
+#ifdef HTTP_FRAGMETATION
    server.sendContent(out);
+#else
+   server.send(200, "text/html", out);
+   Serial.printf("!!! HTTP size page %d\n", out.length());  
+#endif
    msLoad = 0;
 //   Serial.printf("!!! HTTP size page %d\n", out.length());  
 //   Serial.println(out);
 //   server.send ( 200, "text/html", out );
+   is_load_page = false;
 }
 
 
-void HTTP_printConfig(){
-  String out = "";
+void HTTP_printConfig(String &out){
+#ifdef HTTP_FRAGMETATION
+  out = "";
+#endif  
   char s[32];
   sprintf(s,"%d",EA_Config.GroundLevel);
 //  out += "<form action='/' method='PUT'>\n";
 // Блок №2
-  out += " <fieldset>\n";
-  out += "  <legend>Конфигурация WI-FI</legend>\n";
+  out += "<fieldset>\n";
+  out += "<legend>Конфигурация WI-FI</legend>\n";
   out += "<table>";
   out += "<tr><td align='center' width=50%><img src='/wifi1.png'></td><td width=50% align='center'><img src='/wifi2.png'></td></tr>";
   out += "<tr><td align='center'><input type='radio' name='WiFiMode' value='1'";
@@ -446,56 +444,29 @@ void HTTP_printConfig(){
   if( EA_Config.isWiFiAlways )out += " checked";
   out += "></td></tr>";
   out += "<tr><td align='center' class='td1'>Раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Всегда раздает WiFi. Первый светодиод белый.</td></tr></table>";
-//  out += "<p class='t1'>Если вам нужен online мониторинг через сайт www.crm.moscow оставьте галочку \"по умолчанию\", выберите ниже сеть WI-FI с доступом ";
-//  out += "в интернет, введите пароль к ней, номер бокса и ID личного кабинета. ";
-//  out += "ID вы можете получить в технической поддержке по телефону: 89060525500.<br>\n";
-//  out += "⠀<br>\n";
-//  out += "После нажатия кнопки &quot;Сохранить&quot, датчик моргнет белым цветом при успешном сохранении.";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
+  out += "</fieldset>\n";
 
 // Блок №2.5 
-  out += " <fieldset>\n";
-  out += "  <legend>Автокалибровка</legend>\n";
-//  out += "<p class='t1'>Автоматическая калибровка делает паузу в 10 секунд выключая подсветку. Поcле нескольких замеров, пока светится желтый цвет, определяется максимально точное расстояние.";
+  out += "<fieldset>\n";
+  out += "<legend>Автокалибровка</legend>\n";
   out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка расстояния' class='btn'>"; 
-//  out += "<p class='t1'>Для ручной настройки высоты срабатывания перепишите в поле \"* Расстояние от датчика до пола  (мм):\". Этот параметр вы найдете в разделе: &quot;Режимы определения препятствия&quot; </br>";
-
-//  out += " </fieldset>\n";
 
 // Блок №3 
-//  out += " <fieldset>\n";
-//  out += "  <legend>Параметры автокалибровки</legend>\n";
   sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
   HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
   HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
-/*
-// Блок №4 
-  out += " <fieldset>\n";
-  out += "  <legend>Скорость переключения: Занято - Свободно</legend>\n";
-  sprintf(s,"%d",EA_Config.TM_ON);
-  HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_OFF);
-  HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_LOOP_SENSOR);
-  HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
-
-   Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
-*/
-//   server.sendContent(out);
-//   out = "";
-   Serial.printf("!!! HTTP Fragment 2a %d\n", out.length());  
+  out += "</fieldset>\n";
+#ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 3a %d\n", out.length());  
    server.sendContent(out);
    out = "";
-
+#endif
 // Блок №4.1 
-  out += " <fieldset>\n";
-  out += "  <legend>Режим работы реле №1</legend>\n";
+  out += "<fieldset>\n";
+  out += "<legend>Режим работы реле №1</legend>\n";
 
   sprintf(s,"%d",EA_Config.TM_DelayON1);
   HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn1",s,16,32,HT_NUMBER);
@@ -528,21 +499,22 @@ void HTTP_printConfig(){
   sprintf(s,"%d",EA_Config.TM_PauseRelay1);
   HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay1",s,16,32,HT_NUMBER);
 
-  out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
+  out += "<p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
   if( EA_Config.isInverseRelay1  )out += " checked>\n";
   else out += ">";
   out += "<label>Инверсия работы реле 1</label>";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
 
-  out += " </fieldset>\n";  
-
-   Serial.printf("!!! HTTP Fragment 2b %d\n", out.length());  
+  out += "</fieldset>\n";  
+#ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 3b %d\n", out.length());  
    server.sendContent(out);
    out = "";
+#endif
 // Блок №4.2
-  out += " <fieldset>\n";
-  out += "  <legend>Режим работы реле №2</legend>\n";
+  out += "<fieldset>\n";
+  out += "<legend>Режим работы реле №2</legend>\n";
 
   sprintf(s,"%d",EA_Config.TM_DelayON2);
   HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn2",s,16,32,HT_NUMBER);
@@ -583,16 +555,16 @@ void HTTP_printConfig(){
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
 
-  out += " </fieldset>\n";
-
-   Serial.printf("!!! HTTP Fragment 2b %d\n", out.length());  
+  out += "</fieldset>\n";
+#ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 3c %d\n", out.length());  
    server.sendContent(out);
    out = "";
-
+#endif
 
 // Блок №5
-  out += " <fieldset>\n";
-  out += "  <legend>Если датчик не видит расстояние</legend>\n";
+  out += "<fieldset>\n";
+  out += "<legend>Если датчик не видит расстояние</legend>\n";
   out += "<table>";
   out += "<tr><td><img src='/stat2.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='1'";
   if( EA_Config.NanValueFlag  == NAN_VALUE_IGNORE )out += " checked";
@@ -607,7 +579,7 @@ void HTTP_printConfig(){
   sprintf(s,"%06lX",(uint32_t)COLOR_NAN);
  
   out += "<tr><td bgcolor='#"; out += s; out += "'>&nbsp;</td><td>";
-  out += "    <input type=\"checkbox\" value=\"1\" name=\"isColorNan\"";
+  out += "<input type=\"checkbox\" value=\"1\" name=\"isColorNan\"";
   if( EA_Config.isColorNan  )out += " checked>\n";
   else out += ">";
   out += "Активация малиновой подсветки если датчик ничего не видит.";
@@ -617,13 +589,13 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
+  out += "</fieldset>\n";
 
    
 
 // Блок №6
-  out += " <fieldset>\n";
-  out += "  <legend>Режимы определения препятствия</legend>\n"; 
+  out += "<fieldset>\n";
+  out += "<legend>Режимы определения препятствия</legend>\n"; 
   out += "<table><tr><td><img src='/type1.png'><br></td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
   if( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL )out += " checked";
   out += "></td><td valign='middle' class='td1'>Установка датчика на потолке</td></tr></table>";
@@ -652,16 +624,16 @@ void HTTP_printConfig(){
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
-
-   Serial.printf("!!! HTTP Fragment 2c %d\n", out.length());  
+#ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 3d %d\n", out.length());  
    server.sendContent(out);
    out = "";
-
+#endif
 // Блок №7
-  out += " <fieldset>\n";
-  out += "  <legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
-  out += "    <labelВвключить онлайн отправку данных</label>\n";
-  out += "    <input type=\"checkbox\" value=\"send\" name=\"SEND_HTTP\"";
+  out += "<fieldset>\n";
+  out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
+  out += "<labelВвключить онлайн отправку данных</label>\n";
+  out += "<input type=\"checkbox\" value=\"send\" name=\"SEND_HTTP\"";
   if( EA_Config.isSendCrmMoscow  )out += " checked>\n";
   else out += ">\n";
   HTTP_printNetworks1(out,"WiFiName");
@@ -678,13 +650,13 @@ void HTTP_printConfig(){
   sprintf(s,"%d",EA_Config.TM_HTTP_RETRY_ERROR);
   HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";  
+  out += "</fieldset>\n";  
 
 // Блок №8
-  out += "   <fieldset>\n";
-  out += "  <legend>Параметры DHCP</legend>\n";
-  out += "    <label>Статический IP:</label>\n";
-  out += "    <input type=\"checkbox\" value=\"static\" name=\"STATIC_IP\"";
+  out += "<fieldset>\n";
+  out += "<legend>Параметры DHCP</legend>\n";
+  out += "<label>Статический IP:</label>\n";
+  out += "<input type=\"checkbox\" value=\"static\" name=\"STATIC_IP\"";
   if( !EA_Config.isDHCP  )out += " checked";
   out += ">\n";
   
@@ -698,10 +670,10 @@ void HTTP_printConfig(){
   HTTP_printInput1(out,"DNS:",    "IPDns",s,16,32,HT_IP);
  
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";  
+  out += "</fieldset>\n";  
 
-  out += "   <fieldset>\n";
-  out += "  <legend>Параметры доступа к контроллеру</legend>\n";
+  out += "<fieldset>\n";
+  out += "<legend>Параметры доступа к контроллеру</legend>\n";
 
   HTTP_printInput1(out,"Пароль для входа в настройки устройства:","PasswordUser",EA_Config.ESP_OPER_PASS,20,32,HT_PASSWORD);
   if( UID == 0 ){
@@ -709,24 +681,27 @@ void HTTP_printConfig(){
      HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
   }
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";  
+  out += "</fieldset>\n";  
 
  // Блок №9 (настройка цветов) 
   out += "</form>\n";  
 
-
-   Serial.printf("!!! HTTP Fragment 3 %d\n", out.length());  
+#ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 3e %d\n", out.length());  
    server.sendContent(out);
-
+   out = "";
+#endif   
 }
 
-void HTTP_printConfigColor(){
-  String out="";
+void HTTP_printConfigColor(String &out){
+#ifdef HTTP_FRAGMETATION
+  out="";
+#endif  
   char s[50];
   out += "<form action='/' method='PUT'>\n";
 // Блок №1c
-  out += " <fieldset>\n";
-  out += "  <legend>Настройка подсветки датчика</legend>\n";
+  out += "<fieldset>\n";
+  out += "<legend>Настройка подсветки датчика</legend>\n";
   out += "<table width=100%>";
   sprintf(s,"%d",EA_Config.Brightness);
   HTTP_printInput1(out,"Яркость 0-10","Brightness",s,16,32,HT_NUMBER);
@@ -745,7 +720,7 @@ void HTTP_printConfigColor(){
   out += "></td>";
   out += "</tr>\n";
   out += "<tr><td colspan=2>";
-  out += "    <input type=\"checkbox\" value=\"1\" name=\"isFreeBlink\"";
+  out += "<input type=\"checkbox\" value=\"1\" name=\"isFreeBlink\"";
   if( EA_Config.isColorFreeBlink  )out += " checked>\n";
   else out += ">";
   out += "<br>Мигание в режиме &quot;Свободно&quot; ";
@@ -780,10 +755,12 @@ void HTTP_printConfigColor(){
 
   out += "</table>";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";  
-//  out += "</form>\n";  
-  Serial.printf("!!! HTTP Fragment 1c %d\n", out.length());  
+  out += "</fieldset>\n";  
+//  out += "</form>\n";
+#ifdef HTTP_FRAGMETATION
+  Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
   server.sendContent(out);
+#endif  
 }
 
 
@@ -985,9 +962,9 @@ int  HTTP_checkAuth(const char *pass){
  */
 void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype, const char *style, const char *add_text){
    char str[10];
-   if( style == NULL )out += "  <p><label>";
+   if( style == NULL )out += "<p><label>";
    else {
-       out += "  <div class=\"";
+       out += "<div class=\"";
        out += style;
        out += "\"><label>";
    }
@@ -1010,8 +987,8 @@ void HTTP_printInput1(String &out,const char *label, const char *name, const cha
    }
    out += ">";
    if( add_text != NULL )out += add_text;
-   if( style == NULL )out += "</p>\n";
-    else out += "</div>\n";
+   if( style == NULL )out += "</p>";
+    else out += "</div>";
      
 }
 
@@ -1092,6 +1069,7 @@ void HTTP_printNetworks1(String &out, const char *name){
 */
 bool HTTP_redirect() {
 //  if( !isAP )return true;
+#ifdef DNS_SERVER
 
   String serverLoc =  server.client().localIP().toString();
   
@@ -1105,6 +1083,7 @@ bool HTTP_redirect() {
     server.client().stop(); // Stop is needed because we sent no content length
     return true;
   }
+#endif
   return false;
 }
 

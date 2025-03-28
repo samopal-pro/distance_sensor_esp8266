@@ -119,7 +119,7 @@ void loop() {
    cur_ms       = millis();
    t_cur        = cur_ms/1000;
 // Действие по длинному нажатию кнопки
-   if( ms0 == 0 || cur_ms < ms0 || (cur_ms - ms0) > 200  ){
+   if( is_load_page == false && (ms0 == 0 || cur_ms < ms0 || (cur_ms - ms0) > 200)  ){
        ms0 = cur_ms;
        switch(calbtn.Loop()){
           case SB_NONE:
@@ -164,7 +164,7 @@ void loop() {
 
 //   uint32_t it1 = LoopInterval;
 //   if( w_stat2 == EWS_AP_MODE )it1 = LoopIntervalAP;
-   if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click && msLoad == 0 ){
+   if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click && msLoad == 0 && is_load_page == false  ){
       ms1 = cur_ms;
 // Проверяем дистанцию, устанавливаем значение реле и ленты      
       ProcessingDistance();
@@ -188,7 +188,7 @@ void loop() {
       
    }
 // Цикл проверки WiFi   
-   if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) ){
+   if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) && is_load_page == false ){
       ms2 = cur_ms;
       if( msLoad != 0 && (millis()-msLoad > TM_HTTP_LOAD) )msLoad = 0;
 #if defined(DEBUG1)         
@@ -202,7 +202,7 @@ void loop() {
       WiFi_test();
    }
 // Основной цикл обмена с сервером   
-   if( ( ms3 == 0 || cur_ms < ms3 || (cur_ms - ms3) > 1000 )&& ( w_stat2 != EWS_AP_MODE )){
+   if( ( ms3 == 0 || cur_ms < ms3 || (cur_ms - ms3) > 1000 )&& ( w_stat2 != EWS_AP_MODE ) && is_load_page == false ){
       ms3 = cur_ms;     
 
 //      Serial.printf("!!! !!! %d %d\n",(int)EA_Config.isSendCrmMoscow,(int)w_stat2);
