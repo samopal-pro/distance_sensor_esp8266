@@ -271,7 +271,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
  * Выаод окнчания файла HTML
  */
 void HTTP_printTail(String &out){
-  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2025⠀⠀⠀⠀⠀⠀⠀⠀Made from Russia";
+  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2025&nbsp;&nbsp;&nbsp;&nbsp;Made from Russia";
   out += "</div>";
   out += "</body>\n</html>\n";
 }
@@ -405,6 +405,7 @@ void HTTP_handleRoot(void) {
    if( UID >= 0 ){
      HTTP_printConfigColor(out);
      HTTP_printConfig(out);
+   Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
 //     out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
 //     out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
 //     out += "⠀<br>\n";
@@ -681,6 +682,11 @@ void HTTP_printConfig(String &out){
   HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
+#ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 3e %d\n", out.length());  
+   server.sendContent(out);
+   out = "";
+#endif   
 
 // Блок №8
   out += "<fieldset>\n";
@@ -717,7 +723,7 @@ void HTTP_printConfig(String &out){
   out += "</form>\n";  
 
 #ifdef HTTP_FRAGMETATION
-   Serial.printf("!!! HTTP Fragment 3e %d\n", out.length());  
+   Serial.printf("!!! HTTP Fragment 3f %d\n", out.length());  
    server.sendContent(out);
    out = "";
 #endif   
