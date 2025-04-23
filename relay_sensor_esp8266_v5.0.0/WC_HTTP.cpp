@@ -141,6 +141,7 @@ void HTTP_begin(void){
    server.on ( "/relay2.png", HTTP_handlePngRelay2 );
    server.on ( "/relay3.png", HTTP_handlePngRelay3 );
    server.on ( "/relay4.png", HTTP_handlePngRelay4 );
+   server.on ( "/relay5.png", HTTP_handlePngRelay5 );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -171,6 +172,7 @@ void HTTP_handlePngRelay1(){  server.send_P(200, PSTR("image/png"), relay1_png, 
 void HTTP_handlePngRelay2(){  server.send_P(200, PSTR("image/png"), relay2_png, sizeof(relay2_png));}
 void HTTP_handlePngRelay3(){  server.send_P(200, PSTR("image/png"), relay3_png, sizeof(relay3_png));}
 void HTTP_handlePngRelay4(){  server.send_P(200, PSTR("image/png"), relay4_png, sizeof(relay4_png));}
+void HTTP_handlePngRelay5(){  server.send_P(200, PSTR("image/png"), relay5_png, sizeof(relay5_png));}
 
 /**
  * Обработчик событий WEB-сервера
@@ -211,11 +213,15 @@ void HTTP_printCSS(String &out){
 //    out += " .text {width:100%;float:left;}\n";
 //    out += " .tail {position:absolute;bottom:20;}\n";
 //    out += " .imp2 {margin-top:3px;float:left;}\n";
-    out += " .btn {font-size: 1.2em;color:#000088;}\n";
+//    out += " .btn {font-size: 1.2em;color:#000088;}\n";
     out += " hr {border-top:1px solid #000088;}\n";
     out += " input[type=file]::file-selector-button {border: 2px solid #000088;background:#fceade;color:#c55a11;width:30%;}\n";
     out += " input[type=file]::file-selector-button:hover {background:#000088;}\n";
     out += " input[type=submit] {font-size: 1.2em;color:#000088;}\n";
+    out += " input[type=submit].btn1 {font-size: 1.2em;background:#8888ff;}\n";
+    out += " input[type=submit].btn2 {font-size: 1.2em;background:#88ff88;}\n";
+    out += " input[type=submit].btn3 {font-size: 1.2em;background:#ffff88;}\n";
+    out += " input[type=submit].btn4 {font-size: 1.2em;background:#ff8888;}\n";
     out += "</style>\n";  
 
 }
@@ -265,7 +271,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
  * Выаод окнчания файла HTML
  */
 void HTTP_printTail(String &out){
-  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2024⠀⠀⠀⠀⠀⠀⠀⠀Made from Russia";
+  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2025⠀⠀⠀⠀⠀⠀⠀⠀Made from Russia";
   out += "</div>";
   out += "</body>\n</html>\n";
 }
@@ -404,11 +410,17 @@ void HTTP_handleRoot(void) {
 //     out += "⠀<br>\n";
 //     out += "За консультацией рекомендуем Вам обратиться по WhatsApp или Telegram 89060725500.<br>\n";
 //     out += "По всем вопросам вы можете прислать видео или позвонить по видеозвонку.<br>\n";
-     out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
-     out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
-     out += "<p><a class='a1' href=/?Reboot=1>Перезагрузка</a>\n";
+     out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
+     out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
+     out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
+
+
+//     out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
+//     out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
+//     out += "<p><a class='a1' href=/?Reboot=1>Перезагрузка</a>\n";
   }
-  out += "<p><a class='a1' href=/?Logout=1>Выход</a>\n";
+//  out += "<p><a class='a1' href=/?Logout=1>Выход</a>\n";
+    out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
 
    HTTP_printTail(out);
    Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
@@ -484,25 +496,31 @@ void HTTP_printConfig(String &out){
  
   out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='2'";
   if( EA_Config.ModeRelay1  == RELAY_PULSE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой на открытия или закрытие ворот</td></tr></table>\n";
 
-  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='3'";
-  if( EA_Config.ModeRelay1  == RELAY_PULSE_OFF )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
+//  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='3'";
+//  if( EA_Config.ModeRelay1  == RELAY_PULSE_OFF )out += " checked";
+//  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
 
   out += "<table><tr><td><img src='/relay4.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='4'";
   if( EA_Config.ModeRelay1  == RELAY_PWM )out += " checked";
   out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
+
+  out += "<p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
+  if( EA_Config.isInverseRelay1  )out += " checked>\n";
+  else out += ">";
+  out += "<label>Инверсия занято/свободно</label>";
+
+
+  out += "<table><tr><td><img src='/relay5.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='5'";
+  if( EA_Config.ModeRelay1  == RELAY_PULSE2 )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия-закрытия ворот</td></tr></table>\n";
 
   sprintf(s,"%d",EA_Config.TM_PulseRelay1);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay1",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.TM_PauseRelay1);
   HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay1",s,16,32,HT_NUMBER);
 
-  out += "<p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
-  if( EA_Config.isInverseRelay1  )out += " checked>\n";
-  else out += ">";
-  out += "<label>Инверсия работы реле 1</label>";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
 
@@ -532,15 +550,27 @@ void HTTP_printConfig(String &out){
  
   out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='2'";
   if( EA_Config.ModeRelay2  == RELAY_PULSE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот</td></tr></table>\n";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой на открытие или закрытие ворот</td></tr></table>\n";
 
-  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='3'";
-  if( EA_Config.ModeRelay2  == RELAY_PULSE_OFF )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
+//  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='3'";
+//  if( EA_Config.ModeRelay2  == RELAY_PULSE_OFF )out += " checked";
+//  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
 
   out += "<table><tr><td><img src='/relay4.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='4'";
   if( EA_Config.ModeRelay2  == RELAY_PWM )out += " checked";
   out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
+
+  out += "<p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
+  if( EA_Config.isInverseRelay2  )out += " checked>\n";
+  else out += ">";
+  out += "<label>Инверсия занято/свободно</label>";
+
+
+  out += "<table><tr><td><img src='/relay5.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='5'";
+  if( EA_Config.ModeRelay2  == RELAY_PULSE2 )out += " checked";
+  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия-закрытия ворот</td></tr></table>\n";
+
+
 
   sprintf(s,"%d",EA_Config.TM_PulseRelay2);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay2",s,16,32,HT_NUMBER);
@@ -548,10 +578,10 @@ void HTTP_printConfig(String &out){
   sprintf(s,"%d",EA_Config.TM_PauseRelay2);
   HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay2",s,16,32,HT_NUMBER);
 
-  out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
-  if( EA_Config.isInverseRelay2  )out += " checked>\n";
-  else out += ">";
-  out += "<label>Инверсия работы реле 2</label>";
+//  out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
+//  if( EA_Config.isInverseRelay2  )out += " checked>\n";
+//  else out += ">";
+//  out += "<label>Инверсия работы реле 2</label>";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
 

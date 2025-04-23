@@ -748,6 +748,7 @@ void Relay_setDistance1(){
             eventRelay1 = 0; 
             break;
          case RELAY_PULSE : //Если задан одиночный импульс
+         case RELAY_PULSE2 : //Если задан одиночный импульс
             if( eventRelay1 == 1 ){ //Включить и задать время горения
                msRelay1 = ms + EA_Config.TM_PulseRelay1 * 1000;
                Relay_set1(true);
@@ -781,6 +782,7 @@ void Relay_setDistance1(){
    else {
       switch(EA_Config.ModeRelay1 ){  
          case RELAY_PULSE_OFF : //Если задан одиночный импульс
+         case RELAY_PULSE2 : 
             if( eventRelay1 == 1 ){ //Включить и задать время горения
                msRelay1 = ms + EA_Config.TM_PulseRelay1 * 1000;
                Relay_set1(true);
@@ -816,6 +818,7 @@ void Relay_setDistance2(){
             eventRelay2 = 0; 
             break;
          case RELAY_PULSE : //Если задан одиночный импульс
+         case RELAY_PULSE2 : 
             if( eventRelay2 == 1 ){ //Включить и задать время горения
                msRelay2 = ms + EA_Config.TM_PulseRelay2 * 1000;
                Relay_set2(true);
@@ -849,6 +852,7 @@ void Relay_setDistance2(){
    else {
       switch(EA_Config.ModeRelay2 ){  
          case RELAY_PULSE_OFF : //Если задан одиночный импульс
+         case RELAY_PULSE2 : 
             if( eventRelay2 == 1 ){ //Включить и задать время горения
                msRelay2 = ms + EA_Config.TM_PulseRelay2 * 1000;
                Relay_set2(true);
@@ -1001,7 +1005,7 @@ void PrintValue(){
 float CalibrateGround(){
    uint32_t ms_start = millis();
 // Макимальное ограничение калиброка 30сек
-   for( uint32_t ms=millis(); ms-ms_start<30000; ms=millis()){
+   for( uint32_t ms=millis(); ms-ms_start<5000; ms=millis()){
 // Делаем цикл измерения
       int n = 0;
       float distArray[EA_Config.SAMPLES_CLIBRATE];
@@ -1034,7 +1038,7 @@ float CalibrateGround(){
 
 bool ProcessingCalibrate(uint32_t _tm){
    ledSetBaseMode(LED_BASE_NONE,true);
-   delay(_tm);
+   if(_tm>0)delay(_tm);
    ledSetBaseMode(LED_BASE_GROUND);
    float x = CalibrateGround();
    if( isnan(x) ){
