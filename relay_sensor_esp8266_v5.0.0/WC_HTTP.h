@@ -58,7 +58,8 @@ bool ConnectWiFi(void);
 void HTTP_begin(void);
 void HTTP_handleRoot(void);
 void HTTP_handleDistance(void);
-void HTTP_handleConfig(void);
+void HTTP_handleConfig1(void);
+void HTTP_handleConfig2(void);
 void HTTP_handleDefault(void);
 void HTTP_handleReboot(void);
 void HTTP_handleLogo(void);
@@ -80,6 +81,8 @@ void HTTP_handlePngRelay5(void);
 
 void HTTP_printCSS(String &out);
 bool HTTP_login(String &out);
+void HTTP_printConfigRelay(String &out);
+void HTTP_printConfigNet(String &out);
 void HTTP_printConfig(String &out);
 void HTTP_printConfigColor(String &out);
 bool HTTP_checkArgs();
@@ -93,6 +96,13 @@ int  HTTP_isAuth();
 int  HTTP_checkAuth(const char *pass);
 //int  HTTP_checkUserAndPassword( const char *pass);
 void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype=HT_TEXT, const char *style=NULL, const char *add_text=NULL);
+
+
+void HTTP_print_td_color(String &out, uint32_t color, char *name, char *value, uint32_t color_set);
+void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
+void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);
+void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table);
+void HTTP_print_menu(String &out, int current);
 
 void HTTP_printHeader(String &out,const char *title, uint16_t refresh=0);
 void HTTP_printTail(String &out);

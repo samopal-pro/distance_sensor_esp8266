@@ -124,6 +124,8 @@ void HTTP_begin(void){
    
  // Поднимаем WEB-сервер  
    server.on ( "/", HTTP_handleRoot );
+   server.on ( "/conf1", HTTP_handleConfig1 );
+   server.on ( "/conf2", HTTP_handleConfig2 );
    server.on ( "/distance", HTTP_handleDistance );
 //   server.on ( "/config", HTTP_handleConfig );
 //   server.on ( "/login", HTTP_handleLogin );
@@ -192,7 +194,7 @@ void HTTP_loop(void){
  */
 void HTTP_printCSS(String &out){
     out += "<style>\n";
-    out += " body { background-color:#ffffff;padding:20px; }\n";
+    out += " body { background-color:#ffffff;padding:20px;color:#000088; }\n";
     out += " .main {width:600;background:#cccccc;color:#000088;padding:10px;border-radius:8px;float:left;}\n";
     out += " .main label {display:block;float:left;width:360;;font-size:12pt}\n";
     out += " .main input {background:#ffffff;color:#000088;border:0;font-size:12pt}\n";
@@ -214,14 +216,16 @@ void HTTP_printCSS(String &out){
 //    out += " .tail {position:absolute;bottom:20;}\n";
 //    out += " .imp2 {margin-top:3px;float:left;}\n";
 //    out += " .btn {font-size: 1.2em;color:#000088;}\n";
+    out += " td {valign:middle}\n";
     out += " hr {border-top:1px solid #000088;}\n";
     out += " input[type=file]::file-selector-button {border: 2px solid #000088;background:#fceade;color:#c55a11;width:30%;}\n";
     out += " input[type=file]::file-selector-button:hover {background:#000088;}\n";
-    out += " input[type=submit] {font-size: 1.2em;color:#000088;}\n";
-    out += " input[type=submit].btn1 {font-size: 1.2em;background:#8888ff;}\n";
-    out += " input[type=submit].btn2 {font-size: 1.2em;background:#88ff88;}\n";
-    out += " input[type=submit].btn3 {font-size: 1.2em;background:#ffff88;}\n";
-    out += " input[type=submit].btn4 {font-size: 1.2em;background:#ff8888;}\n";
+    out += " input[type=submit] {font-size: 14pt;color:#000088;}\n";
+    out += " input[type=submit].btn1 {background:#8888ff;}\n";
+    out += " input[type=submit].btn2 {background:#88ff88;}\n";
+    out += " input[type=submit].btn3 {background:#ffff88;}\n";
+    out += " input[type=submit].btn4 {background:#ff8888;}\n";
+    out += " input[type=submit].btn0 {background:#cccccc;}\n";
     out += "</style>\n";  
 
 }
@@ -341,20 +345,6 @@ void HTTP_handleDistance(void) {
   out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
   out += str;
   out += "</h3>";
-/*
-  if( !isnan(Temp)){
-     sprintf(str,"%d", (int)Temp );
-     out += "<h3>Температура (С): ";
-     out += str;
-     out += "</h3>";
-  }
-  if( !isnan(Hum)){
-     sprintf(str,"%d", (int)Hum );
-     out += "<h3>Влажность воздуха (%): ";
-     out += str;
-     out += "</h3>";
-  }
-*/  
   out += "<input type='submit' value='Обновить' class='btn'>"; 
 
   out += "</form>\n";
@@ -376,86 +366,210 @@ void HTTP_handleRoot(void) {
   }
   msLoad = millis();
   char str[50];
-//  int gid = HTTP_isAuth();  
-
   String out = "";
   is_load_page = true;
   HTTP_printHeader(out,"Главная",0);
-
+  HTTP_print_menu(out, 1);
 // Блок №1
   out += "<fieldset>\n";
 
   out += "<iframe src='/distance' width=100% height=80 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
   out += "<p class='t1'> расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.";
   out += "Если датчик светится МАЛИНОВЫМ - НЕ ОБНОВЛЯЙТЕ СТРАНИЦУ Сначала расположите датчик так, чтобы он стабильно замерял, видел расстояние и не светился малиновым.</p>";
-
-//  out += " </fieldset>\n</form>\n";
   out += "</fieldset>\n";
 
-
-   if( HTTP_login(out) )return;
+  HTTP_login(out);
+//  if( HTTP_login(out) )return;
 
 #ifdef HTTP_FRAGMETATION
    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
    Serial.printf("!!! HTTP Fragment 1 %d\n", out.length());  
    server.send ( 200, "text/html", out );
-//   HTTP_printConfigColor();
    out = "";
 #endif
+
    if( UID >= 0 ){
-     HTTP_printConfigColor(out);
-     HTTP_printConfig(out);
-   Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
-//     out += "*Обязательная настройка для работы без онлайн отправки данных.<br>\n";
-//     out += "**Обязательная настройка для отправки данных на сайт www.crm.moscow.<br>\n";
-//     out += "⠀<br>\n";
-//     out += "За консультацией рекомендуем Вам обратиться по WhatsApp или Telegram 89060725500.<br>\n";
-//     out += "По всем вопросам вы можете прислать видео или позвонить по видеозвонку.<br>\n";
-     out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
-     out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
-     out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
-
-
-//     out += "<p><a class='a1' href=/update>Обновление прошивки</a>\n";
-//     out += "<p><a class='a1' href=/?Default=1>Сброс до заводских настроек</a>\n";
-//     out += "<p><a class='a1' href=/?Reboot=1>Перезагрузка</a>\n";
-  }
-//  out += "<p><a class='a1' href=/?Logout=1>Выход</a>\n";
-    out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+      out += "<form action='/' method='PUT'>\n";
+      HTTP_printConfigColor(out);
+      HTTP_printConfig(out);
+      out += "</form>\n";
+      out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+   }
 
    HTTP_printTail(out);
-   Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
 #ifdef HTTP_FRAGMETATION
+   Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
    server.sendContent(out);
 #else
+   Serial.printf("!!! HTTP Length %d\n", out.length());  
    server.send(200, "text/html", out);
    Serial.printf("!!! HTTP size page %d\n", out.length());  
 #endif
    msLoad = 0;
-//   Serial.printf("!!! HTTP size page %d\n", out.length());  
-//   Serial.println(out);
-//   server.send ( 200, "text/html", out );
+   is_load_page = false;
+}
+
+/*
+ * Оработчик страницы реле
+ */
+void HTTP_handleConfig1(void) {
+#ifdef DNS_SERVER
+  if( HTTP_redirect() )return;
+#endif
+  if( HTTP_checkArgs() )return;
+  if( msLoad != 0 ){
+     Serial.println(F("!!! Skip HTTP config ..."));
+     return;
+  }
+  msLoad = millis();
+  char str[50];
+  String out = "";
+  is_load_page = true;
+  HTTP_printHeader(out,"Конфигурация реле",0);
+  HTTP_print_menu(out, 2);
+
+  if( HTTP_login(out) )HTTP_goto("/", 2, "Введите пароль");
+
+  if( UID >= 0 ){
+      out += "<h1>Настройка конфигурации реле</h1>\n";
+      out += "<form action='/' method='PUT'>\n";
+      HTTP_printConfigRelay(out);
+      out += "</form>\n";
+      out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+  }
+
+  HTTP_printTail(out);
+#ifdef HTTP_FRAGMETATION
+  Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
+  server.sendContent(out);
+#else
+  Serial.printf("!!! HTTP Length %d\n", out.length());  
+  server.send(200, "text/html", out);
+  Serial.printf("!!! HTTP size page %d\n", out.length());  
+#endif
+   msLoad = 0;
+   is_load_page = false;
+}
+
+/*
+ * Оработчик страницы сетевых настроек
+ */
+void HTTP_handleConfig2(void) {
+#ifdef DNS_SERVER
+  if( HTTP_redirect() )return;
+#endif
+  if( HTTP_checkArgs() )return;
+  if( msLoad != 0 ){
+     Serial.println(F("!!! Skip HTTP config ..."));
+     return;
+  }
+  msLoad = millis();
+  char str[50];
+  String out = "";
+  is_load_page = true;
+  HTTP_printHeader(out,"Конфигурация доступа",0);
+  HTTP_print_menu(out, 3);
+
+
+  if( HTTP_login(out) )HTTP_goto("/", 2, "Введите пароль");
+
+  if( UID >= 0 ){
+      out += "<h1>Настройка сетевых параметров</h1>\n";
+      out += "<form action='/' method='PUT'>\n";
+      HTTP_printConfigNet(out);
+      out += "</form>\n";
+      out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
+      out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+  }
+
+  HTTP_printTail(out);
+#ifdef HTTP_FRAGMETATION
+  Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
+  server.sendContent(out);
+#else
+  Serial.printf("!!! HTTP Length %d\n", out.length());  
+  server.send(200, "text/html", out);
+  Serial.printf("!!! HTTP size page %d\n", out.length());  
+#endif
+   msLoad = 0;
    is_load_page = false;
 }
 
 
-void HTTP_printConfig(String &out){
+/**
+* Настройка подсветки
+**/
+void HTTP_printConfigColor(String &out){
 #ifdef HTTP_FRAGMETATION
+  out="";
+#endif  
+  char s[50];
+// Блок №1c
+  out += "<fieldset>\n";
+  out += "<legend>Настройка подсветки датчика</legend>\n";
+  out += "<table width=100%>";
+  sprintf(s,"%d",EA_Config.Brightness);
+  HTTP_printInput1(out,"Яркость 0-10","Brightness",s,16,32,HT_NUMBER);
+
+  out += "<tr><td colspan=2>Цвет в режиме &quot;Свободно&quot;</td></tr>";
+  out += "<tr>\n";
+  HTTP_print_td_color(out, COLOR_FREE1, "ColorFree", "1", EA_Config.ColorFree);
+  HTTP_print_td_color(out, COLOR_FREE2, "ColorFree", "2", EA_Config.ColorFree);
+  out += "</tr>\n";
+
+  out += "<tr><td colspan=2>";
+  HTTP_print_input_checkbox(out,"isFreeBlink","1",EA_Config.isColorFreeBlink);
+
+  out += "<br>Мигание в режиме &quot;Свободно&quot; ";
+  out += "</td></tr>";
+  out += "<tr>\n";
+  HTTP_print_td_color(out, COLOR_BLINK1, "ColorBlink", "1", EA_Config.ColorBlink);
+  HTTP_print_td_color(out, COLOR_BLINK2, "ColorBlink", "2", EA_Config.ColorBlink);
+  out += "</tr>\n";
+
+  out += "<tr><td colspan=2><br>Цвет в режиме &quot;Занято&quot;</td></tr>";
+  out += "<tr>";
+  HTTP_print_td_color(out, COLOR_BUSY1, "ColorBusy", "1", EA_Config.ColorBusy);
+  HTTP_print_td_color(out, COLOR_BUSY2, "ColorBusy", "2", EA_Config.ColorBusy);
+  out += "</tr>\n";
+
+  out += "</table>";
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+
+#ifdef HTTP_FRAGMETATION
+  Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
+  server.sendContent(out);
   out = "";
 #endif  
+}
+
+
+
+
+/**
+* Парметры основных настроек
+*/
+void HTTP_printConfig(String &out){
   char s[32];
-  sprintf(s,"%d",EA_Config.GroundLevel);
-//  out += "<form action='/' method='PUT'>\n";
 // Блок №2
   out += "<fieldset>\n";
   out += "<legend>Конфигурация WI-FI</legend>\n";
   out += "<table>";
   out += "<tr><td align='center' width=50%><img src='/wifi1.png'></td><td width=50% align='center'><img src='/wifi2.png'></td></tr>";
-  out += "<tr><td align='center'><input type='radio' name='WiFiMode' value='1'";
-  if( !EA_Config.isWiFiAlways )out += " checked";
-  out += "></td><td align='center'><input type='radio' name='WiFiMode' value='2'";
-  if( EA_Config.isWiFiAlways )out += " checked";
-  out += "></td></tr>";
+  out += "<tr><td align='center'>";
+  HTTP_print_input_radio(out,"WiFiMode","1",!EA_Config.isWiFiAlways);
+  out += "</td><td align='center'>";
+  HTTP_print_input_radio(out,"WiFiMode","2",EA_Config.isWiFiAlways);
+  out += "</td></tr>";
   out += "<tr><td align='center' class='td1'>Раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Всегда раздает WiFi. Первый светодиод белый.</td></tr></table>";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";
@@ -472,11 +586,70 @@ void HTTP_printConfig(String &out){
   HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";
+//#ifdef HTTP_FRAGMETATION
+//   Serial.printf("!!! HTTP Fragment 3a %d\n", out.length());  
+//   server.sendContent(out);
+ //  out = "";
+//#endif
+
+// Блок №5
+  out += "<fieldset>\n";
+  out += "<legend>Если датчик не видит расстояние</legend>\n";
+  out += "<table>";
+  HTTP_print_img_radio(out,"/stat2.png","Если не видит расстояние - не переключается. (в этот момент мигает фиолетовым)","NoneMode","1",( EA_Config.NanValueFlag  == NAN_VALUE_IGNORE ),false);
+  HTTP_print_img_radio(out,"/stat3.png","Если не видит расстояние - переключается в &quot;занято&quot;","NoneMode","2",( EA_Config.NanValueFlag  == NAN_VALUE_BUSY ),false);
+  HTTP_print_img_radio(out,"/stat1.png","Если не видит расстояние - переключается в &quot;свободно&quot;","NoneMode","3",( EA_Config.NanValueFlag  == NAN_VALUE_FREE ),false);
+
+  sprintf(s,"%06lX",(uint32_t)COLOR_NAN);
+  out += "<tr><td bgcolor='#"; out += s; out += "' height='50pt'>&nbsp;</td><td>";
+  HTTP_print_input_checkbox(out,"isColorNan","1",EA_Config.isColorNan);
+  out += "</td><td>Активация малиновой подсветки если датчик ничего не видит.";
+  out += "</td></tr>";
+  out += "</table>\n";
+  
+  sprintf(s,"%d",EA_Config.TM_LOOP_SENSOR);
+  HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";
+
+// Блок №6
+  out += "<fieldset>\n";
+  out += "<legend>Режимы определения препятствия</legend>\n"; 
+  HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL ),true);
+  sprintf(s,"%d",EA_Config.GroundLevel);
+  HTTP_printInput1(out,"*Расстояние от датчика до пола (мм):","GroundLevel",s,20,32,HT_TEXT);
+  sprintf(s,"%d",EA_Config.LimitDistance);
+  HTTP_printInput1(out,"Минимальная высота на срабатывание (мм):","LimitDistance",s,16,32,HT_NUMBER);
+
+  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot в заданном диапазоне:","MeasureType","2",( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE ), true);
+  sprintf(s,"%d",EA_Config.MinDistance1);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance1);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",s,16,32,HT_NUMBER);
+ 
+  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot в заданном диапазоне:","MeasureType","3",( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE ), true);
+  sprintf(s,"%d",EA_Config.MinDistance2);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance2);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",s,16,32,HT_NUMBER);
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
 #ifdef HTTP_FRAGMETATION
-   Serial.printf("!!! HTTP Fragment 3a %d\n", out.length());  
+   Serial.printf("!!! HTTP Fragment 3d %d\n", out.length());  
    server.sendContent(out);
    out = "";
 #endif
+}
+
+/**
+* Настройка реле
+**/
+void HTTP_printConfigRelay(String &out){
+  char s[32];
+//  sprintf(s,"%d",EA_Config.GroundLevel);
 // Блок №4.1 
   out += "<fieldset>\n";
   out += "<legend>Режим работы реле №1</legend>\n";
@@ -486,51 +659,27 @@ void HTTP_printConfig(String &out){
   sprintf(s,"%d",EA_Config.TM_DelayON2);
   HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff1",s,16,32,HT_NUMBER);
 
-
-  out += "<table><tr><td><img src='/relay0.png'><br></td><td valign='middle'><input type='radio' name='ModeRelay1' value='0'";
-  if( EA_Config.ModeRelay1  == RELAY_NONE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Не используется</td></tr></table>";
-
-  out += "<table><tr><td><img src='/relay1.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='1'";
-  if( EA_Config.ModeRelay1  == RELAY_NORMAL )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно</td></tr></table>";
- 
-  out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='2'";
-  if( EA_Config.ModeRelay1  == RELAY_PULSE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой на открытия или закрытие ворот</td></tr></table>\n";
-
-//  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='3'";
-//  if( EA_Config.ModeRelay1  == RELAY_PULSE_OFF )out += " checked";
-//  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
-
-  out += "<table><tr><td><img src='/relay4.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='4'";
-  if( EA_Config.ModeRelay1  == RELAY_PWM )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
-
-  out += "<p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay1\"";
-  if( EA_Config.isInverseRelay1  )out += " checked>\n";
-  else out += ">";
+  HTTP_print_img_radio(out,"/relay0.png","Не используется","ModeRelay1","0",( EA_Config.ModeRelay1  == RELAY_NONE ), true);
+  HTTP_print_img_radio(out,"/relay1.png","Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно","ModeRelay1","1",( EA_Config.ModeRelay1  == RELAY_NORMAL ), true);
+  HTTP_print_img_radio(out,"/relay2.png","Управление кнопкой на открытия или закрытие ворот","ModeRelay1","2",( EA_Config.ModeRelay1  == RELAY_PULSE ), true);
+  HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay1","4",( EA_Config.ModeRelay1  == RELAY_PWM  ), true);
+  HTTP_print_input_checkbox(out,"isInverseRelay1","1",EA_Config.isInverseRelay1);
   out += "<label>Инверсия занято/свободно</label>";
-
-
-  out += "<table><tr><td><img src='/relay5.png'></td><td valign='middle'><input type='radio' name='ModeRelay1' value='5'";
-  if( EA_Config.ModeRelay1  == RELAY_PULSE2 )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия-закрытия ворот</td></tr></table>\n";
+  HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия-закрытия ворот","ModeRelay1","5",( EA_Config.ModeRelay1  == RELAY_PULSE2 ), true);
 
   sprintf(s,"%d",EA_Config.TM_PulseRelay1);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay1",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.TM_PauseRelay1);
   HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay1",s,16,32,HT_NUMBER);
 
-
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-
   out += "</fieldset>\n";  
-#ifdef HTTP_FRAGMETATION
-   Serial.printf("!!! HTTP Fragment 3b %d\n", out.length());  
-   server.sendContent(out);
-   out = "";
-#endif
+
+//#ifdef HTTP_FRAGMETATION
+//   Serial.printf("!!! HTTP Fragment 3b %d\n", out.length());  
+//   server.sendContent(out);
+//   out = "";
+//#endif
 // Блок №4.2
   out += "<fieldset>\n";
   out += "<legend>Режим работы реле №2</legend>\n";
@@ -540,126 +689,37 @@ void HTTP_printConfig(String &out){
   sprintf(s,"%d",EA_Config.TM_DelayON2);
   HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff2",s,16,32,HT_NUMBER);
 
-
-  out += "<table><tr><td><img src='/relay0.png'><br></td><td valign='middle'><input type='radio' name='ModeRelay2' value='0'";
-  if( EA_Config.ModeRelay2  == RELAY_NONE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Не используется</td></tr></table>";
-
-  out += "<table><tr><td><img src='/relay1.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='1'";
-  if( EA_Config.ModeRelay2  == RELAY_NORMAL )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно</td></tr></table>";
- 
-  out += "<table><tr><td><img src='/relay2.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='2'";
-  if( EA_Config.ModeRelay2  == RELAY_PULSE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой на открытие или закрытие ворот</td></tr></table>\n";
-
-//  out += "<table><tr><td><img src='/relay3.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='3'";
-//  if( EA_Config.ModeRelay2  == RELAY_PULSE_OFF )out += " checked";
-//  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия ворот (инверсия)</td></tr></table>\n";
-
-  out += "<table><tr><td><img src='/relay4.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='4'";
-  if( EA_Config.ModeRelay2  == RELAY_PWM )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Импульсный режим</td></tr></table>\n";
-
-  out += "<p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
-  if( EA_Config.isInverseRelay2  )out += " checked>\n";
-  else out += ">";
+  HTTP_print_img_radio(out,"/relay0.png","Не используется","ModeRelay2","0",( EA_Config.ModeRelay2  == RELAY_NONE ), true);
+  HTTP_print_img_radio(out,"/relay1.png","Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно","ModeRelay2","1",( EA_Config.ModeRelay2  == RELAY_NORMAL ), true);
+  HTTP_print_img_radio(out,"/relay2.png","Управление кнопкой на открытия или закрытие ворот","ModeRelay2","2",( EA_Config.ModeRelay2  == RELAY_PULSE ), true);
+  HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay2","4",( EA_Config.ModeRelay2  == RELAY_PWM  ), true);
+  HTTP_print_input_checkbox(out,"isInverseRelay2","1",EA_Config.isInverseRelay2);
   out += "<label>Инверсия занято/свободно</label>";
-
-
-  out += "<table><tr><td><img src='/relay5.png'></td><td valign='middle'><input type='radio' name='ModeRelay2' value='5'";
-  if( EA_Config.ModeRelay2  == RELAY_PULSE2 )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Управление кнопкой открытия-закрытия ворот</td></tr></table>\n";
-
-
+  HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия-закрытия ворот","ModeRelay2","5",( EA_Config.ModeRelay2  == RELAY_PULSE2 ), true);
 
   sprintf(s,"%d",EA_Config.TM_PulseRelay2);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay2",s,16,32,HT_NUMBER);
 
   sprintf(s,"%d",EA_Config.TM_PauseRelay2);
   HTTP_printInput1(out,"           На сколько секунд разамкнуть контакты:","TM_PauseRelay2",s,16,32,HT_NUMBER);
-
-//  out += " <p><input type=\"checkbox\" value=\"1\" name=\"isInverseRelay2\"";
-//  if( EA_Config.isInverseRelay2  )out += " checked>\n";
-//  else out += ">";
-//  out += "<label>Инверсия работы реле 2</label>";
-
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
 
   out += "</fieldset>\n";
+
 #ifdef HTTP_FRAGMETATION
    Serial.printf("!!! HTTP Fragment 3c %d\n", out.length());  
    server.sendContent(out);
    out = "";
 #endif
 
-// Блок №5
-  out += "<fieldset>\n";
-  out += "<legend>Если датчик не видит расстояние</legend>\n";
-  out += "<table>";
-  out += "<tr><td><img src='/stat2.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='1'";
-  if( EA_Config.NanValueFlag  == NAN_VALUE_IGNORE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - не переключается. (в этот момент мигает фиолетовым)</td></tr>";
-  out += "<tr><td><img src='/stat3.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='2'";
-  if( EA_Config.NanValueFlag  == NAN_VALUE_BUSY )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;занято&quot;</td></tr>";
-  out += "<tr><td><img src='/stat1.png'></td><td valign='middle'><input type='radio' name='NoneMode' value='3'";
-  if( EA_Config.NanValueFlag  == NAN_VALUE_FREE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Если не видит расстояние - переключается в &quot;свободно&quot;</td></tr>";
+}
 
-  sprintf(s,"%06lX",(uint32_t)COLOR_NAN);
- 
-  out += "<tr><td bgcolor='#"; out += s; out += "'>&nbsp;</td><td>";
-  out += "<input type=\"checkbox\" value=\"1\" name=\"isColorNan\"";
-  if( EA_Config.isColorNan  )out += " checked>\n";
-  else out += ">";
-  out += "Активация малиновой подсветки если датчик ничего не видит.";
-  out += "</td></tr>";
-  out += "</table>\n";
-  sprintf(s,"%d",EA_Config.TM_LOOP_SENSOR);
-  HTTP_printInput1(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",s,16,32,HT_NUMBER);
+/**
+* Настройка Сетевых параметров
+**/
+void HTTP_printConfigNet(String &out){
+  char s[32];
 
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += "</fieldset>\n";
-
-   
-
-// Блок №6
-  out += "<fieldset>\n";
-  out += "<legend>Режимы определения препятствия</legend>\n"; 
-  out += "<table><tr><td><img src='/type1.png'><br></td><td valign='middle'><input type='radio' name='MeasureType' value='1'";
-  if( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Установка датчика на потолке</td></tr></table>";
-  sprintf(s,"%d",EA_Config.GroundLevel);
-  HTTP_printInput1(out,"*Расстояние от датчика до пола (мм):","GroundLevel",s,20,32,HT_TEXT);
-  sprintf(s,"%d",EA_Config.LimitDistance);
-  HTTP_printInput1(out,"Минимальная высота на срабатывание (мм):","LimitDistance",s,16,32,HT_NUMBER);
-
-  out += "<table><tr><td><img src='/type2.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='2'";
-  if( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Определяет как &quot;занято&quot в заданном диапазоне:</td></tr></table>";
-  sprintf(s,"%d",EA_Config.MinDistance1);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.MaxDistance1);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",s,16,32,HT_NUMBER);
- 
-  out += "<table><tr><td><img src='/type3.png'></td><td valign='middle'><input type='radio' name='MeasureType' value='3'";
-  if( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE )out += " checked";
-  out += "></td><td valign='middle' class='td1'>Определяет как &quot;свободно&quot в заданном диапазоне:</td></tr></table>\n";
-  sprintf(s,"%d",EA_Config.MinDistance2);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.MaxDistance2);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",s,16,32,HT_NUMBER);
-
-
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
-#ifdef HTTP_FRAGMETATION
-   Serial.printf("!!! HTTP Fragment 3d %d\n", out.length());  
-   server.sendContent(out);
-   out = "";
-#endif
 // Блок №7
   out += "<fieldset>\n";
   out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
@@ -669,7 +729,6 @@ void HTTP_printConfig(String &out){
   else out += ">\n";
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
-
   HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",EA_Config.DOGOVOR_ID,20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",EA_Config.BOX_ID,20,16,HT_TEXT);
   out += "<p class='t1'>Ниже идут дополнительные настройки. Посоветуйтесь с технической поддержкой прежде чем их менять.";
@@ -682,19 +741,17 @@ void HTTP_printConfig(String &out){
   HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,16,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
-#ifdef HTTP_FRAGMETATION
-   Serial.printf("!!! HTTP Fragment 3e %d\n", out.length());  
-   server.sendContent(out);
-   out = "";
-#endif   
+//#ifdef HTTP_FRAGMETATION
+//   Serial.printf("!!! HTTP Fragment 3e %d\n", out.length());  
+//   server.sendContent(out);
+//   out = "";
+//#endif   
 
 // Блок №8
   out += "<fieldset>\n";
   out += "<legend>Параметры DHCP</legend>\n";
   out += "<label>Статический IP:</label>\n";
-  out += "<input type=\"checkbox\" value=\"static\" name=\"STATIC_IP\"";
-  if( !EA_Config.isDHCP  )out += " checked";
-  out += ">\n";
+  HTTP_print_input_checkbox(out,"STATIC_IP","static",!EA_Config.isDHCP);
   
   sprintf(s,"%d.%d.%d.%d",EA_Config.IP[0],EA_Config.IP[1],EA_Config.IP[2],EA_Config.IP[3]);
   HTTP_printInput1(out,"Адрес:","IPAddr",s,16,32,HT_IP);
@@ -719,85 +776,16 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 
- // Блок №9 (настройка цветов) 
-  out += "</form>\n";  
-
 #ifdef HTTP_FRAGMETATION
    Serial.printf("!!! HTTP Fragment 3f %d\n", out.length());  
    server.sendContent(out);
    out = "";
 #endif   
+
 }
 
-void HTTP_printConfigColor(String &out){
-#ifdef HTTP_FRAGMETATION
-  out="";
-#endif  
-  char s[50];
-  out += "<form action='/' method='PUT'>\n";
-// Блок №1c
-  out += "<fieldset>\n";
-  out += "<legend>Настройка подсветки датчика</legend>\n";
-  out += "<table width=100%>";
-  sprintf(s,"%d",EA_Config.Brightness);
-  HTTP_printInput1(out,"Яркость 0-10","Brightness",s,16,32,HT_NUMBER);
 
-  out += "<tr><td colspan=2>Цвет в режиме &quot;Свободно&quot;</td></tr>";
-  out += "<tr>\n";
-  sprintf(s,"%06lX",(uint32_t)COLOR_FREE1);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  out += "<input type='radio' name='ColorFree' value='1'";
-  if( EA_Config.ColorFree == COLOR_FREE1 )out += " checked";
-  out += "></td>";
-  sprintf(s,"%06lX",(uint32_t)COLOR_FREE2);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  out += "<input type='radio' name='ColorFree' value='2'";
-  if( EA_Config.ColorFree == COLOR_FREE2 )out += " checked";
-  out += "></td>";
-  out += "</tr>\n";
-  out += "<tr><td colspan=2>";
-  out += "<input type=\"checkbox\" value=\"1\" name=\"isFreeBlink\"";
-  if( EA_Config.isColorFreeBlink  )out += " checked>\n";
-  else out += ">";
-  out += "<br>Мигание в режиме &quot;Свободно&quot; ";
 
-  out += "</td></tr>";
-  out += "<tr>\n";
-  sprintf(s,"%06lX",(uint32_t)COLOR_BLINK1);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  out += "<input type='radio' name='ColorBlink' value='1'";
-  if( EA_Config.ColorBlink == COLOR_BLINK1 )out += " checked";
-  out += "></td>";
-  sprintf(s,"%06lX",(uint32_t)COLOR_BLINK2);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  out += "<input type='radio' name='ColorBlink' value='2'";
-  if( EA_Config.ColorBlink == COLOR_BLINK2 )out += " checked";
-  out += "></td>";
-  out += "</tr>\n";
-
-  out += "<tr><td colspan=2><br>Цвет в режиме &quot;Занято&quot;</td></tr>";
-  out += "<tr>";
-  sprintf(s,"%06lX",(uint32_t)COLOR_BUSY1);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  out += "<input type='radio' name='ColorBusy' value='1'";
-  if( EA_Config.ColorBusy == COLOR_BUSY1 )out += " checked";
-  out += "></td>";
-  sprintf(s,"%06lX",(uint32_t)COLOR_BUSY2);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  out += "<input type='radio' name='ColorBusy' value='2'";
-  if( EA_Config.ColorBusy == COLOR_BUSY2 )out += " checked";
-  out += "></td>";
-  out += "</tr>\n";
-
-  out += "</table>";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += "</fieldset>\n";  
-//  out += "</form>\n";
-#ifdef HTTP_FRAGMETATION
-  Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
-  server.sendContent(out);
-#endif  
-}
 
 
 bool HTTP_checkArgs(){
@@ -1144,4 +1132,64 @@ void HTTP_goto(const char *url, uint32_t tm, const char *msg){
    HTTP_printTail(content);
    server.send(200, "text/html", content);
 }
- 
+
+void  HTTP_print_td_color(String &out, uint32_t color, char *name, char *value, uint32_t color_set){
+  char s[64];
+  sprintf(s,"%06lX",color);
+  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
+  HTTP_print_input_radio(out,name,value,(color_set == color));
+  out += "</td>";
+}
+
+void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table){
+  if(is_table)out += "<table>"; 
+  out += "<tr><td><img src='";
+  out += img;
+  out += "'></td><td>";
+  HTTP_print_input_radio(out,name,value,checked);
+  out += "</td><td>";
+  out += label;
+  out += "</td></tr>";
+  if(is_table)out += "</table>"; 
+
+}
+
+
+
+void HTTP_print_input_radio(String &out,char *name, char *value,bool checked){
+  out += "<input type='radio' name='";
+  out += name;
+  out += "' value='";
+  out += value;
+  out += "'";
+  if( checked )out += " checked";
+  out += ">";   
+}
+
+void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked){
+  out += "<input type='checkbox' name='";
+  out += name;
+  out += "' value='";
+  out += value;
+  out += "'";
+  if( checked )out += " checked";
+  out += ">";   
+}
+
+void HTTP_print_menu(String &out, int current){
+  out += "<p><table width='100%'><tr>";
+  out += "<td width = '33%' align='center'>";
+  if( current == 1 )out += "<form method='GET'><input type='submit' value='Основные настройки' class='btn0'></form>\n";
+  else out += "<form action='/' method='GET'><input type='submit' value='Основные настройки' class='btn2'></form>\n";
+  out += "</td>";
+  out += "<td width = '33%' align='center'>";
+  if( current == 2 )out += "<form method='GET'><input type='submit' value='Настройки реле' class='btn0'></form>\n";
+  else out += "<form action='/conf1' method='GET'><input type='submit' value='Настройки реле' class='btn2'></form>\n";
+  out += "</td>";
+  out += "<td width = '33%' align='center'>";
+  if( current == 3 )out += "<form method='GET'><input type='submit' value='Сетевые настройки' class='btn0'></form>\n";
+  else out += "<form action='/conf2' method='GET'><input type='submit' value='Сетевые настройки' class='btn2'></form>\n";
+  out += "</td>";
+  out += "</tr></table>\n";
+
+}

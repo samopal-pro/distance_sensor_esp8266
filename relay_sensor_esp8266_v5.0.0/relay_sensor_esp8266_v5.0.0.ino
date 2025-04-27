@@ -84,6 +84,7 @@ void setup() {
 //   pinMode(PinCalibrateSonar,INPUT_PULLUP);
    calbtn.SetLongClick(10000);
 //   calbtn.SetAutoClick(10000,1000);
+//   calbtn.SetMultiClick(500);
 // Инициализация светодиодной ленты
    ledInit();
 
@@ -115,23 +116,50 @@ void setup() {
 }
 
 
+bool white_flag = false;
+uint16_t btn_count = 0;
+uint32_t ms_btn = 0;
+
+
 void loop() {
    cur_ms       = millis();
    t_cur        = cur_ms/1000;
 // Действие по длинному нажатию кнопки
    if( is_load_page == false && (ms0 == 0 || cur_ms < ms0 || (cur_ms - ms0) > 200)  ){
        ms0 = cur_ms;
+       if( ms_btn == 0 || ms_btn > cur_ms || cur_ms - ms_btn > 4000 ){
+           btn_count = 0;
+       }
        switch(calbtn.Loop()){
           case SB_NONE:
               is_btn_click = false;
+              
               break;     
           case SB_WAIT:
+              if( is_btn_click == false ){
+                  ledSetBaseMode(LED_BASE_NONE,true);
+                  white_flag   = false;
+              }
               is_btn_click = true;
-              ledSetBaseMode(LED_BASE_NONE);
+              if( white_flag)
+                   if( calbtn.Time < 2000 )ledSetBaseMode(LED_BASE_SAVE);
+                   else ledSetBaseMode(LED_BASE_GROUND);
+              else ledSetBaseMode(LED_BASE_NONE);
+              white_flag = !white_flag;
               break;     
           case SB_CLICK:
+              Serial.printf("!!! BTN click %d\n",(int)btn_count);
+              btn_count++;
+              if( btn_count == 7 ){
+                btn_count = 0;
+                strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
+                ledSetBaseMode(LED_BASE_SAVE);
+                EA_save_config();     
+                delay(2000);    
+              }
+              ms_btn = cur_ms;
               Serial.printf("!!! BTN click %d\n",calbtn.Time);
-              if( calbtn.Time > 1000 ){
+              if( calbtn.Time > 2000 ){
 //                 ledSetExtMode(LED_EXT_BTN3);
                  if( EA_Config.isWiFiAlways == false  && isWiFiAlways1 == false )
                     if( w_stat2 == EWS_AP_MODE )WiFi_stop("Stop AP User");
