@@ -85,7 +85,7 @@ void HTTP_printConfigRelay(String &out);
 void HTTP_printConfigNet(String &out);
 void HTTP_printConfig(String &out);
 void HTTP_printConfigColor(String &out);
-bool HTTP_checkArgs();
+bool HTTP_checkArgs(int current);
 
 
 void HTTP_loop();
@@ -103,6 +103,8 @@ void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);
 void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table);
 void HTTP_print_menu(String &out, int current);
+char *HTTP_url( int current );
+
 
 void HTTP_printHeader(String &out,const char *title, uint16_t refresh=0);
 void HTTP_printTail(String &out);

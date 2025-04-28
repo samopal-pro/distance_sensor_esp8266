@@ -141,21 +141,22 @@ void loop() {
                   white_flag   = false;
               }
               is_btn_click = true;
-              if( white_flag)
-                   if( calbtn.Time < 2000 )ledSetBaseMode(LED_BASE_SAVE);
-                   else ledSetBaseMode(LED_BASE_GROUND);
-              else ledSetBaseMode(LED_BASE_NONE);
+             
+              if( calbtn.Time < 2000 )
+                  if( white_flag)ledSetBaseMode(LED_BASE_SAVE);
+                  else ledSetBaseMode(LED_BASE_NONE);
+              else ledSetBaseMode(LED_BASE_GROUND);             
               white_flag = !white_flag;
               break;     
           case SB_CLICK:
               Serial.printf("!!! BTN click %d\n",(int)btn_count);
               btn_count++;
-              if( btn_count == 7 ){
+              if( btn_count == 5 ){
                 btn_count = 0;
                 strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
-                ledSetBaseMode(LED_BASE_SAVE);
+                ledSetBaseMode(LED_BASE_ERROR);
                 EA_save_config();     
-                delay(2000);    
+                delay(3000);    
               }
               ms_btn = cur_ms;
               Serial.printf("!!! BTN click %d\n",calbtn.Time);

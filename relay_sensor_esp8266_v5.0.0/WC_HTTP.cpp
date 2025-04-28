@@ -31,6 +31,9 @@ std::vector <int> n_rssi;
 bool is_update     = false;
 bool is_load_page = false;
 
+char *pages[] =  {"/", "/conf1", "/conf2" };
+
+
 void WiFi_test(){
    uint32_t _ms = millis();
 // Если режим точки доступа
@@ -356,10 +359,11 @@ void HTTP_handleDistance(void) {
  * Оработчик главной страницы сервера
  */
 void HTTP_handleRoot(void) {
+   int numPage = 0;
 #ifdef DNS_SERVER
   if( HTTP_redirect() )return;
 #endif
-  if( HTTP_checkArgs() )return;
+  if( HTTP_checkArgs(numPage) )return;
   if( msLoad != 0 ){
      Serial.println(F("!!! Skip HTTP root ..."));
      return;
@@ -369,7 +373,7 @@ void HTTP_handleRoot(void) {
   String out = "";
   is_load_page = true;
   HTTP_printHeader(out,"Главная",0);
-  HTTP_print_menu(out, 1);
+  HTTP_print_menu(out, numPage);
 // Блок №1
   out += "<fieldset>\n";
 
@@ -389,7 +393,7 @@ void HTTP_handleRoot(void) {
 #endif
 
    if( UID >= 0 ){
-      out += "<form action='/' method='PUT'>\n";
+      out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_printConfigColor(out);
       HTTP_printConfig(out);
       out += "</form>\n";
@@ -416,10 +420,11 @@ void HTTP_handleRoot(void) {
  * Оработчик страницы реле
  */
 void HTTP_handleConfig1(void) {
+   int numPage = 1;
 #ifdef DNS_SERVER
   if( HTTP_redirect() )return;
 #endif
-  if( HTTP_checkArgs() )return;
+  if( HTTP_checkArgs(numPage) )return;
   if( msLoad != 0 ){
      Serial.println(F("!!! Skip HTTP config ..."));
      return;
@@ -429,13 +434,13 @@ void HTTP_handleConfig1(void) {
   String out = "";
   is_load_page = true;
   HTTP_printHeader(out,"Конфигурация реле",0);
-  HTTP_print_menu(out, 2);
+  HTTP_print_menu(out, numPage);
 
-  if( HTTP_login(out) )HTTP_goto("/", 2, "Введите пароль");
+  if( HTTP_login(out) )HTTP_goto(pages[numPage], 2, "Введите пароль");
 
   if( UID >= 0 ){
       out += "<h1>Настройка конфигурации реле</h1>\n";
-      out += "<form action='/' method='PUT'>\n";
+      out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_printConfigRelay(out);
       out += "</form>\n";
       out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
@@ -461,10 +466,11 @@ void HTTP_handleConfig1(void) {
  * Оработчик страницы сетевых настроек
  */
 void HTTP_handleConfig2(void) {
+   int numPage = 2;
 #ifdef DNS_SERVER
   if( HTTP_redirect() )return;
 #endif
-  if( HTTP_checkArgs() )return;
+  if( HTTP_checkArgs(numPage) )return;
   if( msLoad != 0 ){
      Serial.println(F("!!! Skip HTTP config ..."));
      return;
@@ -474,14 +480,14 @@ void HTTP_handleConfig2(void) {
   String out = "";
   is_load_page = true;
   HTTP_printHeader(out,"Конфигурация доступа",0);
-  HTTP_print_menu(out, 3);
+  HTTP_print_menu(out, numPage);
 
 
-  if( HTTP_login(out) )HTTP_goto("/", 2, "Введите пароль");
+  if( HTTP_login(out) )HTTP_goto(pages[numPage], 2, "Введите пароль");
 
   if( UID >= 0 ){
       out += "<h1>Настройка сетевых параметров</h1>\n";
-      out += "<form action='/' method='PUT'>\n";
+      out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_printConfigNet(out);
       out += "</form>\n";
       out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
@@ -508,9 +514,6 @@ void HTTP_handleConfig2(void) {
 * Настройка подсветки
 **/
 void HTTP_printConfigColor(String &out){
-#ifdef HTTP_FRAGMETATION
-  out="";
-#endif  
   char s[50];
 // Блок №1c
   out += "<fieldset>\n";
@@ -788,7 +791,7 @@ void HTTP_printConfigNet(String &out){
 
 
 
-bool HTTP_checkArgs(){
+bool HTTP_checkArgs(int current){
    if( UID < 0 )return false;
    bool _save = false;
 // Если нажата кнопка "Калибровка"   
@@ -913,7 +916,7 @@ bool HTTP_checkArgs(){
    if( _save ){
       EA_save_config(); 
       EA_read_config();      
-      HTTP_goto("/", 1000, "Сохранение параметров ...");
+      HTTP_goto(pages[current], 1000, "Сохранение параметров ...");
       if( EA_Config.isWiFiAlways || isWiFiAlways1)ledSetWiFiMode(LED_WIFI_AP1);
       else ledSetWiFiMode(LED_WIFI_AP);
       ledSetBaseMode(LED_BASE_SAVE,true);
@@ -1179,15 +1182,15 @@ void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked)
 void HTTP_print_menu(String &out, int current){
   out += "<p><table width='100%'><tr>";
   out += "<td width = '33%' align='center'>";
-  if( current == 1 )out += "<form method='GET'><input type='submit' value='Основные настройки' class='btn0'></form>\n";
+  if( current == 0 )out += "<form method='GET'><input type='submit' value='Основные настройки' class='btn0'></form>\n";
   else out += "<form action='/' method='GET'><input type='submit' value='Основные настройки' class='btn2'></form>\n";
   out += "</td>";
   out += "<td width = '33%' align='center'>";
-  if( current == 2 )out += "<form method='GET'><input type='submit' value='Настройки реле' class='btn0'></form>\n";
+  if( current == 1 )out += "<form method='GET'><input type='submit' value='Настройки реле' class='btn0'></form>\n";
   else out += "<form action='/conf1' method='GET'><input type='submit' value='Настройки реле' class='btn2'></form>\n";
   out += "</td>";
   out += "<td width = '33%' align='center'>";
-  if( current == 3 )out += "<form method='GET'><input type='submit' value='Сетевые настройки' class='btn0'></form>\n";
+  if( current == 2 )out += "<form method='GET'><input type='submit' value='Сетевые настройки' class='btn0'></form>\n";
   else out += "<form action='/conf2' method='GET'><input type='submit' value='Сетевые настройки' class='btn2'></form>\n";
   out += "</td>";
   out += "</tr></table>\n";
