@@ -156,7 +156,8 @@ void loop() {
                 strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
                 ledSetBaseMode(LED_BASE_ERROR);
                 EA_save_config();     
-                delay(3000);    
+                 delay(1000);    
+                ESP.reset();  
               }
               ms_btn = cur_ms;
               Serial.printf("!!! BTN click %d\n",calbtn.Time);
@@ -177,8 +178,8 @@ void loop() {
               break;
           case SB_LONG_CLICK:
               Serial.println("!!! BTN long click");
-//              CalibrateGround();
-              strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
+//            CalibrateGround();
+//              strcpy(EA_Config.ESP_NAME,DEVICE_NAME);
               strcpy(EA_Config.ESP_ADMIN_PASS, DEVICE_ADMIN);
               strcpy(EA_Config.ESP_OPER_PASS, DEVICE_OPER);
               EA_Config.CountBoot          = 0;

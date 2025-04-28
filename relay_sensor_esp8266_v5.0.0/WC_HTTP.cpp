@@ -625,13 +625,13 @@ void HTTP_printConfig(String &out){
   sprintf(s,"%d",EA_Config.LimitDistance);
   HTTP_printInput1(out,"Минимальная высота на срабатывание (мм):","LimitDistance",s,16,32,HT_NUMBER);
 
-  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot в заданном диапазоне:","MeasureType","2",( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE ), true);
+  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE ), true);
   sprintf(s,"%d",EA_Config.MinDistance1);
   HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.MaxDistance1);
   HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",s,16,32,HT_NUMBER);
  
-  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot в заданном диапазоне:","MeasureType","3",( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE ), true);
+  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE ), true);
   sprintf(s,"%d",EA_Config.MinDistance2);
   HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.MaxDistance2);
@@ -666,10 +666,11 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay1.png","Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно","ModeRelay1","1",( EA_Config.ModeRelay1  == RELAY_NORMAL ), true);
   HTTP_print_img_radio(out,"/relay2.png","Управление кнопкой на открытия или закрытие ворот","ModeRelay1","2",( EA_Config.ModeRelay1  == RELAY_PULSE ), true);
   HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay1","4",( EA_Config.ModeRelay1  == RELAY_PWM  ), true);
+  out +="<br>";
   HTTP_print_input_checkbox(out,"isInverseRelay1","1",EA_Config.isInverseRelay1);
-  out += "<label>Инверсия занято/свободно</label>";
+  out += "<label><b>Инверсия занято/свободно</b></label>";
+  out +="<br><br>";
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия-закрытия ворот","ModeRelay1","5",( EA_Config.ModeRelay1  == RELAY_PULSE2 ), true);
-
   sprintf(s,"%d",EA_Config.TM_PulseRelay1);
   HTTP_printInput1(out,"           На сколько секунд замкнуть контакты:","TM_PulseRelay1",s,16,32,HT_NUMBER);
   sprintf(s,"%d",EA_Config.TM_PauseRelay1);
@@ -696,8 +697,10 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay1.png","Реле по умолчанию, постоянно ВКЛ или ВЫКЛ режима Занято-свободно","ModeRelay2","1",( EA_Config.ModeRelay2  == RELAY_NORMAL ), true);
   HTTP_print_img_radio(out,"/relay2.png","Управление кнопкой на открытия или закрытие ворот","ModeRelay2","2",( EA_Config.ModeRelay2  == RELAY_PULSE ), true);
   HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay2","4",( EA_Config.ModeRelay2  == RELAY_PWM  ), true);
+  out +="<br>";
   HTTP_print_input_checkbox(out,"isInverseRelay2","1",EA_Config.isInverseRelay2);
-  out += "<label>Инверсия занято/свободно</label>";
+  out += "<label><b>Инверсия занято/свободно</b></label>";
+  out +="<br><br>";
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия-закрытия ворот","ModeRelay2","5",( EA_Config.ModeRelay2  == RELAY_PULSE2 ), true);
 
   sprintf(s,"%d",EA_Config.TM_PulseRelay2);
@@ -727,14 +730,17 @@ void HTTP_printConfigNet(String &out){
   out += "<fieldset>\n";
   out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
   out += "<labelВвключить онлайн отправку данных</label>\n";
-  out += "<input type=\"checkbox\" value=\"send\" name=\"SEND_HTTP\"";
-  if( EA_Config.isSendCrmMoscow  )out += " checked>\n";
-  else out += ">\n";
+  
+  HTTP_print_input_checkbox(out,"SEND_HTTP","send",EA_Config.isSendCrmMoscow);
+  
+  out += "<p class='t1'>Поставьте галочку. Введите все поля с ** и сохраните. После этого в первой вкладке выключите бесконечный режим раздачи WiFi активировав режим с бирюзовой иконкой.";
+  out += "После сохраните и перезагрузите устройство нажав желтую кнопку внизу натроек.</p>";
+
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",EA_Config.AP_PASS,20,32,HT_PASSWORD);
   HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",EA_Config.DOGOVOR_ID,20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",EA_Config.BOX_ID,20,16,HT_TEXT);
-  out += "<p class='t1'>Ниже идут дополнительные настройки. Посоветуйтесь с технической поддержкой прежде чем их менять.";
+  out += "<p class='t1'>Ниже идут дополнительные настройки. Посоветуйтесь с технической поддержкой прежде чем их менять.</p>";
   HTTP_printInput1(out,"Сервер:","Server",EA_Config.SERVER,20,32,HT_TEXT);
   sprintf(s,"%d",EA_Config.PORT);
   HTTP_printInput1(out,"Порт:","Port",s,16,32,HT_NUMBER);
@@ -775,6 +781,7 @@ void HTTP_printConfigNet(String &out){
   if( UID == 0 ){
      HTTP_printInput1(out,"Пароль для входа с правами администратора:","PasswordAdmin",EA_Config.ESP_ADMIN_PASS,20,32,HT_PASSWORD);
      HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
+     out += "<p class='t1'>После изменения имени WiFi нажмите внизу желтую кнопку &quot;Перезагрузка&quot;</p>";
   }
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -799,10 +806,14 @@ bool HTTP_checkArgs(int current){
        ProcessingCalibrate(1000);
    }
    else if( server.hasArg("Default") ){ 
+       char s[32];
+       strncpy(s,EA_Config.ESP_NAME,32);
        EA_default_config();
        EA_clear_arh();
+       strncpy(EA_Config.ESP_NAME,s,32);
        EA_save_config();
        EA_read_config();
+
        HTTP_goto("/", 2000, "Загрузка заводских параметров. Перезагрузка ..."); //1.12.24
        ESP.reset();  
        return true;
