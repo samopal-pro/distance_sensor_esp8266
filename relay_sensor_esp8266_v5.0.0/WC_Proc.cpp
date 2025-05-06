@@ -69,6 +69,7 @@ bool isChangeStat  = false; //Изменение отслеживания изм
  */
 void InitSonar(){
 // Иницализация ультразвукового датчика
+//    if( EA_Config.SensorType == SONAR_TFLUNA )EA_Config.SensorType = SONAR_TFMINI;
    isSonarEnable = false;
    switch(EA_Config.SensorType){
        case SONAR_SR04T :
@@ -93,6 +94,9 @@ void InitSonar(){
           if( scanI2C(0x10) == false ){
               Serial.println("Check UART TFMINI...");
               lidarSetI2C();
+              Serial.printf("Init Sonar trig=%d, echo=%d ...\n",PinDistanceTrig,PinDistanceEcho);
+              pinMode(PinDistanceTrig , OUTPUT);
+              pinMode(PinDistanceEcho , OUTPUT);
               Wire.begin(PinDistanceEcho,PinDistanceTrig);
               scanI2C(0x10);
           }

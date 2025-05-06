@@ -214,7 +214,7 @@ void loop() {
          Temp = dht.readTemperature();
       }
       
-      EA_save_last(Time,cur_ms/1000, Button, Distance, SAVE_DISTANCE_DELTA);
+      if( !isnan(Distance) )EA_save_last(Time,cur_ms/1000, Button, Distance, SAVE_DISTANCE_DELTA);
       
    }
 // Цикл проверки WiFi   

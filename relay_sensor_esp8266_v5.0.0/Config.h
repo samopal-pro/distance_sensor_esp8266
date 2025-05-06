@@ -127,7 +127,7 @@ enum T_RELAY_MODE {
 /*
    Конфигурация светодиодной ленты
 */
-#define LED_COUNT         21   //Число светодиодов
+#define LED_COUNT         50   //Число светодиодов
 #define PinLed            13
 
 

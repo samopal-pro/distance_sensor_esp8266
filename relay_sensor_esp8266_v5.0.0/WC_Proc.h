@@ -22,7 +22,8 @@
 #define SAMPLE_LEN       10
 #define RELIABILITY_PROC 0.15
 
-
+#include <user_interface.h>
+void system_restart(void);
 
 
 #define ReceiveBuferSize         1024

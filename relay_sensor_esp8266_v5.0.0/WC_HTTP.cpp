@@ -640,25 +640,6 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
-  out += "<fieldset>\n";
-  out += "<legend>Тип сенсора</legend>\n"; 
-  out += "<div class='lab2'><p><label>Выберите тип сенсора:</label>\n";
-  out += "<select name='SensorType'>\n";
-  out += "<option value='";out += String(SONAR_SR04T);out += "'";
-  if( EA_Config.SensorType == SONAR_SR04T)out += " selected";
-  out += ">Двойной ультразвуковой сенсор (SR04T)</option>";  
-  out += "<option value='";out += String(SONAR_SR04TM2);out += "'";
-  if( EA_Config.SensorType == SONAR_SR04TM2)out += " selected";
-  out += ">Одинарный ультразвуковой сенсор (SR04M2)</option>";  
-  out += "<option value='";out += String(SONAR_TFLUNA);out += "'";
-  if( EA_Config.SensorType == SONAR_TFLUNA)out += " selected";
-  out += ">Лазерный сенсор (TF-Luna)</option>";  
-  out += "</select>\n";
-  out += "</div>\n";
-  out += "<p class='t1'>После смены типа сенсора нужна перезагрузка.";
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
 
 //         if( n_ssid[i] == EA_Config.AP_SSID )out+=" selected";
 
@@ -749,6 +730,26 @@ void HTTP_printConfigRelay(String &out){
 void HTTP_printConfigNet(String &out){
   char s[32];
 
+  out += "<fieldset>\n";
+  out += "<legend>Тип сенсора</legend>\n"; 
+  out += "<div class='lab2'><p><label>Выберите тип сенсора:</label>\n";
+  out += "<select name='SensorType'>\n";
+  out += "<option value='";out += String(SONAR_SR04T);out += "'";
+  if( EA_Config.SensorType == SONAR_SR04T)out += " selected";
+  out += ">Двойной ультразвуковой сенсор (SR04T)</option>";  
+  out += "<option value='";out += String(SONAR_SR04TM2);out += "'";
+  if( EA_Config.SensorType == SONAR_SR04TM2)out += " selected";
+  out += ">Одинарный ультразвуковой сенсор (SR04M2)</option>";  
+  out += "<option value='";out += String(SONAR_TFLUNA);out += "'";
+  if( EA_Config.SensorType == SONAR_TFLUNA)out += " selected";
+  out += ">Лазерный сенсор (TF-Luna)</option>";  
+  out += "</select>\n";
+  out += "</div>\n";
+  out += "<p class='t1'>После смены типа сенсора нужно кратковременно передернуть питание.";
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
 // Блок №7
   out += "<fieldset>\n";
   out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
@@ -824,6 +825,7 @@ void HTTP_printConfigNet(String &out){
 bool HTTP_checkArgs(int current){
    if( UID < 0 )return false;
    bool _save = false;
+   bool _reboot = false;
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Calibrate")  ){  
        ProcessingCalibrate(1000);
@@ -890,7 +892,7 @@ bool HTTP_checkArgs(int current){
              case 2: EA_Config.MeasureType  = MEASURE_TYPE_OUTSIDE; break;
              case 3: EA_Config.MeasureType  = MEASURE_TYPE_INSIDE; break;
          }
-      if(server.hasArg("SensorType"))EA_Config.SensorType      = (T_SENSOR_TYPE)server.arg("SensorType").toInt();
+      if(server.hasArg("SensorType")){EA_Config.SensorType      = (T_SENSOR_TYPE)server.arg("SensorType").toInt();_reboot = true;}
       
 
       if(server.hasArg("LimitDistance"))EA_Config.LimitDistance      = server.arg("LimitDistance").toInt();
@@ -950,6 +952,17 @@ bool HTTP_checkArgs(int current){
    
       _save = true;
    }
+/*   
+if( _reboot ){ 
+      EA_save_config(); 
+      EA_read_config();      
+       HTTP_goto("/", 20000, "Сохранение параметров и перезагрузка ...");
+       delay(2000);
+       system_restart();  
+       return true;
+   }
+*/
+
    if( _save ){
       EA_save_config(); 
       EA_read_config();      
@@ -1227,8 +1240,8 @@ void HTTP_print_menu(String &out, int current){
   else out += "<form action='/conf1' method='GET'><input type='submit' value='Настройки реле' class='btn2'></form>\n";
   out += "</td>";
   out += "<td width = '33%' align='center'>";
-  if( current == 2 )out += "<form method='GET'><input type='submit' value='Сетевые настройки' class='btn0'></form>\n";
-  else out += "<form action='/conf2' method='GET'><input type='submit' value='Сетевые настройки' class='btn2'></form>\n";
+  if( current == 2 )out += "<form method='GET'><input type='submit' value='Сеть и сенсор' class='btn0'></form>\n";
+  else out += "<form action='/conf2' method='GET'><input type='submit' value='Сеть и сенсор' class='btn2'></form>\n";
   out += "</td>";
   out += "</tr></table>\n";
 
