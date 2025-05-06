@@ -70,7 +70,7 @@ bool isChangeStat  = false; //Изменение отслеживания изм
 void InitSonar(){
 // Иницализация ультразвукового датчика
    isSonarEnable = false;
-   switch(sensorType){
+   switch(EA_Config.SensorType){
        case SONAR_SR04T :
        case SONAR_SR04TV2 :
        case SONAR_SR04TM2 :
@@ -133,7 +133,7 @@ void InitSonar(){
 */
 void GetDistance(){
    if(!isSonarEnable)return;
-   switch(sensorType){
+   switch(EA_Config.SensorType){
        case SONAR_SR04T :
           GetDistanceSR04(2, 10, 2, 0, 5000);
           break;        

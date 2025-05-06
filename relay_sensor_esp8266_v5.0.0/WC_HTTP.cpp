@@ -640,6 +640,29 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += " </fieldset>\n";
 
+  out += "<fieldset>\n";
+  out += "<legend>Тип сенсора</legend>\n"; 
+  out += "<div class='lab2'><p><label>Выберите тип сенсора:</label>\n";
+  out += "<select name='SensorType'>\n";
+  out += "<option value='";out += String(SONAR_SR04T);out += "'";
+  if( EA_Config.SensorType == SONAR_SR04T)out += " selected";
+  out += ">Двойной ультразвуковой сенсор (SR04T)</option>";  
+  out += "<option value='";out += String(SONAR_SR04TM2);out += "'";
+  if( EA_Config.SensorType == SONAR_SR04TM2)out += " selected";
+  out += ">Одинарный ультразвуковой сенсор (SR04M2)</option>";  
+  out += "<option value='";out += String(SONAR_TFLUNA);out += "'";
+  if( EA_Config.SensorType == SONAR_TFLUNA)out += " selected";
+  out += ">Лазерный сенсор (TF-Luna)</option>";  
+  out += "</select>\n";
+  out += "</div>\n";
+  out += "<p class='t1'>После смены типа сенсора нужна перезагрузка.";
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
+//         if( n_ssid[i] == EA_Config.AP_SSID )out+=" selected";
+
+
 #ifdef HTTP_FRAGMETATION
    Serial.printf("!!! HTTP Fragment 3d %d\n", out.length());  
    server.sendContent(out);
@@ -867,6 +890,9 @@ bool HTTP_checkArgs(int current){
              case 2: EA_Config.MeasureType  = MEASURE_TYPE_OUTSIDE; break;
              case 3: EA_Config.MeasureType  = MEASURE_TYPE_INSIDE; break;
          }
+      if(server.hasArg("SensorType"))EA_Config.SensorType      = (T_SENSOR_TYPE)server.arg("SensorType").toInt();
+      
+
       if(server.hasArg("LimitDistance"))EA_Config.LimitDistance      = server.arg("LimitDistance").toInt();
       if(server.hasArg("MinDistance1")  )EA_Config.MinDistance1      = server.arg("MinDistance1").toInt();
       if(server.hasArg("MaxDistance1")  )EA_Config.MaxDistance1      = server.arg("MaxDistance1").toInt();

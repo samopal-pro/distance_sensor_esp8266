@@ -5,7 +5,7 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 8.15.0"
+#define FW_VERSION   "VERSION 8.15.1"
 #define DEVICE_NAME  "3139_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
@@ -62,7 +62,7 @@ enum T_RELAY_MODE {
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 #define DEFAULT_MEASURE_TYPE MEASURE_TYPE_NORMAL
 
-extern T_SENSOR_TYPE sensorType;
+//extern T_SENSOR_TYPE sensorType;
 //extern T_NAN_VALUE_FLAG nanValueFlag;
 
 // Изменение расстояния до датчика в мм, когда проиходит эмуляция нажатия кнопки

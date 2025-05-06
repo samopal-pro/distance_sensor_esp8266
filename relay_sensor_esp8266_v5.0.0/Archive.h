@@ -72,8 +72,6 @@ struct EA_ConfigType{
    uint16_t TM_PauseRelay2; //длительность паузы при циклическом режиме
    uint16_t TM_DelayON2; // Задержка включения, сек
    uint16_t TM_DelayOFF2; //Задержка выключения, сек
-
-
 //   bool isAP;
    uint16_t SRC;   
 };

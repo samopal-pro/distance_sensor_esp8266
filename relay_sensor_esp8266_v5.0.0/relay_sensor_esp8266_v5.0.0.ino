@@ -15,7 +15,7 @@
 
 WiFiClient ws_client;
 
-T_SENSOR_TYPE sensorType      = DEFAULT_SENSOR_TYPE;
+//T_SENSOR_TYPE sensorType      = DEFAULT_SENSOR_TYPE;
 //T_NAN_VALUE_FLAG nanValueFlag = DEFAULT_NAN_VALUE_FLAG;
 
 long  t_correct      = 0;
