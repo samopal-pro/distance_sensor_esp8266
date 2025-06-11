@@ -98,7 +98,7 @@ int  HTTP_checkAuth(const char *pass);
 void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype=HT_TEXT, const char *style=NULL, const char *add_text=NULL);
 
 
-void HTTP_print_td_color(String &out, uint32_t color, char *name, char *value, uint32_t color_set);
+void HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value, uint32_t color_set, uint8_t color_num, uint8_t proc, bool is_change = false);
 void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);
 void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table);
@@ -111,6 +111,8 @@ void HTTP_printTail(String &out);
 void WiFi_ScanNetwork();
 void HTTP_printNetworks1(String &out, const char *name);
 void HTTP_goto(const char *url, uint32_t tm, const char *msg);
+
+uint32_t HTMLtoInt(const char *s_color);
 
 bool HTTP_redirect();
 

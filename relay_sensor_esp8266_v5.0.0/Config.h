@@ -5,7 +5,7 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 8.15.1"
+#define FW_VERSION   "VERSION 8.15.2"
 #define DEVICE_NAME  "3139_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
@@ -173,7 +173,7 @@ enum T_RELAY_MODE {
 #define NUMBER_DISTANCE_ATT    2            //Число попыток повторения в случае неудачного измерения
 #define PING_SERVER
 #define TM_HTTP_LOAD           20000        //Максимальное время загрузки главной страницы, блокирующее опрос датчиков
-#define TM_ECHO                100000        //Таймаут pulseIn в мкс
+#define TM_ECHO                250000        //Таймаут pulseIn в мкс
 
 #define DNS_SERVER
 #define HTTP_FRAGMETATION

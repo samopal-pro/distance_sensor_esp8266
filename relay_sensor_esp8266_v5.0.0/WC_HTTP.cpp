@@ -524,24 +524,27 @@ void HTTP_printConfigColor(String &out){
 
   out += "<tr><td colspan=2>Цвет в режиме &quot;Свободно&quot;</td></tr>";
   out += "<tr>\n";
-  HTTP_print_td_color(out, COLOR_FREE1, "ColorFree", "1", EA_Config.ColorFree);
-  HTTP_print_td_color(out, COLOR_FREE2, "ColorFree", "2", EA_Config.ColorFree);
+  HTTP_print_td_color(out, COLOR_FREE1, "ColorFree", 1, EA_Config.ColorFree,EA_Config.ColorFreeNum,25);
+  HTTP_print_td_color(out, COLOR_FREE2, "ColorFree", 2, EA_Config.ColorFree,EA_Config.ColorFreeNum,25);
+  HTTP_print_td_color(out, 0xffffff, "ColorFree", 3, EA_Config.ColorFree,EA_Config.ColorFreeNum,50,true);
   out += "</tr>\n";
 
-  out += "<tr><td colspan=2>";
+  out += "<tr><td colspan=3>";
   HTTP_print_input_checkbox(out,"isFreeBlink","1",EA_Config.isColorFreeBlink);
 
   out += "<br>Мигание в режиме &quot;Свободно&quot; ";
   out += "</td></tr>";
   out += "<tr>\n";
-  HTTP_print_td_color(out, COLOR_BLINK1, "ColorBlink", "1", EA_Config.ColorBlink);
-  HTTP_print_td_color(out, COLOR_BLINK2, "ColorBlink", "2", EA_Config.ColorBlink);
+  HTTP_print_td_color(out, COLOR_BLINK1, "ColorBlink", 1, EA_Config.ColorBlink,EA_Config.ColorBlinkNum,25);
+  HTTP_print_td_color(out, COLOR_BLINK2, "ColorBlink", 2, EA_Config.ColorBlink,EA_Config.ColorBlinkNum,25);
+  HTTP_print_td_color(out, 0xffffff, "ColorBlink", 3, EA_Config.ColorBlink,EA_Config.ColorBlinkNum,50,true);
   out += "</tr>\n";
 
   out += "<tr><td colspan=2><br>Цвет в режиме &quot;Занято&quot;</td></tr>";
   out += "<tr>";
-  HTTP_print_td_color(out, COLOR_BUSY1, "ColorBusy", "1", EA_Config.ColorBusy);
-  HTTP_print_td_color(out, COLOR_BUSY2, "ColorBusy", "2", EA_Config.ColorBusy);
+  HTTP_print_td_color(out, COLOR_BUSY1, "ColorBusy", 1, EA_Config.ColorBusy,EA_Config.ColorBusyNum,25);
+  HTTP_print_td_color(out, COLOR_BUSY2, "ColorBusy", 2, EA_Config.ColorBusy,EA_Config.ColorBusyNum,25);
+  HTTP_print_td_color(out, 0xffffff, "ColorBusy", 3, EA_Config.ColorBusy,EA_Config.ColorBusyNum,50,true);
   out += "</tr>\n";
 
   out += "</table>";
@@ -851,21 +854,34 @@ bool HTTP_checkArgs(int current){
    }
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
-      if(server.hasArg("ColorFree"))
+      if(server.hasArg("ColorFree")){
          switch(server.arg("ColorFree").toInt()){
              case 1: EA_Config.ColorFree = COLOR_FREE1; break;
              case 2: EA_Config.ColorFree = COLOR_FREE2; break;
+             default:
+                EA_Config.ColorFree = HTMLtoInt(server.arg("ColorFree_Change").c_str());
+//                Serial.printf("!!! Color = %lx\n",EA_Config.ColorFree);
          }
-      if(server.hasArg("ColorBusy"))
+         EA_Config.ColorFreeNum = (uint8_t)server.arg("ColorFree").toInt();
+      }
+      if(server.hasArg("ColorBusy")){
          switch(server.arg("ColorBusy").toInt()){
              case 1: EA_Config.ColorBusy = COLOR_BUSY1; break;
              case 2: EA_Config.ColorBusy = COLOR_BUSY2; break;
+             default:
+                EA_Config.ColorBusy = HTMLtoInt(server.arg("ColorBusy_Change").c_str());
          }
-      if(server.hasArg("ColorBlink"))
+         EA_Config.ColorBusyNum = (uint8_t)server.arg("ColorBusy").toInt();
+      }
+      if(server.hasArg("ColorBlink")){
          switch(server.arg("ColorBlink").toInt()){
              case 1: EA_Config.ColorBlink = COLOR_BLINK1; break;
              case 2: EA_Config.ColorBlink = COLOR_BLINK2; break;
+             default:
+                EA_Config.ColorBlink = HTMLtoInt(server.arg("ColorBlink_Change").c_str());
          }
+         EA_Config.ColorBlinkNum = (uint8_t)server.arg("ColorBlink").toInt();
+      }
       EA_Config.isColorFreeBlink = false;   
       if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
       EA_Config.isColorNan = false;   
@@ -1186,11 +1202,26 @@ void HTTP_goto(const char *url, uint32_t tm, const char *msg){
    server.send(200, "text/html", content);
 }
 
-void  HTTP_print_td_color(String &out, uint32_t color, char *name, char *value, uint32_t color_set){
+void  HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value, uint32_t color_set, uint8_t color_num, uint8_t proc, bool is_change){
   char s[64];
   sprintf(s,"%06lX",color);
-  out += "<td align='center' width=50% bgcolor='#"; out += s; out += "'>";
-  HTTP_print_input_radio(out,name,value,(color_set == color));
+  out += "<td align='center' width='";
+  out += proc;
+  //else out += "%' width='25%' ";
+  out += "%' bgcolor='#"; out += s; out += "'>";
+  sprintf(s,"%d",(int)value);  
+  HTTP_print_input_radio(out,name,s,(value == color_num));
+  if( is_change ){
+     sprintf(s,"%06lX",color_set);
+     out += " Настройка: <input type='color' value='#";
+     out += s;
+     out += "' name='";
+     out += name;
+     out += "_Change'>";
+  }
+
+
+
   out += "</td>";
 }
 
@@ -1244,5 +1275,51 @@ void HTTP_print_menu(String &out, int current){
   else out += "<form action='/conf2' method='GET'><input type='submit' value='Сеть и сенсор' class='btn2'></form>\n";
   out += "</td>";
   out += "</tr></table>\n";
+
+}
+
+uint32_t HTMLtoInt(const char *s_color){
+   if(strlen(s_color) != 7)return 0L;
+   if( s_color[0] != '#' )return 0L;
+//   Serial.printf("!!!! color=%s\n",s_color);
+   uint32_t color = 0L;
+   uint32_t cur = 0;
+   for(int i=1; i<7; i++){
+       switch( s_color[i] ){
+          case '0': cur = 0L; break;
+          case '1': cur = 1L; break;
+          case '2': cur = 2L; break;
+          case '3': cur = 3L; break;
+          case '4': cur = 4L; break;
+          case '5': cur = 5L; break;
+          case '6': cur = 6L; break;
+          case '7': cur = 7L; break;
+          case '8': cur = 8L; break;
+          case '9': cur = 9L; break;
+          case 'a': 
+          case 'A': cur = 10L; break;
+          case 'b': 
+          case 'B': cur = 11L; break;
+          case 'c': 
+          case 'C': cur = 12L; break;
+          case 'd': 
+          case 'D': cur = 13L; break;
+          case 'e': 
+          case 'E': cur = 14L; break;
+          case 'f': 
+          case 'F': cur = 15L; break;
+          default : cur = 0L;
+       }
+       switch(i){
+          case 1: color += cur*0x100000; break;
+          case 2: color += cur*0x10000; break;
+          case 3: color += cur*0x1000; break;
+          case 4: color += cur*0x100; break;
+          case 5: color += cur*0x10; break;
+          case 6: color += cur; break;
+       }
+//       Serial.printf("!!!! %d %c %lx %lx\n",i,s_color[i],cur,color);
+   }
+   return color;
 
 }

@@ -394,6 +394,9 @@ void EA_default_config(void){
    EA_Config.ColorFree          = COLOR_FREE_DEFAULT;
    EA_Config.ColorBusy          = COLOR_BUSY_DEFAULT;
    EA_Config.ColorBlink         = COLOR_BLINK_DEFAULT;
+   EA_Config.ColorFreeNum       = 1;
+   EA_Config.ColorBusyNum       = 1;
+   EA_Config.ColorBlinkNum      = 1;
    EA_Config.isColorFreeBlink   = true;
    EA_Config.isColorNan         = true;
    EA_Config.Brightness         = 10;
