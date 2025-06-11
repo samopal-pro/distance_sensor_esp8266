@@ -40,7 +40,9 @@ void setup() {
    Serial.printf("\n\nFree memory %d\n",ESP.getFreeHeap());
    Serial.printf("Flash memoty size %d\n",ESP.getFlashChipSize());
    Serial.printf("Flash chip ID %d\n",ESP.getFlashChipId());
-   Serial.println(_VERSION);
+   Serial.printf("Sensor name %s\n",DEVICE_NAME);
+   Serial.printf("Version %s\n",FW_VERSION);
+
 // Инициализация реле
    if( PinRelay >= 0 ){
        Serial.printf("Pin relay %d init\n",PinRelay);
