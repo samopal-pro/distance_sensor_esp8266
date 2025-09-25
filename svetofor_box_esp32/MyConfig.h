@@ -30,7 +30,7 @@ enum T_SENSOR_TYPE {
 };
 */
 
-#define DEFAULT_SENSOR_TYPE SENSOR_TFLUNA_I2C
+#define DEFAULT_SENSOR_TYPE SENSOR_SR04T 
 
 #define PIN_LORA_MOSI        23
 #define PIN_LORA_MISO        19

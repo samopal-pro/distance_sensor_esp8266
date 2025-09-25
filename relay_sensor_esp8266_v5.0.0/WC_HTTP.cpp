@@ -666,7 +666,7 @@ void HTTP_printConfigRelay(String &out){
 
   sprintf(s,"%d",EA_Config.TM_DelayON1);
   HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn1",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_DelayON2);
+  sprintf(s,"%d",EA_Config.TM_DelayOFF1);
   HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff1",s,16,32,HT_NUMBER);
 
   HTTP_print_img_radio(out,"/relay0.png","Не используется","ModeRelay1","0",( EA_Config.ModeRelay1  == RELAY_NONE ), true);
@@ -697,7 +697,7 @@ void HTTP_printConfigRelay(String &out){
 
   sprintf(s,"%d",EA_Config.TM_DelayON2);
   HTTP_printInput1(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn2",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.TM_DelayON2);
+  sprintf(s,"%d",EA_Config.TM_DelayOFF2);
   HTTP_printInput1(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff2",s,16,32,HT_NUMBER);
 
   HTTP_print_img_radio(out,"/relay0.png","Не используется","ModeRelay2","0",( EA_Config.ModeRelay2  == RELAY_NONE ), true);
