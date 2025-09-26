@@ -750,7 +750,14 @@ void HTTP_printConfigNet(String &out){
   out += "</div>\n";
   out += "<p class='t1'>После смены типа сенсора нужно кратковременно передернуть питание.";
 
+ if( UID == 0 ){
+     HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
+     out += "<p class='t1'>После изменения имени WiFi нажмите внизу желтую кнопку &quot;Перезагрузка&quot;</p>";
+  }
+
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+
+
   out += " </fieldset>\n";
 
 // Блок №7
@@ -807,8 +814,8 @@ void HTTP_printConfigNet(String &out){
   HTTP_printInput1(out,"Пароль для входа в правами администратора:","PasswordUser",EA_Config.ESP_OPER_PASS,20,32,HT_PASSWORD);
   if( UID == 0 ){
      HTTP_printInput1(out,"Пароль для входа с правами суперадминистратора:","PasswordAdmin",EA_Config.ESP_ADMIN_PASS,20,32,HT_PASSWORD);
-     HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
-     out += "<p class='t1'>После изменения имени WiFi нажмите внизу желтую кнопку &quot;Перезагрузка&quot;</p>";
+//     HTTP_printInput1(out,"Наименование устройства","NameESP",EA_Config.ESP_NAME,32,32,HT_TEXT,"lab1");
+//     out += "<p class='t1'>После изменения имени WiFi нажмите внизу желтую кнопку &quot;Перезагрузка&quot;</p>";
   }
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
