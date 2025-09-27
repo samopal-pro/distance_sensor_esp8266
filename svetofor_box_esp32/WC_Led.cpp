@@ -10,7 +10,7 @@
 
 
 
-Adafruit_NeoPixel *strip;
+Adafruit_NeoPixel *strip, *strip2;
 uint32_t saveColor = 0;
 
 
@@ -20,6 +20,8 @@ uint32_t saveColor = 0;
 void ledInit(){
    strip = new Adafruit_NeoPixel(COUNT_RGB1, PIN_RGB1, NEO_GRB + NEO_KHZ800);
    strip->begin();
+   strip2 = new Adafruit_NeoPixel(COUNT_RGB1, PIN_RGB2, NEO_GRB + NEO_KHZ800);
+   strip2->begin();
 
    uint16_t _hue = 0;
    uint16_t _inc = 65536/COUNT_RGB1;
@@ -27,8 +29,10 @@ void ledInit(){
       for( int j=0; j<COUNT_RGB1; j++){
          uint16_t h = _hue + _inc*j;
          strip->setPixelColor(j, strip->ColorHSV(h, 255, 100));     
+         strip2->setPixelColor(j, strip->ColorHSV(h, 255, 100));     
       }
       strip->show();
+      strip2->show();
       _hue += _inc;
 //      Serial.println(_hue);
       delay(50);

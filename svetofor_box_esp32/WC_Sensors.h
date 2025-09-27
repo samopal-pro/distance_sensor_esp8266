@@ -13,13 +13,14 @@ typedef enum {
 
 } SensorValueType_t;
 
-#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )||(DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
+//#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )||(DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
 #include "src/SonarSR04/SonarSR04.h"
 //#include "src/SonarA21/SonarA21.h"
-#elif ( DEFAULT_SENSOR_TYPE == SENSOR_TFLUNA_I2C )
+//#elif ( DEFAULT_SENSOR_TYPE == SENSOR_TFLUNA_I2C )
 #include "src/TF/TFLI2C.h"
-//#include "src/TF/TFMPI2C.h"
-#endif
+#include "src/TF/TFMPI2C.h"
+#include "src/LD2413/LD2413.h"
+//#endif
 class MySensorValue {
    public:
       MySensorValue(SensorValueType_t _type, String _label, float _min, float _max, float _error = 0, uint16_t _mult=1, uint16_t _samples = 10);
@@ -53,7 +54,6 @@ class MySensor {
    private:
       bool isInit;
       void *Sensor;
-//      TFLI2C *SensorTFLuna; 
       bool checkI2C(uint8_t _addr);   
       void scanI2C();
 };

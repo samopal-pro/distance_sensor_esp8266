@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
-#define TM_ECHO                250000        //Таймаут pulseIn в мкс
+#define TM_ECHO                500000        //Таймаут pulseIn в мкс
 
 
 class SonarSR04
@@ -13,7 +13,7 @@ class SonarSR04
     uint8_t last_status;
 
     SonarSR04(uint8_t _echo, uint8_t _trig, uint32_t _tm1 = 2, uint32_t _tm2 = 10);
-    uint16_t getDistance();
+    float getDistance();
   
     void init();
 

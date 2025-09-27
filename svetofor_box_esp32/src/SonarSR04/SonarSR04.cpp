@@ -16,7 +16,9 @@ void SonarSR04::init(){
     digitalWrite(pinTrig, LOW); 
 }
 
-uint16_t SonarSR04::getDistance(){
+float SonarSR04::getDistance(){
+//    pinMode(pinTrig, OUTPUT);
+//    pinMode(pinEcho, INPUT);
     digitalWrite(pinTrig, LOW);
     delayMicroseconds(tm1);
     digitalWrite(pinTrig, HIGH);
@@ -24,6 +26,9 @@ uint16_t SonarSR04::getDistance(){
     digitalWrite(pinTrig, LOW);
 
     uint32_t _dur = pulseIn(pinEcho, HIGH, TM_ECHO);
-    return (uint16_t)(_dur/5.8);
+    float _dist = (float)_dur/5.8;
+
+//    Serial.printf("!!! SR04 %d %d %d\n",(int)pinEcho,(int)pinTrig,(int)_dist);
+    return _dist;
 }
 

@@ -3,7 +3,7 @@ char strID[16];
 uint64_t chipID;
 
 
-MySensor sensor;
+MySensor *sensor;
 float Distance = NAN, lastDistance = NAN;
 bool SensorOn = false, lastSensorOn = false;  
 ES_STAT stat1 = STAT_OFF, stat2 = STAT_OFF;
@@ -58,7 +58,8 @@ void taskSensors(void *pvParameters) {
    Serial.println(F("!!! Sensors task start"));
 #endif
    ledInit();
-   sensor.init();
+   sensor = new MySensor();
+   sensor->init();
    pinMode(PIN_OUT1,OUTPUT);
    setRelay1(statRelay1); 
    pinMode(PIN_OUT2,OUTPUT);
@@ -74,8 +75,8 @@ void taskSensors(void *pvParameters) {
       uint32_t ms = millis();
 
       xSemaphoreTake(sensorSemaphore, portMAX_DELAY);
-      uint16_t _status = (uint16_t)sensor.get();
-      Distance = sensor.Value->getLast();
+      uint16_t _status = (uint16_t)sensor->get();
+      Distance = sensor->Value->getLast();
       if( isnan(Distance) ){
          switch( jsonConfig["RGB1"]["NAN_MODE"].as<int>() ){
             case NAN_VALUE_IGNORE: 
@@ -395,8 +396,8 @@ float CalibrateGround(){
       float distArray[jsonConfig["CALIBR"]["NUMBER"].as<int>()];
       float distAvg = 0, distDiv = 0;
       for( int i=0; i<jsonConfig["CALIBR"]["NUMBER"].as<int>(); i++){
-         uint16_t _status = (uint16_t)sensor.get();
-         float L = sensor.Value->getLast();
+         uint16_t _status = (uint16_t)sensor->get();
+         float L = sensor->Value->getLast();
          if( !isnan(L) ){
             distAvg += L;
             distArray[n++] = L;

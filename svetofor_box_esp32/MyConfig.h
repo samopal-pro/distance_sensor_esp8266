@@ -8,7 +8,7 @@
 #define SOFTWARE_V           "10.0.0"
 #define HARDWARE_V           "10.0.0"
 
-
+/*
 #define SENSOR_TYPE_NONE     0
 #define SENSOR_SR04T         1 //Типовой сенсор TGIG/ECHO
 #define SENSOR_SR04TM2       2 //Типовой сенсор TGIG/ECHO
@@ -17,8 +17,8 @@
 #define SENSOR_TFMINI_I2C    11 //TFMiniPlus I2C сенсор подключен к основному разъему (SCL = TRIG, SDA = ECHO )
 
 #define SENSOR_A21_I2C       20 //A21 I2C сенсор подключен к I2C разъему
+*/
 
-/*
 enum T_SENSOR_TYPE {
 //  SONAR_SERIAL  = 0, // Все платы работающие по протоколу UART
   SENSOR_SR04T   = 1, // Все платы работающие по протоколу Trig/Echo
@@ -26,9 +26,10 @@ enum T_SENSOR_TYPE {
   SENSOR_SR04TM2 = 2, // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
   SENSOR_TFLUNA_I2C  = 10, // LiDAR TF Mini Plus по I2C
   SENSOR_TFMINI_I2C  = 11, // LiDAR TF Luna по I2C
-  SENSOR_A21_I2C     = 23  //A21 I2C сенсор подключен к I2C разъему
+  SENSOR_LD2413_UART = 20  // Радар LD-2413 подключенный ро UART
+//  SENSOR_A21_I2C     = 23  //A21 I2C сенсор подключен к I2C разъему
 };
-*/
+
 
 #define DEFAULT_SENSOR_TYPE SENSOR_SR04T 
 

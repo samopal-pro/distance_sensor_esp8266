@@ -737,9 +737,14 @@ void HTTP_printConfigNet(String &out){
   out += "<option value='";out += String(SENSOR_SR04TM2);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04TM2)out += " selected";
   out += ">Одинарный ультразвуковой сенсор (SR04M2)</option>";  
+
   out += "<option value='";out += String(SENSOR_TFLUNA_I2C);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_TFLUNA_I2C)out += " selected";
   out += ">Лазерный сенсор (TF-Luna)</option>";  
+
+  out += "<option value='";out += String(SENSOR_LD2413_UART);out += "'";
+  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_LD2413_UART)out += " selected";
+  out += ">Радар LD-2413</option>";  
   out += "</select>\n";
   out += "</div>\n";
   out += "<p class='t1'>После смены типа сенсора нужно кратковременно передернуть питание.";
