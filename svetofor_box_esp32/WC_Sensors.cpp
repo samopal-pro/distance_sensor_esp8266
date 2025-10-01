@@ -95,7 +95,7 @@ MySensor::MySensor(){
 
       case SENSOR_SR04TM2 :  
          Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 5500.0, NAN, 1, SIMPLE_SIZE );
+         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 7500.0, NAN, 1, SIMPLE_SIZE );
          Name   = "Sonar SR04TM2";
          Serial.println("!!! new Sonar SR04TM2");
          break;
@@ -118,7 +118,7 @@ MySensor::MySensor(){
          break;
       case SENSOR_LD2413_UART :
          Sensor = (LD2413 *)new LD2413();
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 10000.0, NAN, 1, SIMPLE_SIZE );
+         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 150.0, 10000.0, NAN, 1, 1);
          Name   = "Датчик HiLINK LD2413 (UART)";
          break;
 
@@ -182,7 +182,7 @@ bool MySensor::init(){
       case SENSOR_LD2413_UART :
          Serial2.begin(115200,SERIAL_8N1,PIN_SONAR_TRIG,PIN_SONAR_ECHO);
          ((LD2413 *)Sensor)->begin(PIN_SONAR_TRIG,PIN_SONAR_ECHO);
-         ((LD2413 *)Sensor)->init(100, 10000, 500);
+         ((LD2413 *)Sensor)->init(150, 10000, 1000);
          isInit = true;
 
    }

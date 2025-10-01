@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
-//#define DEBUG_SERIAL Serial
+#define DEBUG_SERIAL Serial
 #if CONFIG_IDF_TARGET_ESP32
 #define RADAR_SERIAL Serial2
 #elif CONFIG_IDF_TARGET_ESP32S3

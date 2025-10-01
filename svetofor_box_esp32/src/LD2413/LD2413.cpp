@@ -43,6 +43,7 @@ void LD2413::cmd2(uint8_t _cmd){
    debug_char(_cmd);
    DEBUG_SERIAL.println();
 #endif
+   RADAR_SERIAL.flush();
    RADAR_SERIAL.write(0xfd);
    RADAR_SERIAL.write(0xfc);
    RADAR_SERIAL.write(0xfb);
@@ -68,6 +69,7 @@ void LD2413::cmd4(uint8_t _cmd, uint16_t _arg){
    debug_char(b1);
    DEBUG_SERIAL.println();
 #endif
+   RADAR_SERIAL.flush();
    RADAR_SERIAL.write(0xfd);
    RADAR_SERIAL.write(0xfc);
    RADAR_SERIAL.write(0xfb);
@@ -131,6 +133,7 @@ float LD2413::wait_data(uint32_t _tm){
        uint8_t b[4];
    }val;
    uint32_t ms1 = millis();
+   RADAR_SERIAL.flush();
    while(true){
       uint32_t ms = millis();
       if( _tm > 0 && labs(ms-ms1) >_tm )return NAN;

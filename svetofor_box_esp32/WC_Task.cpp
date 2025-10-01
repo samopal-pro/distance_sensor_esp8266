@@ -36,7 +36,7 @@ void tasksStart() {
   
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
   sensorSemaphore = xSemaphoreCreateMutex();
-  xTaskCreateUniversal(taskSensors, "sensors", 30000, NULL, 3, NULL, CORE);
+  xTaskCreateUniversal(taskSensors, "sensors", 30000, NULL, 4, NULL, CORE);
   //    vTaskDelay(500);
   // xTaskCreateUniversal(taskPoll, "poll", 10240, NULL, 2, NULL, CORE);
  // vTaskDelay(500);
@@ -45,7 +45,7 @@ void tasksStart() {
  // xTaskCreateUniversal(taskModbus, "modbus", 10240, NULL, 5, NULL,CORE);
   vTaskDelay(1000);
   xTaskCreateUniversal(taskNet, "net", 10000, NULL, 3, NULL, CORE);
-      vTaskDelay(1000);
+  vTaskDelay(1000);
   xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 2, NULL,CORE);
 }
 
