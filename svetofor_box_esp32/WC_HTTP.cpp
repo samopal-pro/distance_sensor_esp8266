@@ -169,7 +169,7 @@ void HTTP_begin(void){
    server.on ( "/conf1", HTTP_handleConfig1 );
    server.on ( "/conf2", HTTP_handleConfig2 );
    server.on ( "/distance", HTTP_handleDistance );
-//   server.on ( "/config", HTTP_handleConfig );
+   server.on ( "/update", HTTP_handleUpload );
 //   server.on ( "/login", HTTP_handleLogin );
    server.on ( "/logo.png", HTTP_handleLogo );
    server.on ( "/stat1.png", HTTP_handlePngStat1 );
@@ -192,7 +192,8 @@ void HTTP_begin(void){
    size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
   //ask server to track these headers
    server.collectHeaders(headerkeys, headerkeyssize );
-   server.on("/update",HTTP_POST,HTTP_fileUpload1,HTTP_handleUpdate);
+   server.on("/update1",HTTP_POST,HTTP_fileUpload1,HTTP_handleUpdate);
+//   server.on("/update",HTTP_GET,HTTP_handleUpdate,HTTP_fileUpload1);
 
 
    
@@ -448,7 +449,7 @@ void HTTP_handleRoot(void) {
    }
 
    HTTP_printTail(out);
-   Serial.printf("!!! HTTP Length %d\n", out.length());  
+   Serial.printf("!!! HTTP Root Length %d\n", out.length());  
    server.send(200, "text/html", out);
    msLoad = 0;
    is_load_page = false;
@@ -486,14 +487,9 @@ void HTTP_handleConfig1(void) {
   }
 
   HTTP_printTail(out);
-#ifdef HTTP_FRAGMETATION
-  Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
-  server.sendContent(out);
-#else
-  Serial.printf("!!! HTTP Length %d\n", out.length());  
+
+  Serial.printf("!!! HTTP Config1 Length %d\n", out.length());  
   server.send(200, "text/html", out);
-  Serial.printf("!!! HTTP size page %d\n", out.length());  
-#endif
    msLoad = 0;
    is_load_page = false;
 }
@@ -531,14 +527,8 @@ void HTTP_handleConfig2(void) {
   }
 
   HTTP_printTail(out);
-#ifdef HTTP_FRAGMETATION
-  Serial.printf("!!! HTTP Fragment 4 %d\n", out.length());  
-  server.sendContent(out);
-#else
-  Serial.printf("!!! HTTP Length %d\n", out.length());  
+  Serial.printf("!!! HTTP Config2 Length %d\n", out.length());  
   server.send(200, "text/html", out);
-  Serial.printf("!!! HTTP size page %d\n", out.length());  
-#endif
    msLoad = 0;
    is_load_page = false;
 }
@@ -569,11 +559,7 @@ void HTTP_printConfigColor(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 
-#ifdef HTTP_FRAGMETATION
-  Serial.printf("!!! HTTP Fragment 2 %d\n", out.length());  
-  server.sendContent(out);
-  out = "";
-#endif  
+
 }
 
 
@@ -1213,6 +1199,7 @@ bool HTTP_redirect() {
 void HTTP_goto(const char *url, uint32_t tm, const char *msg){
 
    String content;
+   Serial.printf("!!! HTTP GOTO %s\n",msg);
    HTTP_printHeader(content,msg,0);
    content += "<h2>";
    content += msg;  
@@ -1387,6 +1374,7 @@ uint32_t HTMLtoInt(const char *s_color){
  * Процесс обновления прошивки через WEB
  */
 void HTTP_handleUpdate() {
+//   Serial.println("!!! Update start ...");
 //   if( is_update ){
 //      String content;
 //      HTTP_printHeader(content,"Update",0);
@@ -1400,10 +1388,12 @@ void HTTP_handleUpdate() {
 //  displayGive();
   http_ms = millis();
   HTTPUpload& upload = server.upload();
+///  Serial.printf("!!! Update %d\n",upload.status);
   if (upload.status == UPLOAD_FILE_START) {
 #if defined(DEBUG_SERIAL)
      Serial.setDebugOutput(true);
      Serial.printf("Update: %s\n", upload.filename.c_str());
+//     HTTP_goto("/", 500000, "Загрузка файла ...");
 #endif
      if (!Update.begin()) { //start with max available size
         Update.printError(Serial);
@@ -1417,9 +1407,12 @@ void HTTP_handleUpdate() {
 #if defined(DEBUG_SERIAL)
        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
 #endif
-       HTTP_printMessage("Обновление прошивки завершено успешно");
-       delay(1000);
-       ESP.restart();
+//       HTTP_goto("/", 5000, "Обновление прошивки завершено успешно. Перезагрузка через 5 сек");
+#if defined(DEBUG_SERIAL)
+       Serial.println(F("Обновление прошивки завершено успешно."));
+#endif
+ //      delay(20000);
+//       ESP.restart();
 
      } else {
        Update.printError(Serial);
@@ -1437,14 +1430,16 @@ void HTTP_handleUpdate() {
 }
 
 void HTTP_fileUpload1(){ // upload a new file to the Filing system
-    HTTP_printMessage("Загрузка файла");
+    HTTP_goto("/", 5000, "Обновление прошивки завершено успешно. Перезагрузка через 5 сек");
+    delay(5000);
+    ESP.restart();
 
 }
 
 void HTTP_printMessage(const char *s){
   if( HTTP_redirect() )return;
   Serial.printf("!!! HTTP MSG %s\n",s);
-  server.headers();
+//  server.headers();
   http_ms = millis();
   String out = "";
   HTTP_printHeader(out,"msg",5);
@@ -1454,4 +1449,36 @@ void HTTP_printMessage(const char *s){
   out += "  Сейчас загрузится главная страница ...";
   HTTP_printTail(out);
   server.send(200, "text/html", out); 
+}
+
+/**
+ * Выдача страницы с формой загрузки файла прошивки "Update"
+ */
+void HTTP_handleUpload() {
+  if( HTTP_redirect() )return;
+  
+   is_update = true;
+  String content;
+  HTTP_printHeader(content,"Update",0);
+  content += "<script>\n";
+//  content += "function F1(){$('#main').html(\"Begin firmware update. Please wait 30 sec\");}\n";
+  content += "</script>\n";
+  content += " <form method='POST' action='/update1' enctype='multipart/form-data'>\n";
+  content += "  <fieldset>\n";
+// content += "    <legend>Upload firmware</legend>\n";
+//  content += "    <p><label class=\"file-upload\">";
+  content += "    <p><input type='file' name='update' id=\"userfile\" size=\"30\">\n";
+//  content += "    <span id=\"userfile-name\">Not file firmware</span>\n";
+//  content += "    <script type=\"text/javascript\">\n";
+//  content += "      $('#userfile').change(function(e) {\n";
+//  content += "        $('#userfile-name').text(this.files[0].name);\n";
+//  content += "      })\n";
+//  content += "    </script>\n";
+  
+//  content += "    </label>\n";
+//  content += "    <label for=\"file_upload\">Select file</label>\n";    
+  content += "    <p><input type='submit' value='Update'>\n";  content += "  </fieldset>\n";
+  content += "</form>\n";
+  HTTP_printTail(content);
+  server.send(200, "text/html", content);
 }

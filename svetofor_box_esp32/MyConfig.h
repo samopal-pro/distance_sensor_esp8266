@@ -2,10 +2,10 @@
 #define MY_CONFIG
 
 // Выдача сообщение сенсоров 1- иницилизация и ошибки, 2 - измерение параметров
-#define DEBUG_SENSORS        2
+#define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.0"
+#define SOFTWARE_V           "10.0.3"
 #define HARDWARE_V           "10.0.0"
 
 /*
@@ -97,7 +97,7 @@ enum T_SENSOR_TYPE {
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
-#define DEVICE_NAME            "3139_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_NAME            "2025_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_PASS0           "superadmin"
 #define DEVICE_PASS1           "admin"
 #define SENSOR_GROUND_STATE    false

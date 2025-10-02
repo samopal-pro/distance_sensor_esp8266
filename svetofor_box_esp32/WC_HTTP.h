@@ -62,6 +62,7 @@ void HTTP_handleConfig1(void);
 void HTTP_handleConfig2(void);
 void HTTP_handleDefault(void);
 void HTTP_handleReboot(void);
+void HTTP_handleUpload(void);
 void HTTP_handleLogo(void);
 void HTTP_handlePngStat1(void);
 void HTTP_handlePngStat2(void);

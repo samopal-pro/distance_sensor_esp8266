@@ -145,7 +145,7 @@ void GetDistance(){
           GetDistanceSR04(2, 10, 1);
           break;        
        case SONAR_SR04TM2 :
-          GetDistanceSR04(2, 500, 2, 0, 5500);
+          GetDistanceSR04(2, 500, 2, 0, 7500);
           break;        
        case SONAR_SERIAL :
           GetDistanceSerial();
