@@ -5,8 +5,9 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.3"
+#define SOFTWARE_V           "10.0.4"
 #define HARDWARE_V           "10.0.0"
+#define CONFIG_V             "10.0.5"
 
 /*
 #define SENSOR_TYPE_NONE     0
@@ -30,8 +31,16 @@ enum T_SENSOR_TYPE {
 //  SENSOR_A21_I2C     = 23  //A21 I2C сенсор подключен к I2C разъему
 };
 
+enum SENSOR_STAT_t {
+  SS_NONE      = 0,
+  SS_FREE      = 2,
+  SS_BUSY      = 3,
+  SS_NAN       = -1,
+  SS_NAN_FREE  = -2,
+  SS_NAN_BUSY  = -3
+};
 
-#define DEFAULT_SENSOR_TYPE SENSOR_SR04T 
+#define DEFAULT_SENSOR_TYPE SENSOR_LD2413_UART 
 
 #define PIN_LORA_MOSI        23
 #define PIN_LORA_MISO        19
@@ -73,7 +82,8 @@ enum T_SENSOR_TYPE {
 #define DEFAULT_SENSOR_LIMIT        250
 #define DEFAULT_SENSOR_MIN_DIST     1250
 #define DEFAULT_SENSOR_MAX_DIST     1750
-#define COLOR_NONE             0x000000    //Цвет "никакой" (черный)
+#define COLOR_NONE             0xFFFFFFFF  //Цвет прозрачный
+#define COLOR_BLACK            0x000000    //Цвет "никакой" (черный)
 #define COLOR_FREE1            0x0000FF    //Цвет "свободно" №1
 #define COLOR_FREE2            0x00FF00    //Цвет "свободно" №2
 #define COLOR_FREE_DEFAULT     COLOR_FREE1 //Цвет "свободно" по умолчанию
@@ -87,6 +97,9 @@ enum T_SENSOR_TYPE {
 #define COLOR_GROUND           0xA5FF00    //Цвет "установка земли"
 #define COLOR_SAVE             0xFFFFFF    //Цвет "сохранение"
 #define COLOR_ERROR            0xFF7F00    //Цвет "ошибка"
+#define COLOR_MP3_1            0x7F7F7F    //Цвет мигания во время произрывания звукового файла
+#define COLOR_MP3_2            0xFFFF00    //Цвет мигания во время произрывания звукового файла
+#define COLOR_MP3_DEFAULT      COLOR_MP3_1    //Цвет мигания во время произрывания звукового файла
 
 #define COLOR_WIFI_NONE        0x000000    //Цвет "WiFi не конфигуен"
 #define COLOR_WIFI_OFF         0xFF0000    //Цвет "WiFi не подключен"
@@ -100,7 +113,8 @@ enum T_SENSOR_TYPE {
 #define DEVICE_NAME            "2025_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_PASS0           "superadmin"
 #define DEVICE_PASS1           "admin"
-#define SENSOR_GROUND_STATE    false
+#define SENSOR_GROUND_STATE    SS_FREE;
 #define COUNT_RGB1             50   //Число светодиодов
+#define COUNT_RGB2             50   //Число светодиодов
 
 #endif

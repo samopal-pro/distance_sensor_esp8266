@@ -128,12 +128,15 @@ uint16_t LD2413::wait_cmd(uint32_t _tm){
 float LD2413::wait_data(uint32_t _tm){
    int n = 0;
    int len = 0;
+//   int count = 0;
+   float val1 = NAN;
    union {
        float f;
        uint8_t b[4];
    }val;
    uint32_t ms1 = millis();
-   RADAR_SERIAL.flush();
+//   while(RADAR_SERIAL.available())RADAR_SERIAL.read();
+//   RADAR_SERIAL.flush();
    while(true){
       uint32_t ms = millis();
       if( _tm > 0 && labs(ms-ms1) >_tm )return NAN;
@@ -181,11 +184,17 @@ float LD2413::wait_data(uint32_t _tm){
             DEBUG_SERIAL.print(" val=");
             DEBUG_SERIAL.println(val.f,0);
 #endif
-            return val.f;
-            n++;
+//            return val.f;
+            val1 = val.f;
+            n=0;
+//            count++;
          }
          else n=0;
       }    
+      else { //Енд авайбле
+//         Serial.printf("!!! Count = %d ",count);
+         return val1;
+      }
    }
 }
 

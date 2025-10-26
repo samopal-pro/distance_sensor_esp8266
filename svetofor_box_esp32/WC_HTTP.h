@@ -15,7 +15,7 @@
 #include "MyConfig.h"
 #include "WC_Config.h"
 #include "WC_Led.h"
-
+#include "WC_Task.h"
 
 
 #define TM_AP_MODE      120000
@@ -60,6 +60,7 @@ void HTTP_handleRoot(void);
 void HTTP_handleDistance(void);
 void HTTP_handleConfig1(void);
 void HTTP_handleConfig2(void);
+void HTTP_handleConfig3(void);
 void HTTP_handleDefault(void);
 void HTTP_handleReboot(void);
 void HTTP_handleUpload(void);
@@ -88,9 +89,10 @@ bool HTTP_login(String &out);
 void HTTP_printConfigRelay(String &out);
 void HTTP_printConfigNet(String &out);
 void HTTP_printConfig(String &out);
+void HTTP_printConfig2(String &out);
 void HTTP_printConfigColor(String &out);
 bool HTTP_checkArgs(int current);
-
+void HTTP_printBottomMenu(String &out);
 
 void HTTP_loop();
 void WiFi_begin(void);
@@ -102,6 +104,7 @@ int  HTTP_checkAuth(const char *pass);
 void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype=HT_TEXT, const char *style=NULL, const char *add_text=NULL);
 void HTTP_InputFloat(String &out,const char *label,const char *name,double value,double min,double max,int size=32,const char *style = NULL);
 void HTTP_InputInt(String &out,const char *label,const char *name,int value,int min,int max,int size=32,const char *style = NULL);
+void HTTP_InputInt1(String &out,const char *name,int value,int min,int max,int size=32);
 void HTTP_printMessage(const char *s);
 
 void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2);

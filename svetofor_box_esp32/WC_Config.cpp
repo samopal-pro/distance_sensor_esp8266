@@ -34,6 +34,10 @@ void configRead(){
       f.close();
       if( jsonConfig.isNull()     ) save_flag = true; 
    }
+   if( !save_flag ){
+      if( jsonConfig["CONFIG_V"].isNull() )save_flag = true;
+      else if( strcmp(jsonConfig["CONFIG_V"].as<const char *>(),CONFIG_V)!=0 )save_flag = true;
+   }
    if( save_flag ){
        configDefault();
        configSave();
@@ -44,6 +48,7 @@ void configDefault(){
    jsonConfig.clear();
    int n = 0;
 // Системные параметры
+   jsonConfig["CONFIG_V"]              = CONFIG_V;                //Имя точки доступа устройства  
    jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;                //Имя точки доступа устройства  
    jsonConfig["SYSTEM"]["AP_START"]    = AP_ALWAYS;  
    jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
@@ -91,6 +96,61 @@ void configDefault(){
    jsonConfig["RGB1"]["BUSY"]          = COLOR_BUSY_DEFAULT;
    jsonConfig["RGB1"]["IS_NAN_MODE"]   = true;
    jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_IGNORE;
+
+// Настройка подсветки датчика RGB2      
+   jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB2"]["FREE"]          = COLOR_FREE_DEFAULT;
+   jsonConfig["RGB2"]["FREE_BLINK"]    = COLOR_BLINK_DEFAULT;
+   jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
+   jsonConfig["RGB2"]["BUSY"]          = COLOR_BUSY_DEFAULT;
+   jsonConfig["RGB2"]["IS_NAN_MODE"]   = true;
+   jsonConfig["RGB2"]["NAN_MODE"]      = NAN_VALUE_IGNORE;
+   jsonConfig["RGB2"]["IS_MP3"]        = true;
+   jsonConfig["RGB2"]["MP3"]           = COLOR_MP3_DEFAULT;
+
+// Настройка плеера MP3      
+   jsonConfig["MP3"]["VOLUNE"]            = 30;                          // Громкость 0-30
+   jsonConfig["MP3"]["EQ"]                = 0;                           // Режим эквалайзера 0-5
+// Автомобиль заехал
+   jsonConfig["MP3"]["BUSY"]["ENABLE"]    = true;
+   jsonConfig["MP3"]["BUSY"]["DIR"]       = 1;
+   jsonConfig["MP3"]["BUSY"]["NUM"]       = 1;
+   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 5;
+   jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
+// Датчик NAN (пена) 
+   jsonConfig["MP3"]["NAN"]["ENABLE"]     = true;
+   jsonConfig["MP3"]["NAN"]["DIR"]        = 1;
+   jsonConfig["MP3"]["NAN"]["NUM"]        = 2;
+   jsonConfig["MP3"]["NAN"]["DELAY"]      = 10;
+   jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
+// Слишком долго автомобиль в боксе
+   jsonConfig["MP3"]["BUSY1"]["ENABLE"]   = true;
+   jsonConfig["MP3"]["BUSY1"]["DIR"]      = 1;
+   jsonConfig["MP3"]["BUSY1"]["NUM"]      = 3;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 900;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
+// Слишком долго автомобиль в боксе или датчик "залип"
+   jsonConfig["MP3"]["BUSY2"]["ENABLE"]   = true;
+   jsonConfig["MP3"]["BUSY2"]["DIR"]      = 1;
+   jsonConfig["MP3"]["BUSY2"]["NUM"]      = 4;
+   jsonConfig["MP3"]["BUSY2"]["DELAY"]    = 1800;
+   jsonConfig["MP3"]["BUSY2"]["LOOP"]     = true;
+// После выезда NAN
+   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"]= true;
+   jsonConfig["MP3"]["FREE_NAN"]["DIR"]   = 1;
+   jsonConfig["MP3"]["FREE_NAN"]["NUM"]   = 5;
+   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 4;
+   jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = true;
+// Автомобиль выехал
+   jsonConfig["MP3"]["FREE"]["ENABLE"]    = true;
+   jsonConfig["MP3"]["FREE"]["DIR"]       = 1;
+   jsonConfig["MP3"]["FREE"]["NUM"]       = 6;
+   jsonConfig["MP3"]["FREE"]["DELAY"]     = 5;
+   jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
+
+//   jsonConfig["MP3"]["SYSTEM"]["DIR"] = 1;                           // Номер папки с системными звуками
+
+
 
 // Настройка реле1   
    jsonConfig["RELAY1"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
@@ -197,9 +257,9 @@ void saveSave(){
    savePrint("Save");  
 }
 
-void saveSet(float _dist, bool _on){
+void saveSet(float _dist, SENSOR_STAT_t _on){
    jsonSave["DISTANCE"]    = _dist;
-   jsonSave["STATE_ON"]    = _on;
+   jsonSave["STATE_ON"]    = (int)_on;
    saveSave();
    
 }

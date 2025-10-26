@@ -7,11 +7,13 @@
 #include "WC_Sensors.h"
 #include "WC_Led.h"
 #include "WC_HTTP.h"
+#include "WC_Event.h"
 #include "src/Slib/SButton.h"
+#include "src/DFPlayer/DFRobotDFPlayerMini.h"
 #define DEPTH_DIST_ARRAY 5
 #define SAMPLE_LEN       10
 #define RELIABILITY_PROC 0.15
-
+#define FPSerial Serial1
 enum ES_STAT {
   STAT_OFF,
   STAT_BT_ON,
@@ -19,10 +21,26 @@ enum ES_STAT {
   STAT_WAIT_ON,
   STAT_WAIT_OFF
 };
+
+extern DFRobotDFPlayerMini myDFPlayer;
+
+
 void tasksStart();
+void taskEvents(void *pvParameters);
 void taskSensors(void *pvParameters);
 void taskButton(void *pvParameters);
 void taskNet(void *pvParameters);
+
+void handleSensor( bool _flag  );
+void handleRelay1( bool _flag  );
+void handleRelay2( bool _flag  );
+void handleRGB1(   bool _flag  );
+void handleRGB2(   bool _flag  );
+void handleMP3(    bool _flag  );
+void setEventRGB1(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
+void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
+void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop);
+void setEventMP3( JsonObject _config );
 
 void checkChangeOn();
 void processRelay1();

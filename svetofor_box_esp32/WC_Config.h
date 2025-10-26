@@ -50,7 +50,7 @@ void saveRead();
 void saveSave();
 void saveDefault();
 void savePrint(char *label);
-void saveSet(float _dist, bool _on);
+void saveSet(float _dist, SENSOR_STAT_t _on);
 uint16_t saveCount();
 
 

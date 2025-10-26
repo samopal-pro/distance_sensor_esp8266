@@ -182,7 +182,7 @@ bool MySensor::init(){
       case SENSOR_LD2413_UART :
          Serial2.begin(115200,SERIAL_8N1,PIN_SONAR_TRIG,PIN_SONAR_ECHO);
          ((LD2413 *)Sensor)->begin(PIN_SONAR_TRIG,PIN_SONAR_ECHO);
-         ((LD2413 *)Sensor)->init(150, 10000, 1000);
+         ((LD2413 *)Sensor)->init(150, 10000, 250);
          isInit = true;
 
    }

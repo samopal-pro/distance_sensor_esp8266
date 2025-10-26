@@ -29,7 +29,7 @@ std::vector <int> n_rssi;
 bool is_update     = false;
 bool is_load_page = false;
 uint32_t   http_ms = 0;
-char *pages[] =  {"/", "/conf1", "/conf2" };
+char *pages[] =  {"/", "/conf1", "/conf2", "/conf3", "/conf4" };
 
 
 void WiFi_test(){
@@ -168,6 +168,7 @@ void HTTP_begin(void){
    server.on ( "/", HTTP_handleRoot );
    server.on ( "/conf1", HTTP_handleConfig1 );
    server.on ( "/conf2", HTTP_handleConfig2 );
+   server.on ( "/conf3", HTTP_handleConfig3 );
    server.on ( "/distance", HTTP_handleDistance );
    server.on ( "/update", HTTP_handleUpload );
 //   server.on ( "/login", HTTP_handleLogin );
@@ -261,6 +262,7 @@ void HTTP_printCSS(String &out){
     out += " .lab2 label {display:block;float:left;width:262;font-size:12pt;}\n";
     out += " .lab2 select {background:#ffffff;color:#000088;font-size:12pt;width:299px;}\n";
     out += " .a1 {color:#000088;font-size:12pt;}\n";
+    out += " table .tab1 {border: 1px dotted grey;}\n";
 
 //    out += " .col1 {width:50%;float:left;}\n";
 //    out += " .col2 {width:45%;float:left;}\n";
@@ -379,6 +381,14 @@ bool HTTP_login(String &out){
 }
 
 
+void HTTP_printBottomMenu(String &out){
+   out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
+   out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
+   out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
+   out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+}
+
+
 /*
  * Оработчик страницы с расстоянием
  */
@@ -442,10 +452,7 @@ void HTTP_handleRoot(void) {
       HTTP_printConfigColor(out);
       HTTP_printConfig(out);
       out += "</form>\n";
-      out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+      HTTP_printBottomMenu(out);
    }
 
    HTTP_printTail(out);
@@ -480,10 +487,7 @@ void HTTP_handleConfig1(void) {
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_printConfigRelay(out);
       out += "</form>\n";
-      out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+      HTTP_printBottomMenu(out);
   }
 
   HTTP_printTail(out);
@@ -520,10 +524,7 @@ void HTTP_handleConfig2(void) {
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_printConfigNet(out);
       out += "</form>\n";
-      out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Default' value='Сброс до заводских настроек' class='btn2'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Reboot' value='Перезагрузка' class='btn3'></form>\n";
-      out += "<p><form action='/' method='GET'><input type='submit' Name='Logout' value='Выход' class='btn4'></form>\n";
+      HTTP_printBottomMenu(out);
   }
 
   HTTP_printTail(out);
@@ -533,6 +534,41 @@ void HTTP_handleConfig2(void) {
    is_load_page = false;
 }
 
+/*
+ * Оработчик страницы сетевых настроек
+ */
+void HTTP_handleConfig3(void) {
+   int numPage = 3;
+  if( HTTP_redirect() )return;
+  if( HTTP_checkArgs(numPage) )return;
+  if( msLoad != 0 ){
+     Serial.println(F("!!! Skip HTTP config ..."));
+     return;
+  }
+  msLoad = millis();
+  char str[50];
+  String out = "";
+  is_load_page = true;
+  HTTP_printHeader(out,"Звуковые опомещение",0);
+  HTTP_print_menu(out, numPage);
+
+
+  if( HTTP_login(out) )HTTP_goto(pages[numPage], 2, "Введите пароль");
+
+  if( UID >= 0 ){
+      out += "<h1>Настройка хвуковых оповещений</h1>\n";
+      out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_printConfig2(out);
+      out += "</form>\n";
+      HTTP_printBottomMenu(out);
+  }
+
+  HTTP_printTail(out);
+  Serial.printf("!!! HTTP Config3 Length %d\n", out.length());  
+  server.send(200, "text/html", out);
+   msLoad = 0;
+   is_load_page = false;
+}
 
 /**
 * Настройка подсветки
@@ -795,7 +831,108 @@ void HTTP_printConfigNet(String &out){
   out += "</fieldset>\n";  
 }
 
+/**
+* Настройка подсветки
+**/
+void HTTP_printConfig2(String &out){
+  char s[50];
+// Блок №1c
+  out += "<fieldset>\n";
+  out += "<legend>Настройка RGB2</legend>\n";
+//  out += "<table width=100%>";
+  HTTP_InputInt(out,"Яркость 0-10","Brightness2",jsonConfig["RGB2"]["BRIGHTNESS"].as<int>(),0,10,32);
 
+//  out += "</table>\n";
+  out += "<table width=100%>";
+  HTTP_print_color3(out, jsonConfig["RGB2"]["FREE"].as<uint32_t>(), "ColorFree2", "Цвет в режиме \"Свободно\"", COLOR_FREE1, COLOR_FREE2);
+  out += "<tr><td colspan=4>";
+  HTTP_print_input_checkbox(out,"isFreeBlink2","1",jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>());
+  out += "</td></tr>\n";
+  HTTP_print_color3(out, jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink2", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2);
+  HTTP_print_color3(out, jsonConfig["RGB2"]["BUSY"].as<uint32_t>(), "ColorBusy2", "Цвет в режиме \"Занято\"", COLOR_BUSY1, COLOR_BUSY2);
+  out += "<tr><td colspan=4>";
+  HTTP_print_input_checkbox(out,"isMP3","1",jsonConfig["RGB2"]["IS_MP3"].as<bool>());
+  out += "</td></tr>\n";
+  HTTP_print_color3(out, jsonConfig["RGB2"]["MP3"].as<uint32_t>(), "ColorMP3", "Мигание в режиме \"оповещение\"", COLOR_MP3_1, COLOR_MP3_2);
+  out += "</table>";
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+
+  out += "<fieldset>\n";
+  out += "<legend>Настройка оповещения</legend>\n";
+  HTTP_InputInt(out,"Громкость звука 0-30","MP3_VOLUME",jsonConfig["MP3"]["VOLUNE"].as<int>(),0,30,32);
+
+
+  out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
+//  out += "<table class='tab1'>\n";
+  out += "<tr><td width='320'>Оповещение</td><td width='50'>Включить</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><tr>\n";
+  out += "<tr><td>Момент заезда автомобиля. Файл 01/001.mp3</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_BUSY_ENABLE","1",jsonConfig["MP3"]["BUSY"]["ENABLE"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_BUSY_DELAY",jsonConfig["MP3"]["BUSY"]["DELAY"].as<int>(),1,3600);
+  out += "</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_BUSY_LOOP","1",jsonConfig["MP3"]["BUSY"]["LOOP"].as<bool>());
+  out += "</td><td>";
+  out += "<input type='submit' name='MP3_BUSY_PLAY' value='▶' class='btn'>";
+  out += "</td></tr>\n";
+
+  out += "<tr><td>Датчик перестает видеть расстояние (Машина в пене). Файл 01/002.mp3</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_NAN_ENABLE","1",jsonConfig["MP3"]["NAN"]["ENABLE"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_NAN_DELAY",jsonConfig["MP3"]["NAN"]["DELAY"].as<int>(),1,3600);
+  out += "</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_NAN_LOOP","1",jsonConfig["MP3"]["NAN"]["LOOP"].as<bool>());
+  out += "</td><td>";
+  out += "<input type='submit' name='MP3_NAN_PLAY' value='▶' class='btn'>";
+  out += "</td></tr>\n";
+
+  out += "<tr><td>В боксе долго находится автмомбиль. Файл 01/003.mp3</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_BUSY1_ENABLE","1",jsonConfig["MP3"]["BUSY1"]["ENABLE"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_BUSY1_DELAY",jsonConfig["MP3"]["BUSY1"]["DELAY"].as<int>(),1,3600);
+  out += "</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_BUSY1_LOOP","1",jsonConfig["MP3"]["BUSY1"]["LOOP"].as<bool>());
+  out += "</td><td>";
+  out += "<input type='submit' name='MP3_BUSY1_PLAY' value='▶' class='btn'>";
+  out += "</td></tr>\n";
+
+  out += "<tr><td>Автомобиль слишком долго в доксе или датчик \"залип\". Файл 01/004.mp3</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_BUSY2_ENABLE","1",jsonConfig["MP3"]["BUSY2"]["ENABLE"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_BUSY2_DELAY",jsonConfig["MP3"]["BUSY2"]["DELAY"].as<int>(),1,3600);
+  out += "</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_BUSY2_LOOP","1",jsonConfig["MP3"]["BUSY2"]["LOOP"].as<bool>());
+  out += "</td><td>";
+  out += "<input type='submit' name='MP3_BUSY2_PLAY' value='▶' class='btn'>";
+  out += "</td></tr>\n";
+
+  out += "<tr><td>После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 01/005.mp3</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_FREE_NAN_ENABLE","1",jsonConfig["MP3"]["FREE_NAN"]["ENABLE"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_FREE_NAN_DELAY",jsonConfig["MP3"]["FREE_NAN"]["DELAY"].as<int>(),1,3600);
+  out += "</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_FREE_NAN_LOOP","1",jsonConfig["MP3"]["FREE_NAN"]["LOOP"].as<bool>());
+  out += "</td><td>";
+  out += "<input type='submit' name='MP3_FREE_NAN_PLAY' value='▶' class='btn'>";
+  out += "</td></tr>\n";
+
+  out += "<tr><td>Выезд автомобиля. Бокс свободен. (Можно загрузить рекламу) Файл 01/006.mp3</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_FREE_ENABLE","1",jsonConfig["MP3"]["FREE"]["ENABLE"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_FREE_DELAY",jsonConfig["MP3"]["FREE"]["DELAY"].as<int>(),1,3600);
+  out += "</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_FREE_LOOP","1",jsonConfig["MP3"]["FREE"]["LOOP"].as<bool>());
+  out += "</td><td>";
+  out += "<input type='submit' name='MP3_FREE_PLAY' value='▶' class='btn'>";
+  out += "</td></tr>\n";
+
+  out += "</table>\n";
+
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+
+}
 
 
 
@@ -825,42 +962,88 @@ bool HTTP_checkArgs(int current){
        ESP.restart();  
        return true;
    }
+   else if( server.hasArg("MP3_BUSY_PLAY") ){
+       myDFPlayer.playFolder(jsonConfig["MP3"]["BUSY"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY"]["NUM"].as<int>());
+   }
+   else if( server.hasArg("MP3_NAN_PLAY") ){
+       myDFPlayer.playFolder(jsonConfig["MP3"]["NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["NAN"]["NUM"].as<int>());
+   }
+   else if( server.hasArg("MP3_BUSY1_PLAY") ){
+       myDFPlayer.playFolder(jsonConfig["MP3"]["BUSY1"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY1"]["NUM"].as<int>());
+   }
+   else if( server.hasArg("MP3_BUSY2_PLAY") ){
+       myDFPlayer.playFolder(jsonConfig["MP3"]["BUSY2"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY2"]["NUM"].as<int>());
+   }
+   else if( server.hasArg("MP3_FREE_NAN_PLAY") ){
+       myDFPlayer.playFolder(jsonConfig["MP3"]["FREE_NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE_NAN"]["NUM"].as<int>());
+   }
+   else if( server.hasArg("MP3_FREE_PLAY") ){
+       myDFPlayer.playFolder(jsonConfig["MP3"]["FREE"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE"]["NUM"].as<int>());
+   }
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
-      if(server.hasArg("ColorFree")){
-         switch(server.arg("ColorFree").toInt()){
-             case 1: jsonConfig["RGB1"]["FREE"] = COLOR_FREE1; break;
-             case 2: jsonConfig["RGB1"]["FREE"] = COLOR_FREE2; break;
-             default:
-                jsonConfig["RGB1"]["FREE"] = HTMLtoInt(server.arg("ColorFree_Change").c_str());
-//                Serial.printf("!!! Color = %lx\n",EA_Config.ColorFree);
-         }
-//         EA_Config.ColorFreeNum = (uint8_t)server.arg("ColorFree").toInt();
-      }
-      if(server.hasArg("ColorBusy")){
-         switch(server.arg("ColorBusy").toInt()){
-             case 1: jsonConfig["RGB1"]["BUSY"] = COLOR_BUSY1; break;
-             case 2: jsonConfig["RGB1"]["BUSY"] = COLOR_BUSY2; break;
-             default:
-                jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy_Change").c_str());
-         }
-//         EA_Config.ColorBusyNum = (uint8_t)server.arg("ColorBusy").toInt();
-      }
-      if(server.hasArg("ColorBlink")){
-         switch(server.arg("ColorBlink").toInt()){
-             case 1: jsonConfig["RGB1"]["FREE_BLINK"] = COLOR_BLINK1; break;
-             case 2: jsonConfig["RGB1"]["FREE_BLINK"] = COLOR_BLINK2; break;
-             default:
-                jsonConfig["RGB1"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink_Change").c_str());
-         }
-//         EA_Config.ColorBlinkNum = (uint8_t)server.arg("ColorBlink").toInt();
-      }
+// RGB1
+      if(server.hasArg("ColorFree")   )jsonConfig["RGB1"]["FREE"] = HTMLtoInt(server.arg("ColorFree").c_str());
+      if(server.hasArg("ColorBusy")   )jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy").c_str());
+      if(server.hasArg("ColorBlink")  )jsonConfig["RGB1"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink").c_str());
       jsonConfig["RGB1"]["IS_FREE_BLINK"] = false;   
       if( server.hasArg("isFreeBlink"))jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
       jsonConfig["RGB1"]["IS_NAN_MODE"] = false;   
-      if( server.hasArg("isColorNan"))jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
+      if( server.hasArg("isColorNan") )jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
       if(server.hasArg("Brightness")  )jsonConfig["RGB1"]["BRIGHTNESS"] = server.arg("Brightness").toInt();
 
+/// RGB2
+      if(server.hasArg("ColorFree2")  )jsonConfig["RGB2"]["FREE"] = HTMLtoInt(server.arg("ColorFree2").c_str());
+      if(server.hasArg("ColorBusy2")  )jsonConfig["RGB2"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy2").c_str());
+      if(server.hasArg("ColorBlink2") )jsonConfig["RGB2"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink2").c_str());
+      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3}").c_str());
+      jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;   
+      if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
+      jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
+      if( server.hasArg("isColorNan2") )jsonConfig["RGB2"]["IS_NAN_MODE"] = true;
+      if(server.hasArg("Brightness2")  )jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();
+
+// MP3
+      if(server.hasArg("MP3_VOLUME")  )jsonConfig["MP3"]["VOLUNE"] = server.arg("MP3_VOLUME").toInt();
+
+      if(server.hasArg("MP3_BUSY_DELAY")  )jsonConfig["MP3"]["BUSY"]["DELAY"] = server.arg("MP3_BUSY_DELAY").toInt();
+      jsonConfig["MP3"]["BUSY"]["ENABLE"] = false;
+      if( server.hasArg("MP3_BUSY_ENABLE") )jsonConfig["MP3"]["BUSY"]["ENABLE"] = true;
+      jsonConfig["MP3"]["BUSY"]["LOOP"] = false;
+      if( server.hasArg("MP3_BUSY_LOOP") )jsonConfig["MP3"]["BUSY"]["LOOP"] = true;
+
+      if(server.hasArg("MP3_NAN_DELAY")  )jsonConfig["MP3"]["NAN"]["DELAY"] = server.arg("MP3_NAN_DELAY").toInt();
+      jsonConfig["MP3"]["NAN"]["ENABLE"] = false;
+      if( server.hasArg("MP3_NAN_ENABLE") )jsonConfig["MP3"]["NAN"]["ENABLE"] = true;
+      jsonConfig["MP3"]["NAN"]["LOOP"] = false;
+      if( server.hasArg("MP3_NAN_LOOP") )jsonConfig["MP3"]["NAN"]["LOOP"] = true;
+
+      if(server.hasArg("MP3_BUSY1_DELAY")  )jsonConfig["MP3"]["BUSY1"]["DELAY"] = server.arg("MP3_BUSY1_DELAY").toInt();
+      jsonConfig["MP3"]["BUSY1"]["ENABLE"] = false;
+      if( server.hasArg("MP3_BUSY1_ENABLE") )jsonConfig["MP3"]["BUSY1"]["ENABLE"] = true;
+      jsonConfig["MP3"]["BUSY1"]["LOOP"] = false;
+      if( server.hasArg("MP3_BUSY1_LOOP") )jsonConfig["MP3"]["BUSY1"]["LOOP"] = true;
+
+      if(server.hasArg("MP3_BUSY2_DELAY")  )jsonConfig["MP3"]["BUSY2"]["DELAY"] = server.arg("MP3_BUSY2_DELAY").toInt();
+      jsonConfig["MP3"]["BUSY2"]["ENABLE"] = false;
+      if( server.hasArg("MP3_BUSY2_ENABLE") )jsonConfig["MP3"]["BUSY2"]["ENABLE"] = true;
+      jsonConfig["MP3"]["BUSY2"]["LOOP"] = false;
+      if( server.hasArg("MP3_BUSY2_LOOP") )jsonConfig["MP3"]["BUSY2"]["LOOP"] = true;
+
+      if(server.hasArg("MP3_FREE_NAN_DELAY")  )jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = server.arg("MP3_FREE_NAN_DELAY").toInt();
+      jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = false;
+      if( server.hasArg("MP3_FREE_NAN_ENABLE") )jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = true;
+      jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = false;
+      if( server.hasArg("MP3_FREE_NAN_LOOP") )jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = true;
+
+      if(server.hasArg("MP3_FREE_DELAY")  )jsonConfig["MP3"]["FREE"]["DELAY"] = server.arg("MP3_FREE_DELAY").toInt();
+      jsonConfig["MP3"]["FREE"]["ENABLE"] = false;
+      if( server.hasArg("MP3_FREE_ENABLE") )jsonConfig["MP3"]["FREE"]["ENABLE"] = true;
+      jsonConfig["MP3"]["FREE"]["LOOP"] = false;
+      if( server.hasArg("MP3_FREE_LOOP") )jsonConfig["MP3"]["FREE"]["LOOP"] = true;
+
+
+/// NET
       jsonConfig["WIFI"]["DHCP"] = true;
       jsonConfig["CRM_MOSCOW"]["ENABLE"] = false;
       if(server.hasArg("GroundLevel"))jsonConfig["SENSOR"]["DIST_GROUND"] = server.arg("GroundLevel").toInt();
@@ -1062,6 +1245,8 @@ void HTTP_printInput1(String &out,const char *label, const char *name, const cha
      
 }
 
+
+
 void HTTP_InputInt(String &out,
    const char *label, // Метка поля
    const char *name,  // Имя поля HTTP 
@@ -1097,6 +1282,31 @@ void HTTP_InputInt(String &out,
    else out += "</div>\n";
      
 }
+
+void HTTP_InputInt1(String &out,
+   const char *name,  // Имя поля HTTP 
+   int value,      // Текущее значение
+   int min,        // Минимальное значение
+   int max,        // Максимальное значение
+   int size)          // Дина поля
+   {
+   char str[10];
+   out += "<input name='";
+   out += name;
+   out += "' type='number'";
+   out += " value=";
+   out += String(value);
+//   out += " size=";
+//   out += String(size);
+//   out += " maxlength=32";
+   out += " min=";
+   out += String(min);
+   out += " max=";
+   out += String(max);
+
+   out += ">";
+}
+
 
 void WiFi_ScanNetwork(){
    Serial.println("Scan networks...");
@@ -1267,7 +1477,7 @@ void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uin
    out += name;
    out += "' name='";
    out += name;
-   out += "_Change'></td>\n";
+   out += "'></td>\n";
    out += "</tr>\n"; 
 }
 
@@ -1308,18 +1518,32 @@ void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked)
 
 void HTTP_print_menu(String &out, int current){
   out += "<p><table width='100%'><tr>";
-  out += "<td width = '33%' align='center'>";
+  out += "<td width=33% align='center'>";
   if( current == 0 )out += "<form method='GET'><input type='submit' value='Основные настройки' class='btn0'></form>\n";
   else out += "<form action='/' method='GET'><input type='submit' value='Основные настройки' class='btn2'></form>\n";
   out += "</td>";
-  out += "<td width = '33%' align='center'>";
+  out += "<td width=33% align='center'>";
   if( current == 1 )out += "<form method='GET'><input type='submit' value='Настройки реле' class='btn0'></form>\n";
   else out += "<form action='/conf1' method='GET'><input type='submit' value='Настройки реле' class='btn2'></form>\n";
   out += "</td>";
-  out += "<td width = '33%' align='center'>";
+  out += "<td width=33% align='center'>";
   if( current == 2 )out += "<form method='GET'><input type='submit' value='Сеть и сенсор' class='btn0'></form>\n";
   else out += "<form action='/conf2' method='GET'><input type='submit' value='Сеть и сенсор' class='btn2'></form>\n";
+  out += "</tr><tr>\n";
   out += "</td>";
+  out += "<td width=33% align='center'>";
+  if( current == 3 )out += "<form method='GET'><input type='submit' value='Звуковые оповещения' class='btn0'></form>\n";
+  else out += "<form action='/conf3' method='GET'><input type='submit' value='Звуковые оповещения' class='btn2'></form>\n";
+  out += "</td>";
+
+//  out += "<td width=33% align='center'>";
+//  if( current == 4 )out += "<form method='GET'><input type='submit' value='Стартовые настройки' class='btn0'></form>\n";
+//  else out += "<form action='/conf4' method='GET'><input type='submit' value='Стартовые настройки' class='btn2'></form>\n";
+//  out += "</td>";
+  out += "<td width=33% align='center'>&nbsp;</tr>";
+
+  out += "<td width=33% align='center'>&nbsp;</tr>";
+
   out += "</tr></table>\n";
 
 }
