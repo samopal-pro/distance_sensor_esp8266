@@ -104,6 +104,7 @@ int  HTTP_checkAuth(const char *pass);
 void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype=HT_TEXT, const char *style=NULL, const char *add_text=NULL);
 void HTTP_InputFloat(String &out,const char *label,const char *name,double value,double min,double max,int size=32,const char *style = NULL);
 void HTTP_InputInt(String &out,const char *label,const char *name,int value,int min,int max,int size=32,const char *style = NULL);
+void HTTP_InputRange(String &out,const char *label,const char *name,int value,int min,int max,int size=32,const char *style = NULL);
 void HTTP_InputInt1(String &out,const char *name,int value,int min,int max,int size=32);
 void HTTP_printMessage(const char *s);
 

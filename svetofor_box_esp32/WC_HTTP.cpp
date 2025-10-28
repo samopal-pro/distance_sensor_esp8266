@@ -942,7 +942,7 @@ bool HTTP_checkArgs(int current){
    bool _reboot = false;
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Calibrate")  ){  
-       ProcessingCalibrate(1000);
+       startCalibrate(1000);
    }
    else if( server.hasArg("Default") ){ 
        String ss = jsonConfig["SYSTEM"]["NAME"].as<String>();
@@ -996,7 +996,7 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("ColorFree2")  )jsonConfig["RGB2"]["FREE"] = HTMLtoInt(server.arg("ColorFree2").c_str());
       if(server.hasArg("ColorBusy2")  )jsonConfig["RGB2"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy2").c_str());
       if(server.hasArg("ColorBlink2") )jsonConfig["RGB2"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink2").c_str());
-      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3}").c_str());
+      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3").c_str());
       jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;   
       if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
       jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
@@ -1283,6 +1283,42 @@ void HTTP_InputInt(String &out,
      
 }
 
+void HTTP_InputRange(String &out,
+   const char *label, // Метка поля
+   const char *name,  // Имя поля HTTP 
+   int value,      // Текущее значение
+   int min,        // Минимальное значение
+   int max,        // Максимальное значение
+   int size,          // Дина поля
+   const char *style) //Стиль поля
+   {
+   char str[10];
+   if( style == NULL )out += "<p><label>";
+   else {
+       out += "  <div class=\"";
+       out += style;
+       out += "\"><label>";
+   }
+   out += label;
+   out += "</label><input name='";
+   out += name;
+   out += "' type='range'";
+   out += " value=";
+   out += String(value);
+//   out += " size=";
+//   out += String(size);
+//   out += " maxlength=32";
+   out += " min=";
+   out += String(min);
+   out += " max=";
+   out += String(max);
+
+   out += ">";
+   if( style == NULL )out += "</p>\n";
+   else out += "</div>\n";
+     
+}
+
 void HTTP_InputInt1(String &out,
    const char *name,  // Имя поля HTTP 
    int value,      // Текущее значение
@@ -1306,6 +1342,7 @@ void HTTP_InputInt1(String &out,
 
    out += ">";
 }
+
 
 
 void WiFi_ScanNetwork(){
