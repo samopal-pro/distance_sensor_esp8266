@@ -212,3 +212,70 @@ void TEventMP3::copyTo(TEventMP3 *dist){
     dist->setSound(Dir,Sound,Loop);
 }
 
+//***********************************************************************************************************************************************************************************
+// Класс TSaveRGB
+//***********************************************************************************************************************************************************************************
+TSaveRGB::TSaveRGB( TEventRGB *_event){
+    EventRGB = _event;
+    Clear();
+}
+
+void TSaveRGB::Clear(){
+    Count = 0; 
+}
+
+int TSaveRGB::Push(int _id ){
+    if( Count >= MAX_RGB_STACK_ITEMS )return -1;
+    StackRGB[Count].ID      = _id;
+    StackRGB[Count].Type    = EventRGB->Type;
+    StackRGB[Count].TimeOn  = EventRGB->TimeOn;
+    StackRGB[Count].TimeOff = EventRGB->TimeOff;
+    StackRGB[Count].Color1  = EventRGB->Color1;
+    StackRGB[Count].Color2  = EventRGB->Color2;
+    StackRGB[Count].Flag    = false;
+    Count++;
+    return Count; 
+}
+
+int TSaveRGB::Pop(){
+    if( Count == 0 )return -1;
+    Count--;
+    EventRGB->setType(StackRGB[Count].Type,StackRGB[Count].TimeOn,StackRGB[Count].TimeOff);
+    EventRGB->setColor(StackRGB[Count].Color1,EventRGB->Color2);
+    return Count; 
+}
+
+int TSaveRGB::Save(int _id, TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2 ){
+//    Serial.printf("!!! SaveRGB Save %d\n",_id);
+    if( Count >= MAX_RGB_STACK_ITEMS )return -1;
+    int ret = Push( _id );
+    EventRGB->setType( _type, _timeOn, _timeOff );
+    EventRGB->setColor(_color1, _color2);    
+    EventRGB->reset();
+    EventRGB->on();
+    return ret;
+}
+
+int TSaveRGB::Restore( int _id ){
+    Serial.printf("!!! SaveRGB Restore1 %d\n",_id);
+    if( Count <= 0 )return 1;
+    int n = -1;
+    for( int i=0; i<Count; i++){
+       if( StackRGB[i].ID == _id ){n = i; break; }
+    }
+    Serial.printf("!!! SaveRGB Restore2 %d\n",_id);
+    if( n < 0 )return -1;
+    Serial.printf("!!! SaveRGB Restore3 %d\n",_id);
+    if( n != Count-1 ){
+       StackRGB[n].Flag = false;
+       return -1;
+    }
+    Serial.printf("!!! SaveRGB Restore4 %d\n",_id);
+    Pop();
+    for( int i=Count-1; i>=0; i-- ){
+       if( StackRGB[i].Flag == false )Pop();
+    }
+    EventRGB->reset();
+    EventRGB->on();
+    return Count;
+}

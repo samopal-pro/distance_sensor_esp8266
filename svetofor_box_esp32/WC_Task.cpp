@@ -6,7 +6,9 @@ uint64_t chipID;
 MySensor *sensor;
 TEvent *EventSensor, *EventRelay1, *EventRelay2;
 TEventRGB *EventRGB1, *EventRGB2;
-TEventRGB  *SaveEventRGB2, *SaveEventCalibrate1, *SaveEventCalibrate2;
+//TEventRGB  *SaveEventRGB2, *SaveEventCalibrate1, *SaveEventCalibrate2;
+TSaveRGB *SaveRGB1, *SaveRGB2;
+
 TEventMP3 *EventMP3;
 TEvent *EventCalibrate; 
 
@@ -82,9 +84,11 @@ void taskEvents(void *pvParameters) {
    EventRelay2         = new TEvent((uint32_t)(jsonConfig["RELAY2"]["DELAY_ON"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY2"]["DELAY_OFF"].as<float>()*1000),handleRelay2);
    EventRGB1           = new TEventRGB(0,0,handleRGB1);
    EventRGB2           = new TEventRGB(0,0,handleRGB2);
-   SaveEventRGB2       = new TEventRGB(0,0,handleRGB2);
-   SaveEventCalibrate1 = new TEventRGB(0,0,handleRGB1);  
-   SaveEventCalibrate2 = new TEventRGB(0,0,handleRGB2);  
+   SaveRGB1            = new TSaveRGB(EventRGB1);
+   SaveRGB2            = new TSaveRGB(EventRGB2);
+//   SaveEventRGB2       = new TEventRGB(0,0,handleRGB2);
+//   SaveEventCalibrate1 = new TEventRGB(0,0,handleRGB1);  
+//   SaveEventCalibrate2 = new TEventRGB(0,0,handleRGB2);  
    EventMP3            = new TEventMP3(0,0,handleMP3,1,1,false);
    EventCalibrate      = new TEvent(0,0,handleCalibrate);
 //   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
@@ -110,10 +114,11 @@ void taskEvents(void *pvParameters) {
                     EventMP3->reset();
                     EventMP3->on(2000);
                  }
-                 if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() ){                  
-                    EventRGB2->reset();
-                    SaveEventRGB2->copyTo(EventRGB2);
-                    EventRGB2->on();
+                 if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() ){  
+                    SaveRGB2->Restore(1);                
+//                    EventRGB2->reset();
+//                    SaveEventRGB2->copyTo(EventRGB2);
+//                    EventRGB2->on();
                  }
                  isPlayMP3 = false;
              }
@@ -265,11 +270,7 @@ void handleMP3(bool _flag){
       myDFPlayer.playFolder(EventMP3->Dir, EventMP3->Sound);   
       isPlayMP3 = true;
       if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() ){
-         EventRGB2->reset();
-         EventRGB2->copyTo(SaveEventRGB2);
-//         Serial.println(jsonConfig["RGB2"]["MP3"].as<uint32_t>(),HEX);
-         setEventRGB2(ET_PWM, 500, 500, SaveEventRGB2->Color1, jsonConfig["RGB2"]["MP3"].as<uint32_t>());
-         EventRGB2->on();
+         SaveRGB2->Save(1,ET_PWM,500,500,EventRGB2->Color1, jsonConfig["RGB2"]["MP3"].as<uint32_t>());
       }
       ms1 = millis();
    }
@@ -284,16 +285,8 @@ void startCalibrate(uint32_t _delay){
    EventCalibrate->setType(ET_PULSE,30000,0);
    EventCalibrate->on(_delay);
    calibrMode = CM_WAIT;
-   EventRGB1->copyTo(SaveEventCalibrate1);
-   EventRGB2->copyTo(SaveEventCalibrate2);
-   EventRGB1->setColor(COLOR_GROUND, COLOR_BLACK);
-   EventRGB2->setColor(COLOR_GROUND, COLOR_BLACK);
-   EventRGB1->setType(ET_PWM,250,250);   
-   EventRGB2->setType(ET_PWM,250,250);   
-   EventRGB1->reset();   
-   EventRGB2->reset();   
-   EventRGB1->on();   
-   EventRGB2->on();   
+   SaveRGB1->Save(2,ET_PWM,250,250,COLOR_GROUND, COLOR_BLACK);
+   SaveRGB2->Save(2,ET_PWM,250,250,COLOR_GROUND, COLOR_BLACK);
    isPlayMP3 = false;
 }
 
@@ -306,14 +299,10 @@ void handleCalibrate(bool _flag){
       calibrMode = CM_ON;
       calibrAvg = 0;
       calibrCount = 0;
-      EventRGB1->setColor(COLOR_GROUND, COLOR_NONE);
-      EventRGB2->setColor(COLOR_GROUND, COLOR_NONE);
-      EventRGB1->setType(ET_NORMAL,0,0);   
-      EventRGB2->setType(ET_NORMAL,0,0);   
-      EventRGB1->reset();   
-      EventRGB2->reset();   
-      EventRGB1->on();   
-      EventRGB2->on();   
+      SaveRGB1->Restore(2);
+      SaveRGB2->Save(2,ET_NORMAL,0,0,COLOR_GROUND, COLOR_NONE);
+      SaveRGB2->Restore(2);
+      SaveRGB2->Save(2,ET_NORMAL,0,0,COLOR_GROUND, COLOR_NONE);
       isPlayMP3 = false;
    }
    else {
@@ -336,6 +325,8 @@ void handleCalibrate(bool _flag){
           ledSetColor(COLOR_NAN);
           led2SetColor(COLOR_NAN);
      }
+     SaveRGB1->Restore(2);
+     SaveRGB2->Restore(2);
      vTaskDelay(250);
 
    }
@@ -558,10 +549,20 @@ void taskButton(void *pvParameters){
 //   uint32_t ms_btn = 0;
    bool white_flag = false;
    uint32_t tm;
+   int btn_count;
    while(true){
       switch(btn.loop()){
           case SB_PRESS:
-             Serial.printf("!!! BTN Press %d\n",(int)btn.getCountEvent());
+             btn_count = (int)btn.getCountEvent();
+             Serial.printf("!!! BTN Press %d\n",btn_count);
+             if( btn_count == 5 ){
+                btn_count = 0;
+                jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
+                ledSetColor(COLOR_ERROR);
+                configSave();     
+                delay(1000);    
+                ESP.restart();  
+              }
              break;
           case SB_RELEASE:
              tm = btn.getPressTime();

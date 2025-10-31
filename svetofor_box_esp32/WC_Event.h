@@ -8,6 +8,7 @@
 #include <arduino.h>
 #include "MyConfig.h"
 
+#define MAX_RGB_STACK_ITEMS 10
 
 enum TEVENT_TYPE_t {
   ET_DISABLE    = 0, //CСобытие отключено
@@ -27,6 +28,16 @@ enum TEVENT_STATUS_t {
    ES_OFF      = 4
 };
 
+
+typedef struct {
+   int ID;
+   TEVENT_TYPE_t Type;
+   uint32_t TimeOn;
+   uint32_t TimeOff;
+   uint32_t Color1;
+   uint32_t Color2;
+   bool Flag; 
+}RGB_STACK_ITEM_t;
 
 class TEvent {
 public:
@@ -82,6 +93,21 @@ class TEventMP3: public TEvent {
        bool Loop;
    void save(TEventMP3 *dist);
    void copyTo(TEventMP3 *src);
+};
+
+
+class TSaveRGB {
+   public:
+      TSaveRGB( TEventRGB *_event);
+      int Save(int _id, TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2 );
+      int Restore( int _id );
+      void Clear();
+   private:
+      TEventRGB *EventRGB;
+      int Count;
+      RGB_STACK_ITEM_t StackRGB[MAX_RGB_STACK_ITEMS];
+      int Push(int _id );
+      int Pop();
 };
 
 #endif
