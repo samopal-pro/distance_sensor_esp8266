@@ -52,6 +52,8 @@ void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _l
 void setEventMP3( JsonObject _config );
 void setNanMode();
 
+void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
+
 void checkChangeOn();
 void processRelay1();
 void processRelay2();

@@ -36,6 +36,7 @@ bool isChangeStat  = false; //Изменение отслеживания изм
 uint16_t bootCount;
 bool isWiFiAlways1 = true; 
 SemaphoreHandle_t sensorSemaphore;
+
 /**
  * Старт всех параллельных задач
  */
@@ -199,7 +200,9 @@ void taskSensors(void *pvParameters) {
   }
 }
 
-
+/**
+* Обработччик события срабатывания сенсора
+*/
 void handleSensor(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.printf("!!! EventSensor %d %d %d\n",(int)_flag,(int)EventSensor->Type,(int)EventSensor->State);
@@ -216,7 +219,9 @@ void handleSensor(bool _flag){
    }
 }
 
-
+/**
+* Обработчик события включения/выключение Реле1
+*/
 void handleRelay1(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.print(F("!!! EventsRelay1 "));
@@ -225,6 +230,9 @@ void handleRelay1(bool _flag){
    setRelay1(_flag);
 }
 
+/**
+* Обработчик события включения/выключение Реле2
+*/
 void handleRelay2(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.print(F("!!! EventsRelay2 "));
@@ -233,6 +241,9 @@ void handleRelay2(bool _flag){
    setRelay2(_flag);
 }
 
+/**
+* Обработчик события работы с RGB1
+*/
 void handleRGB1(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.print(F("!!! EventsRGB1 "));
@@ -247,10 +258,20 @@ void handleRGB1(bool _flag){
    }
 }
 
+/**
+* Обработчик события работы с RGB2
+*/
 void handleRGB2(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.print(F("!!! EventsRGB2 "));
+   Serial.print(EventRGB2->Type);
+   Serial.print(" #");
+   Serial.print(EventRGB2->Color1,HEX);
+   Serial.print(" #");
+   Serial.print(EventRGB2->Color2,HEX);
+   Serial.print(' ');
    Serial.println((int)_flag);
+
 #endif
    if( _flag ){
       if( EventRGB2->Type == ET_NORMAL && EventRGB2->Color2 != COLOR_NONE )led2SetColor2(EventRGB2->Color1,EventRGB2->Color2);
@@ -261,6 +282,9 @@ void handleRGB2(bool _flag){
    }
 }
 
+/**
+* Обработчик события работы с DFPlayer Mini
+*/
 void handleMP3(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.print(F("!!! EventsMP3 "));
@@ -268,8 +292,10 @@ void handleMP3(bool _flag){
 #endif
    if( _flag ){
       myDFPlayer.playFolder(EventMP3->Dir, EventMP3->Sound);   
+      bool flag = isPlayMP3; 
       isPlayMP3 = true;
       if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() ){
+         if( flag )SaveRGB2->Restore(1);
          SaveRGB2->Save(1,ET_PWM,500,500,EventRGB2->Color1, jsonConfig["RGB2"]["MP3"].as<uint32_t>());
       }
       ms1 = millis();
@@ -278,6 +304,9 @@ void handleMP3(bool _flag){
    }
 }
 
+/**
+* Начало калибровки через событие
+*/
 void startCalibrate(uint32_t _delay){
 #if defined(DEBUG_SERIAL)
    Serial.println(F("!!! Calibrate Wait ... "));
@@ -290,6 +319,9 @@ void startCalibrate(uint32_t _delay){
    isPlayMP3 = false;
 }
 
+/**
+* Обработчик события калибровки
+*/
 void handleCalibrate(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.print(F("!!! Calibrate "));
@@ -300,7 +332,7 @@ void handleCalibrate(bool _flag){
       calibrAvg = 0;
       calibrCount = 0;
       SaveRGB1->Restore(2);
-      SaveRGB2->Save(2,ET_NORMAL,0,0,COLOR_GROUND, COLOR_NONE);
+      SaveRGB1->Save(2,ET_NORMAL,0,0,COLOR_GROUND, COLOR_NONE);
       SaveRGB2->Restore(2);
       SaveRGB2->Save(2,ET_NORMAL,0,0,COLOR_GROUND, COLOR_NONE);
       isPlayMP3 = false;
@@ -332,6 +364,9 @@ void handleCalibrate(bool _flag){
    }
 }
 
+/**
+* Установка режима если датчик NAN
+*/
 void setNanMode(){
    switch( jsonConfig["RGB1"]["NAN_MODE"].as<int>() ){
       case NAN_VALUE_IGNORE: 
@@ -350,9 +385,9 @@ void setNanMode(){
    isChangeNan = false;
 }
 
-
-
-
+/*
+* Установка эффекта на RGB1
+*/
 void setEventRGB1(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2){
     EventRGB1->setType(_type, _timeOn, _timeOff);
     EventRGB1->setColor(_color1, _color2);
@@ -360,6 +395,9 @@ void setEventRGB1(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint
     EventRGB1->on();   
 }
 
+/*
+* Установка эффекта на RGB2
+*/
 void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2){
     EventRGB2->setType(_type, _timeOn, _timeOff);
     EventRGB2->setColor(_color1, _color2);
@@ -367,16 +405,25 @@ void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint
     EventRGB2->on();   
 }
 
+/*
+* Установка проигрывния звуковой дорожки
+*/
 void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop){
     EventMP3->setSound(_dir, _sound, _loop);
     EventMP3->reset();
     if(_enable)EventMP3->on(_delayOn);
 }
 
+/*
+* Установка проигрывния звуковой дорожки из JSON Объекта
+*/
 void setEventMP3( JsonObject _config ){
     setEventMP3(_config["ENABLE"].as<bool>(),_config["DELAY"].as<uint32_t>()*1000,_config["DIR"].as<int>(),_config["NUM"].as<int>(),_config["LOOP"].as<bool>());
 }
 
+/*
+* Проверка состояния сенсора и формирование нудный событий
+*/
 void checkChangeOn(){
    if( SensorOn == lastSensorOn )return;
    Serial.printf("!!! Set change stat %d\n", (int)SensorOn);
@@ -421,7 +468,9 @@ void checkChangeOn(){
    saveSet(Distance,SensorOn);
 }
 
-
+/*
+* Установка состояние реле1
+*/
 void  setRelay1( bool stat){
    bool _stat;
    if( jsonConfig["RELAY1"]["INVERSE"].as<bool>() )_stat = !stat;
@@ -433,6 +482,9 @@ void  setRelay1( bool stat){
    inverseRelay1 = jsonConfig["RELAY1"]["INVERSE"].as<bool>();
 }
 
+/*
+* Установка состояние реле2
+*/
 void  setRelay2( bool stat){
    bool _stat;
    if( jsonConfig["RELAY2"]["INVERSE"].as<bool>() )_stat = !stat;
@@ -445,6 +497,9 @@ void  setRelay2( bool stat){
 }
 
 
+/*
+* Установка состояния физического GPIO пина реле
+*/
 void  setRelayPin(uint8_t pin, bool stat, bool is_inverse){
    bool _stat;
    if( is_inverse )_stat = !stat;
@@ -453,9 +508,9 @@ void  setRelayPin(uint8_t pin, bool stat, bool is_inverse){
    digitalWrite(pin, _stat);
 }
 
-
-
-
+/*
+* Вывод на экран состояния сенсора
+*/
 void printStat(char *msg){
  #if defined(DEBUG_SERIAL)   
    Serial.print(F("!!! Sensor: "));
@@ -470,6 +525,7 @@ void printStat(char *msg){
 /**
 * Автокалибровка земли
 */
+/*
 float CalibrateGround(){
    uint32_t ms_start = millis();
 // Макимальное ограничение калиброка 30сек
@@ -535,7 +591,11 @@ bool ProcessingCalibrate(uint32_t _tm){
       return true;
    }
 }
+*/
 
+/*
+* Задача работы с кнопкой (герконом)
+*/
 void taskButton(void *pvParameters){
 #if defined(DEBUG_SERIAL)
    Serial.println(F("!!! Button task start"));
@@ -555,14 +615,16 @@ void taskButton(void *pvParameters){
           case SB_PRESS:
              btn_count = (int)btn.getCountEvent();
              Serial.printf("!!! BTN Press %d\n",btn_count);
+             SaveRGB1->Save(2,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
+             SaveRGB2->Save(2,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
              if( btn_count == 5 ){
+                ledSetColor(COLOR_ERROR);
                 btn_count = 0;
                 jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
-                ledSetColor(COLOR_ERROR);
                 configSave();     
                 delay(1000);    
                 ESP.restart();  
-              }
+             }
              break;
           case SB_RELEASE:
              tm = btn.getPressTime();
@@ -573,6 +635,14 @@ void taskButton(void *pvParameters){
              break;
           case SB_TIMER:
              Serial.printf("!!! BTN Timer %d\n",(int)btn.getPressTime());
+             ledSetColor(COLOR_ERROR);
+             jsonSave["BOOT_COUNT"]  = 0;
+             saveSave();
+             jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
+             jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
+             configSave();
+             delay(1000);    
+             ESP.restart();  
              break;
       }
 /*      
@@ -653,6 +723,8 @@ void taskNet( void *pvParameters ){
 #if defined(DEBUG_SERIAL)
     Serial.println(F("!!! WiFi task start"));
 #endif
+
+   Network.onEvent(handleEventWiFi);
    if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() ||  isWiFiAlways1 )WiFi_startAP();
 //   HTTP_begin();
    while(true){
@@ -662,3 +734,40 @@ void taskNet( void *pvParameters ){
 
 
 }
+
+void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_STA_START:     Serial.println("STA Started"); break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("STA Connected"); break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      Serial.println("STA Got IP");
+      Serial.println(WiFi.STA);
+//      WiFi.AP.enableNAPT(true);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_LOST_IP:
+      Serial.println("STA Lost IP");
+//      WiFi.AP.enableNAPT(false);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.println("STA Disconnected");
+//      WiFi.AP.enableNAPT(false);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_STOP: Serial.println("STA Stopped"); break;
+
+    case ARDUINO_EVENT_WIFI_AP_START:
+      Serial.println("AP Started");
+      Serial.println(WiFi.AP);
+      break;
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    Serial.println("AP STA Connected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("AP STA Disconnected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+      Serial.print("AP STA IP Assigned: ");
+      Serial.println(IPAddress(info.wifi_ap_staipassigned.ip.addr));
+      break;
+    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED: Serial.println("AP Probe Request Received"); break;
+    case ARDUINO_EVENT_WIFI_AP_STOP:           Serial.println("AP Stopped"); break;
+
+    default: break;
+  }
+}
+

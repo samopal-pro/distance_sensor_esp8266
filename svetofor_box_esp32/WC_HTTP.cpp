@@ -15,7 +15,7 @@ WebServer server(80);
 DNSServer dnsServer;
 
 ES_WIFI_STAT w_stat2 = EWS_OFF;
-bool isAP = false;
+bool isAP = false, isSTA = false;
 uint32_t msAP = 0, msSTA = 0;
 String authPass = "";
 String HTTP_User = "";
@@ -449,6 +449,7 @@ void HTTP_handleRoot(void) {
 
    if( UID >= 0 ){
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_ROOT");
       HTTP_printConfigColor(out);
       HTTP_printConfig(out);
       out += "</form>\n";
@@ -485,6 +486,7 @@ void HTTP_handleConfig1(void) {
   if( UID >= 0 ){
       out += "<h1>Настройка конфигурации реле</h1>\n";
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_CONFIG1");
       HTTP_printConfigRelay(out);
       out += "</form>\n";
       HTTP_printBottomMenu(out);
@@ -522,6 +524,7 @@ void HTTP_handleConfig2(void) {
   if( UID >= 0 ){
       out += "<h1>Настройка сетевых параметров</h1>\n";
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_CONFIG2");
       HTTP_printConfigNet(out);
       out += "</form>\n";
       HTTP_printBottomMenu(out);
@@ -558,6 +561,7 @@ void HTTP_handleConfig3(void) {
   if( UID >= 0 ){
       out += "<h1>Настройка хвуковых оповещений</h1>\n";
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_CONFIG3");
       HTTP_printConfig2(out);
       out += "</form>\n";
       HTTP_printBottomMenu(out);
@@ -986,66 +990,75 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("ColorFree")   )jsonConfig["RGB1"]["FREE"] = HTMLtoInt(server.arg("ColorFree").c_str());
       if(server.hasArg("ColorBusy")   )jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy").c_str());
       if(server.hasArg("ColorBlink")  )jsonConfig["RGB1"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink").c_str());
-      jsonConfig["RGB1"]["IS_FREE_BLINK"] = false;   
+
+      if(server.hasArg("FLAG_ROOT")  ){
+         jsonConfig["RGB1"]["IS_FREE_BLINK"] = false;   
+         jsonConfig["RGB1"]["IS_NAN_MODE"] = false;   
+      }
       if( server.hasArg("isFreeBlink"))jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
-      jsonConfig["RGB1"]["IS_NAN_MODE"] = false;   
       if( server.hasArg("isColorNan") )jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
       if(server.hasArg("Brightness")  )jsonConfig["RGB1"]["BRIGHTNESS"] = server.arg("Brightness").toInt();
 
 /// RGB2
+      if(server.hasArg("FLAG_CONFIG3")  ){
+         jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;   
+         jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
+      }
       if(server.hasArg("ColorFree2")  )jsonConfig["RGB2"]["FREE"] = HTMLtoInt(server.arg("ColorFree2").c_str());
       if(server.hasArg("ColorBusy2")  )jsonConfig["RGB2"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy2").c_str());
       if(server.hasArg("ColorBlink2") )jsonConfig["RGB2"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink2").c_str());
       if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3").c_str());
-      jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;   
       if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
-      jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
       if( server.hasArg("isColorNan2") )jsonConfig["RGB2"]["IS_NAN_MODE"] = true;
       if(server.hasArg("Brightness2")  )jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();
 
 // MP3
-      if(server.hasArg("MP3_VOLUME")  )jsonConfig["MP3"]["VOLUNE"] = server.arg("MP3_VOLUME").toInt();
+      if(server.hasArg("FLAG_CONFIG3")  ){
+         jsonConfig["MP3"]["BUSY"]["ENABLE"] = false;
+         jsonConfig["MP3"]["BUSY"]["LOOP"] = false;
+         jsonConfig["MP3"]["NAN"]["ENABLE"] = false;
+         jsonConfig["MP3"]["NAN"]["LOOP"] = false;
+         jsonConfig["MP3"]["BUSY1"]["ENABLE"] = false;
+         jsonConfig["MP3"]["BUSY1"]["LOOP"] = false;
+         jsonConfig["MP3"]["BUSY2"]["ENABLE"] = false;
+         jsonConfig["MP3"]["BUSY2"]["LOOP"] = false;
+         jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = false;
+         jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = false;
+         jsonConfig["MP3"]["FREE"]["ENABLE"] = false;
+         jsonConfig["MP3"]["FREE"]["LOOP"] = false;
+      }
 
+      if(server.hasArg("MP3_VOLUME")  )jsonConfig["MP3"]["VOLUNE"] = server.arg("MP3_VOLUME").toInt();
       if(server.hasArg("MP3_BUSY_DELAY")  )jsonConfig["MP3"]["BUSY"]["DELAY"] = server.arg("MP3_BUSY_DELAY").toInt();
-      jsonConfig["MP3"]["BUSY"]["ENABLE"] = false;
       if( server.hasArg("MP3_BUSY_ENABLE") )jsonConfig["MP3"]["BUSY"]["ENABLE"] = true;
-      jsonConfig["MP3"]["BUSY"]["LOOP"] = false;
       if( server.hasArg("MP3_BUSY_LOOP") )jsonConfig["MP3"]["BUSY"]["LOOP"] = true;
 
       if(server.hasArg("MP3_NAN_DELAY")  )jsonConfig["MP3"]["NAN"]["DELAY"] = server.arg("MP3_NAN_DELAY").toInt();
-      jsonConfig["MP3"]["NAN"]["ENABLE"] = false;
       if( server.hasArg("MP3_NAN_ENABLE") )jsonConfig["MP3"]["NAN"]["ENABLE"] = true;
-      jsonConfig["MP3"]["NAN"]["LOOP"] = false;
       if( server.hasArg("MP3_NAN_LOOP") )jsonConfig["MP3"]["NAN"]["LOOP"] = true;
 
       if(server.hasArg("MP3_BUSY1_DELAY")  )jsonConfig["MP3"]["BUSY1"]["DELAY"] = server.arg("MP3_BUSY1_DELAY").toInt();
-      jsonConfig["MP3"]["BUSY1"]["ENABLE"] = false;
       if( server.hasArg("MP3_BUSY1_ENABLE") )jsonConfig["MP3"]["BUSY1"]["ENABLE"] = true;
-      jsonConfig["MP3"]["BUSY1"]["LOOP"] = false;
       if( server.hasArg("MP3_BUSY1_LOOP") )jsonConfig["MP3"]["BUSY1"]["LOOP"] = true;
 
       if(server.hasArg("MP3_BUSY2_DELAY")  )jsonConfig["MP3"]["BUSY2"]["DELAY"] = server.arg("MP3_BUSY2_DELAY").toInt();
-      jsonConfig["MP3"]["BUSY2"]["ENABLE"] = false;
       if( server.hasArg("MP3_BUSY2_ENABLE") )jsonConfig["MP3"]["BUSY2"]["ENABLE"] = true;
-      jsonConfig["MP3"]["BUSY2"]["LOOP"] = false;
       if( server.hasArg("MP3_BUSY2_LOOP") )jsonConfig["MP3"]["BUSY2"]["LOOP"] = true;
 
       if(server.hasArg("MP3_FREE_NAN_DELAY")  )jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = server.arg("MP3_FREE_NAN_DELAY").toInt();
-      jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = false;
       if( server.hasArg("MP3_FREE_NAN_ENABLE") )jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = true;
-      jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = false;
       if( server.hasArg("MP3_FREE_NAN_LOOP") )jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = true;
 
       if(server.hasArg("MP3_FREE_DELAY")  )jsonConfig["MP3"]["FREE"]["DELAY"] = server.arg("MP3_FREE_DELAY").toInt();
-      jsonConfig["MP3"]["FREE"]["ENABLE"] = false;
       if( server.hasArg("MP3_FREE_ENABLE") )jsonConfig["MP3"]["FREE"]["ENABLE"] = true;
-      jsonConfig["MP3"]["FREE"]["LOOP"] = false;
       if( server.hasArg("MP3_FREE_LOOP") )jsonConfig["MP3"]["FREE"]["LOOP"] = true;
 
 
 /// NET
-      jsonConfig["WIFI"]["DHCP"] = true;
-      jsonConfig["CRM_MOSCOW"]["ENABLE"] = false;
+      if(server.hasArg("FLAG_CONFIG2")  ){
+         jsonConfig["WIFI"]["DHCP"] = true;
+         jsonConfig["CRM_MOSCOW"]["ENABLE"] = false;
+      }
       if(server.hasArg("GroundLevel"))jsonConfig["SENSOR"]["DIST_GROUND"] = server.arg("GroundLevel").toInt();
       if(server.hasArg("WiFiMode"))
          switch(server.arg("WiFiMode").toInt()){
@@ -1105,13 +1118,17 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("IPGate"))jsonConfig["WIFI"]["IP"]["GW"]             = server.arg("IPGate").c_str();
       if(server.hasArg("IPDns") )jsonConfig["WIFI"]["IP"]["DNS"]            = server.arg("IPDns").c_str();
 
+
+      if(server.hasArg("FLAG_CONFIG1")  ){
+         jsonConfig["RELAY1"]["INVERSE"] = false;
+         jsonConfig["RELAY2"]["INVERSE"] = false;
+      }
       if(server.hasArg("TMOn1")         )jsonConfig["RELAY1"]["DELAY_ON"]   = server.arg("TMOn1").toInt();
       if(server.hasArg("TMOff1")        )jsonConfig["RELAY1"]["DELAY_OFF"]  = server.arg("TMOff1").toInt();
       if(server.hasArg("ModeRelay1")    )jsonConfig["RELAY1"]["MODE"]       = (T_RELAY_MODE)server.arg("ModeRelay1").toInt();
       if(server.hasArg("TM_PulseRelay1"))jsonConfig["RELAY1"]["T_PULSE"]    = server.arg("TM_PulseRelay1").toInt();   
       if(server.hasArg("TM_PauseRelay1"))jsonConfig["RELAY1"]["T_PAUSE"]    = server.arg("TM_PauseRelay1").toInt();    
       if(server.hasArg("isInverseRelay1"))jsonConfig["RELAY1"]["INVERSE"]   = true;
-      else jsonConfig["RELAY1"]["INVERSE"] = false;
 
       if(server.hasArg("TMOn2")         )jsonConfig["RELAY2"]["DELAY_ON"]   = server.arg("TMOn2").toInt();
       if(server.hasArg("TMOff2")        )jsonConfig["RELAY2"]["DELAY_OFF"]  = server.arg("TMOff2").toInt();
@@ -1119,7 +1136,6 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("TM_PulseRelay2"))jsonConfig["RELAY2"]["T_PULSE"]    = server.arg("TM_PulseRelay2").toInt();   
       if(server.hasArg("TM_PauseRelay2"))jsonConfig["RELAY2"]["T_PAUSE"]    = server.arg("TM_PauseRelay2").toInt();   
       if(server.hasArg("isInverseRelay2"))jsonConfig["RELAY2"]["INVERSE"]   = true;
-      else jsonConfig["RELAY2"]["INVERSE"] = false;
 
    
       _save = true;
@@ -1343,6 +1359,13 @@ void HTTP_InputInt1(String &out,
    out += ">";
 }
 
+void HTTP_InputHidden(String &out, char *name, char *value){
+   out += "<input type=\"hidden\" name=\"";
+   out += name;
+   out += "\" value=\"";
+   out += value;
+   out += "\">\n";
+}
 
 
 void WiFi_ScanNetwork(){

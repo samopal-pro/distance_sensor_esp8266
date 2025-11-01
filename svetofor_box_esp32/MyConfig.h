@@ -7,7 +7,7 @@
 
 #define SOFTWARE_V           "10.0.6"
 #define HARDWARE_V           "10.0.0"
-#define CONFIG_V             "10.0.6"
+#define CONFIG_V             "10.0.8"
 
 /*
 #define SENSOR_TYPE_NONE     0

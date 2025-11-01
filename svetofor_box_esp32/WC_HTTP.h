@@ -23,7 +23,7 @@
 
 extern WebServer server;
 extern char SensorID[];
-extern bool isAP;
+extern bool isAP, isSTA;
 extern float Temp, LastTemp, Hum, LastHum, LastDistance, Distance;
 extern unsigned long Time;
 extern uint32_t msAP, msSTA, msLoad;
@@ -107,6 +107,9 @@ void HTTP_InputInt(String &out,const char *label,const char *name,int value,int 
 void HTTP_InputRange(String &out,const char *label,const char *name,int value,int min,int max,int size=32,const char *style = NULL);
 void HTTP_InputInt1(String &out,const char *name,int value,int min,int max,int size=32);
 void HTTP_printMessage(const char *s);
+
+void HTTP_InputHidden(String &out, char *name, char *value = "1");
+
 
 void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2);
 
