@@ -30,7 +30,7 @@ SBTN::SBTN(uint8_t pin, uint32_t _bounce, bool _press_state): SBTN_base( NULL, _
 */
 bool SBTN::isPress(void){ 
    if( PressState == LOW )return !digitalRead(Pin); 
-   else digitalRead(Pin);
+   else return digitalRead(Pin);
 }
 
 //***********************************************************************************************************************
