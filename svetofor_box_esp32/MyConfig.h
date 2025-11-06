@@ -104,7 +104,7 @@ enum SENSOR_STAT_t {
 #define COLOR_WIFI_NONE        0x000000    //Цвет "WiFi не конфигуен"
 #define COLOR_WIFI_OFF         0xFF0000    //Цвет "WiFi не подключен"
 #define COLOR_WIFI_ON          0x00FF00    //Цвет "WiFi подключен"
-#define COLOR_WIFI_WAIT        0x0FFF00    //Цвет "WiFi попытка подключения"
+#define COLOR_WIFI_WAIT        0xFFFF00    //Цвет "WiFi попытка подключения"
 #define COLOR_WIFI_AP          0x00FF7F    //Цвет "Режим точки доступа"
 #define COLOR_WIFI_AP1         0xFFFFFF    //Цвет "Точка доступа всегда включена"
 
@@ -116,5 +116,8 @@ enum SENSOR_STAT_t {
 #define SENSOR_GROUND_STATE    SS_FREE;
 #define COUNT_RGB1             50   //Число светодиодов
 #define COUNT_RGB2             50   //Число светодиодов
+
+#define HTTP_PATH              "/api/1/sensor/99/"
+
 
 #endif

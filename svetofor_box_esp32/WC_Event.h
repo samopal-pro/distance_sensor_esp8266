@@ -98,13 +98,14 @@ class TEventMP3: public TEvent {
 
 class TSaveRGB {
    public:
-      TSaveRGB( TEventRGB *_event);
+      TSaveRGB( TEventRGB *_event, int _id = 1);
       int Save(int _id, TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2 );
       int Restore( int _id );
       void Clear();
    private:
       TEventRGB *EventRGB;
       int Count;
+      int ID;
       RGB_STACK_ITEM_t StackRGB[MAX_RGB_STACK_ITEMS];
       int Push(int _id );
       int Pop();

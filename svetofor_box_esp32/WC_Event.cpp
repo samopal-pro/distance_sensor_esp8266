@@ -215,8 +215,9 @@ void TEventMP3::copyTo(TEventMP3 *dist){
 //***********************************************************************************************************************************************************************************
 // Класс TSaveRGB
 //***********************************************************************************************************************************************************************************
-TSaveRGB::TSaveRGB( TEventRGB *_event){
+TSaveRGB::TSaveRGB( TEventRGB *_event, int _id){
     EventRGB = _event;
+    ID       = _id;
     Clear();
 }
 
@@ -248,7 +249,7 @@ int TSaveRGB::Pop(){
 }
 
 int TSaveRGB::Save(int _id, TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2 ){
-//    Serial.printf("!!! SaveRGB Save %d\n",_id);
+    Serial.printf("!!! SaveRGB%d Save %d\n",ID,_id);
     if( Count >= MAX_RGB_STACK_ITEMS )return -1;
     int ret = Push( _id );
     EventRGB->setType( _type, _timeOn, _timeOff );
@@ -259,7 +260,7 @@ int TSaveRGB::Save(int _id, TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _tim
 }
 
 int TSaveRGB::Restore( int _id ){
-    Serial.printf("!!! SaveRGB Restore %d\n",_id);
+    Serial.printf("!!! SaveRGB%d Restore %d\n",ID,_id);
     if( Count <= 0 )return 1;
     int n = -1;
     for( int i=0; i<Count; i++){

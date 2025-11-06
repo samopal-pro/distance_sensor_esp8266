@@ -11,6 +11,9 @@
 //#include "src/Slib/SButton.h"
 #include "src/Slib/SBTN.h"
 #include "src/DFPlayer/DFRobotDFPlayerMini.h"
+//#include <WiFi.h>
+#include <HTTPClient.h>
+
 #define DEPTH_DIST_ARRAY 5
 #define SAMPLE_LEN       10
 #define RELIABILITY_PROC 0.15
@@ -53,6 +56,9 @@ void setEventMP3( JsonObject _config );
 void setNanMode();
 
 void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
+
+bool sendHttpParam();
+
 
 void checkChangeOn();
 void processRelay1();

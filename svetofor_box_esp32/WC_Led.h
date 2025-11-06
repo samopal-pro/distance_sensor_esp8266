@@ -18,13 +18,20 @@ extern float Distance;
 extern SENSOR_STAT_t SensorOn;  
 
 extern Adafruit_NeoPixel *strip;
+extern int startRGB1;
 
 void ledInit();
 void ledRestoreMode();
-void ledSetColor0(uint32_t _color);
+void ledSetColorAP(uint32_t _color);
+void ledSetColorSTA(uint32_t _color);
 void ledSetColor(uint32_t _color, bool _flag = true);
 void ledSetColor2(uint32_t _color1, uint32_t _color2, bool _flag = true);
 void ledRestoreColor();
+void ledSTA(bool _flag);
+
+void ledBrightness( int br );
+
+
 
 //void led2Init();
 void led2RestoreMode();
@@ -32,4 +39,5 @@ void led2SetColor0(uint32_t _color);
 void led2SetColor(uint32_t _color, bool _flag = true);
 void led2SetColor2(uint32_t _color1, uint32_t _color2, bool _flag = true);
 void led2RestoreColor();
+void led2Brightness( int br );
 #endif

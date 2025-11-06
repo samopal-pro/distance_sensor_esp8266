@@ -11,6 +11,7 @@
 
 extern JsonDocument jsonConfig;
 extern JsonDocument jsonSave;
+extern bool isChangeConfig;
 
 typedef enum T_AP_START_MODE {
   AP_NONE           = 0, //Не стартовать AP при загрузке

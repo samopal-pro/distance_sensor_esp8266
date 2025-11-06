@@ -26,6 +26,8 @@ uint32_t msLoad = 0;
 std::vector <String> n_ssid;
 std::vector <int> n_rssi;
 
+bool isHTTP = false;
+
 bool is_update     = false;
 bool is_load_page = false;
 uint32_t   http_ms = 0;
@@ -43,7 +45,7 @@ void WiFi_test(){
       if( w_stat2 != EWS_NOT_CONFIG ){
          Serial.println(F("??? WiFi is not config"));
          w_stat2 = EWS_NOT_CONFIG;
-         ledSetColor0(COLOR_WIFI_OFF);
+         ledSetColorAP(COLOR_WIFI_OFF);
       }         
       return;
    }   
@@ -64,7 +66,7 @@ void WiFi_test(){
       WiFi.begin(jsonConfig["WIFI"]["NAME"].as<String>(), jsonConfig["WIFI"]["PASS"].as<String>());
       w_stat2 = EWS_WAIT;
       msSTA = _ms;
-      ledSetColor0(COLOR_WIFI_WAIT);
+      ledSetColorAP(COLOR_WIFI_WAIT);
       Serial.print(F("!!! WiFi connect wait "));
       Serial.println(jsonConfig["WIFI"]["NAME"].as<String>());
       return;
@@ -79,7 +81,7 @@ void WiFi_test(){
       Serial.print(WiFi.gatewayIP());
       Serial.print(" DNS: ");
       Serial.println(WiFi.dnsIP());
-      ledSetColor0(COLOR_WIFI_ON);
+      ledSetColorAP(COLOR_WIFI_ON);
       w_stat2 = EWS_ON;
       
       return;
@@ -110,9 +112,9 @@ void WiFi_startAP(){
    HTTP_begin();
    msAP = millis();
    w_stat2 = EWS_AP_MODE;
-   if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() || isWiFiAlways1 )ledSetColor0(COLOR_WIFI_AP1);
-   else ledSetColor0(COLOR_WIFI_AP);
-   server.begin();
+   if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() || isWiFiAlways1 )ledSetColorAP(COLOR_WIFI_AP1);
+   else ledSetColorAP(COLOR_WIFI_AP);
+//   server.begin();
 
 }
 
@@ -125,7 +127,7 @@ void WiFi_stop(const char *msg){
    Serial.println(msg);
    server.stop();
    w_stat2 = EWS_OFF;
-   ledSetColor0(COLOR_WIFI_OFF);
+   ledSetColorAP(COLOR_WIFI_OFF);
  }
 
 /** 
@@ -161,8 +163,9 @@ bool HTTP_redirect1() {
  * Старт WEB сервера
  */
 void HTTP_begin(void){
-
-
+   if( isHTTP )return;
+   isHTTP = true;
+   server.begin();
    
  // Поднимаем WEB-сервер  
    server.on ( "/", HTTP_handleRoot );
@@ -201,6 +204,8 @@ void HTTP_begin(void){
    server.begin();
 //   WiFi_ScanNetwork();
    Serial.printf( "!!! HTTP server started ...\n" );
+   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+   dnsServer.start(53, "*", WiFi.softAPIP());
   
 }
 
@@ -224,6 +229,7 @@ void HTTP_handlePngRelay5(){  server.send_P(200, PSTR("image/png"), relay5_png, 
  * Обработчик событий WEB-сервера
  */
 void HTTP_loop(void){
+   if( !isHTTP )return;
    dnsServer.processNextRequest();   
    server.handleClient(); 
 

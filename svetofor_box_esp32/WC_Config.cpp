@@ -3,6 +3,8 @@
 JsonDocument jsonConfig;
 JsonDocument jsonSave;
 
+bool isChangeConfig = true;
+
 //configPID_t configPID;
 
 void configInit(){
@@ -54,15 +56,15 @@ void configDefault(){
    jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
 // Параметры моединения WiFi
-   jsonConfig["WIFI"]["NAME"]          = "";                         //Имя сети WiFi
-   jsonConfig["WIFI"]["PASS"]          = "";                         //Пароль сети WiFi
-   jsonConfig["WIFI"]["DHCP"]          = true;                       //Брать парметры сети по DHCP
-   jsonConfig["WIFI"]["IP"]["ADDR"]    = "192.168.1.10";             //IP адрес при стаическом режиме
-   jsonConfig["WIFI"]["IP"]["MASK"]    = "255.255.255.0";            //IP маска при стаическом режиме
-   jsonConfig["WIFI"]["IP"]["GW"]      = "192.168.1.1";              //IP адрес шлюза при стаическом режиме
-   jsonConfig["WIFI"]["IP"]["DNS"]     = "8.8.8.8";                  //IP адрес DNS при стаическом режиме
+   jsonConfig["WIFI"]["NAME"]              = "";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS"]              = "";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["DHCP"]              = true;                       //Брать парметры сети по DHCP
+   jsonConfig["WIFI"]["IP"]["ADDR"]        = "192.168.1.10";             //IP адрес при стаическом режиме
+   jsonConfig["WIFI"]["IP"]["MASK"]        = "255.255.255.0";            //IP маска при стаическом режиме
+   jsonConfig["WIFI"]["IP"]["GW"]          = "192.168.1.1";              //IP адрес шлюза при стаическом режиме
+   jsonConfig["WIFI"]["IP"]["DNS"]         = "8.8.8.8";                  //IP адрес DNS при стаическом режиме
 // Параметры подключения к CRM.MOSCOW
-   jsonConfig["CRM_MOSCOW"]["ENABLE"]  = false;                      //посылать информацию на CRM-MOSCOW
+   jsonConfig["CRM_MOSCOW"]["ENABLE"]      = false;                      //посылать информацию на CRM-MOSCOW
    jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"]  = "0000";            
    jsonConfig["CRM_MOSCOW"]["BOX_ID"]      = "1";                     
    jsonConfig["CRM_MOSCOW"]["SERVER"]      = "crm.moscow";             
@@ -109,7 +111,7 @@ void configDefault(){
    jsonConfig["RGB2"]["MP3"]           = COLOR_MP3_DEFAULT;
 
 // Настройка плеера MP3      
-   jsonConfig["MP3"]["VOLUNE"]            = 30;                          // Громкость 0-30
+   jsonConfig["MP3"]["VOLUNE"]            = 10;                          // Громкость 0-30
    jsonConfig["MP3"]["EQ"]                = 0;                           // Режим эквалайзера 0-5
 // Автомобиль заехал
    jsonConfig["MP3"]["BUSY"]["ENABLE"]    = true;
@@ -176,7 +178,7 @@ void configSave(){
    File f = SPIFFS.open(CONFIG_JSON, FILE_WRITE);
    serializeJson(jsonConfig, f);
    f.close();
-
+   isChangeConfig = true;
    configPrint("Save");  
 }
 
