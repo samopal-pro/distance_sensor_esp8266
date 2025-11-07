@@ -111,7 +111,10 @@ void HTTP_printMessage(const char *s);
 void HTTP_InputHidden(String &out, char *name, char *value = "1");
 
 
-void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2);
+void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1 = NULL, bool check = false);
+void HTTP_print_color(String &out, uint32_t color, char *name);
+void HTTP_print_MP3_7(String &out, char *text, char *name);
+void HTTP_checkArgsMP3(char *name);
 
 void HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value, uint32_t color_set, uint8_t color_num, uint8_t proc, bool is_change = false);
 void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);

@@ -5,16 +5,20 @@ uint64_t chipID;
 
 MySensor *sensor;
 TEvent *EventSensor, *EventRelay1, *EventRelay2;
+TEvent *EventBusy1, *EventBusy2;
 TEventRGB *EventRGB1, *EventRGB2;
 //TEventRGB  *SaveEventRGB2, *SaveEventCalibrate1, *SaveEventCalibrate2;
 TSaveRGB *SaveRGB1, *SaveRGB2;
 
+
 TEventMP3 *EventMP3;
 TEvent *EventCalibrate; 
 
-DFRobotDFPlayerMini myDFPlayer;
 bool isDFPlayer = false;
 bool isPlayMP3  = false;
+CMD_MP3_t cmdMP3 = CMP3_NONE;
+int arg1MP3 = 0, arg2MP3 = 0;
+
 
 float Distance = NAN, lastDistance = NAN;
 SENSOR_STAT_t SensorOn = SS_NONE, lastSensorOn = SS_NONE;  
@@ -36,6 +40,7 @@ bool isChangeStat  = false; //Изменение отслеживания изм
 uint16_t bootCount;
 bool isWiFiAlways1 = true; 
 SemaphoreHandle_t sensorSemaphore;
+uint32_t msSendHttp = 0;
 
 HTTPClient httpClient;
 
@@ -58,9 +63,10 @@ void tasksStart() {
   
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
   sensorSemaphore = xSemaphoreCreateMutex();
-  xTaskCreateUniversal(taskEvents, "events", 40000, NULL, 4, NULL, CORE);
+  xTaskCreateUniversal(taskMP3, "mp3", 10000, NULL, 1, NULL, CORE);
+  xTaskCreateUniversal(taskEvents, "events", 30000, NULL, 3, NULL, CORE);
 
-  xTaskCreateUniversal(taskSensors, "sensors", 40000, NULL, 4, NULL, CORE);
+  xTaskCreateUniversal(taskSensors, "sensors", 30000, NULL, 4, NULL, CORE);
   //    vTaskDelay(500);
   // xTaskCreateUniversal(taskPoll, "poll", 10240, NULL, 2, NULL, CORE);
  // vTaskDelay(500);
@@ -89,11 +95,17 @@ void taskEvents(void *pvParameters) {
    EventRGB2           = new TEventRGB(0,0,handleRGB2);
    SaveRGB1            = new TSaveRGB(EventRGB1,1);
    SaveRGB2            = new TSaveRGB(EventRGB2,2);
+   EventBusy1          = new TEvent(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>(),0,handleBusy1);
+   EventBusy2          = new TEvent(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>(),0,handleBusy2);
 //   SaveEventRGB2       = new TEventRGB(0,0,handleRGB2);
 //   SaveEventCalibrate1 = new TEventRGB(0,0,handleRGB1);  
 //   SaveEventCalibrate2 = new TEventRGB(0,0,handleRGB2);  
-   EventMP3            = new TEventMP3(0,0,handleMP3,1,1,false);
+//   EventMP3            = new TEventMP3(0,0,handleMP3,1,1,false);
    EventCalibrate      = new TEvent(0,0,handleCalibrate);
+
+   setEventRGB1( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+   setEventRGB2( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+
 //   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
    while (true) {
       uint32_t ms = millis();
@@ -106,33 +118,62 @@ void taskEvents(void *pvParameters) {
       EventRGB1->loop();
       EventRGB2->loop();
       EventCalibrate->loop();
-      if( ms1 == 0 || ms1 > ms || ms-ms1 > 2000 ){
-         ms1 = ms;
-         if( isPlayMP3 ){
-             myDFPlayer.readState();
-             int _stat = myDFPlayer.readState();
-             if(  _stat == 0 ){
-                 Serial.printf("!!! Play MP3 completed %d\n",_stat);
-                 EventMP3->off(0);
-                 if( EventMP3->Loop ){
-//                    EventMP3->reset();
-                    EventMP3->on(2000);
-                 }
-///                 if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() ){  
-///                    SaveRGB2->Restore(1);                
-//                    EventRGB2->reset();
-//                    SaveEventRGB2->copyTo(EventRGB2);
-//                    EventRGB2->on();
-///                 }
-                 isPlayMP3 = false;
-             }
-         }
-      } 
-      EventMP3->loop();
-
+      EventBusy1->loop();
+      EventBusy2->loop();
       vTaskDelay(250);
    }
 }
+
+/**
+ * Задача работы с MP3
+ * @param pvParameters
+ */
+void taskMP3(void *pvParameters) {
+#if defined(DEBUG_SERIAL)
+   Serial.println(F("!!! MP3 task start"));
+#endif
+   DFRobotDFPlayerMini myDFPlayer;
+   EventMP3            = new TEventMP3(0,0,handleMP3,1,1,false);
+   FPSerial.begin(9600, SERIAL_8N1, /*rx =*/PIN_RX1, /*tx =*/PIN_TX1);
+   isDFPlayer = myDFPlayer.begin(FPSerial, /*isACK = */true, /*doReset = */true);
+   myDFPlayer.setTimeOut(500);
+   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
+   myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>());
+   vTaskDelay(250);
+   myDFPlayer.playFolder(1,123);
+//   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
+   while (true) {
+      uint32_t ms = millis();
+      switch( cmdMP3 ){
+         case CMP3_VOLUME: myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>()); cmdMP3 = CMP3_NONE; break;
+         case CMP3_PLAY:   myDFPlayer.playFolder(arg1MP3, arg2MP3); cmdMP3 = CMP3_NONE; break;
+         case CMP3_STOP:   myDFPlayer.stop(); cmdMP3 = CMP3_NONE; break;
+      }
+     
+      if( ms1 == 0 || ms1 > ms || ms-ms1 > 2000 ){
+         ms1 = ms;
+         if( isPlayMP3 ){
+            myDFPlayer.readState();
+            int _stat = myDFPlayer.readState();
+            if(  _stat == 0 ){
+                Serial.printf("!!! Play MP3 completed %d\n",_stat);
+//                EventMP3->off(0);
+                if( EventMP3->Loop ){
+                   EventMP3->reset();
+                   EventMP3->on(2000);
+                }
+                isPlayMP3 = false;
+            }
+         }
+      }
+     
+      EventMP3->loop();
+      vTaskDelay(1000);
+   }
+}
+
+
+
 
 /**
  * Задача работы с сенсорами
@@ -143,13 +184,6 @@ void taskSensors(void *pvParameters) {
    Serial.println(F("!!! Sensors task start"));
 #endif
    ledInit();
-   FPSerial.begin(9600, SERIAL_8N1, /*rx =*/PIN_RX1, /*tx =*/PIN_TX1);
-   isDFPlayer = myDFPlayer.begin(FPSerial, /*isACK = */true, /*doReset = */true);
-   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
-   myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>());
-   vTaskDelay(250);
-   myDFPlayer.playFolder(1,123);
-
    sensor = new MySensor();
    sensor->init();
    pinMode(PIN_OUT1,OUTPUT);
@@ -202,7 +236,7 @@ void taskSensors(void *pvParameters) {
           isChangeConfig = false;
           ledBrightness( jsonConfig["RGB1"]["BRIGHTNESS"].as<int>() );
           led2Brightness( jsonConfig["RGB2"]["BRIGHTNESS"].as<int>() );
-          myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>());
+          void setVolumeMP3();
       }
       
       xSemaphoreGive(sensorSemaphore);
@@ -300,22 +334,50 @@ void handleMP3(bool _flag){
    Serial.println((int)_flag);
 #endif
    if( _flag ){
-      myDFPlayer.playFolder(EventMP3->Dir, EventMP3->Sound);   
+      playMP3(EventMP3->Dir, EventMP3->Sound);   
 //      bool flag = isPlayMP3; 
       isPlayMP3 = true;
-      if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() ){
+      if( EventMP3->ColorTM != 0 ){
 //         if( flag )SaveRGB2->Restore(1);
          SaveRGB2->Save(1,ET_PWM,500,500,EventRGB2->Color1, jsonConfig["RGB2"]["MP3"].as<uint32_t>());
       }
       ms1 = millis();
    }
    else {
-      myDFPlayer.stop();
-      isPlayMP3 = false;   
-      if( jsonConfig["RGB2"]["IS_MP3"].as<bool>() )SaveRGB2->Restore(1);                
+//      stopMP3();
+//      isPlayMP3 = false;   
+      if( EventMP3->ColorTM != 0 )SaveRGB2->Restore(1);                
 
    }
 }
+
+/**
+* Обработчик события работы с RGB1
+*/
+void handleBusy1(bool _flag){
+#if defined(DEBUG_SERIAL)
+   Serial.print(F("!!! EventsBUSY1 "));
+   Serial.println((int)_flag);
+#endif
+   if( _flag ){
+      if( jsonConfig["MP3"]["BUSY1"]["ENABLE"].as<bool>() )setEventMP3(jsonConfig["MP3"]["BUSY1"],false);
+   }
+}
+
+/**
+* Обработчик события работы с RGB1
+*/
+void handleBusy2(bool _flag){
+#if defined(DEBUG_SERIAL)
+///   Serial.print(F("!!! EventsBUSY1 "));
+///   Serial.println((int)_flag);
+#endif
+   if( _flag ){
+      if( jsonConfig["MP3"]["BUSY2"]["ENABLE"].as<bool>() )setEventMP3(jsonConfig["MP3"]["BUSY2"],false);
+   }
+}
+
+
 
 /**
 * Начало калибровки через событие
@@ -424,17 +486,22 @@ void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint
 /*
 * Установка проигрывния звуковой дорожки
 */
-void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop){
-    EventMP3->setSound(_dir, _sound, _loop);
+void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm){
+    EventMP3->setSound(_dir, _sound, _loop, _color, _tm);
+    stopMP3();
     EventMP3->off(0);
+    if( _tm == 0 )EventMP3->setType(ET_PULSE, 500, 0 );
+    else EventMP3->setType(ET_PULSE, _tm, 0);
     if(_enable)EventMP3->on(_delayOn);
 }
 
 /*
 * Установка проигрывния звуковой дорожки из JSON Объекта
 */
-void setEventMP3( JsonObject _config ){
-    setEventMP3(_config["ENABLE"].as<bool>(),_config["DELAY"].as<uint32_t>()*1000,_config["DIR"].as<int>(),_config["NUM"].as<int>(),_config["LOOP"].as<bool>());
+void setEventMP3( JsonObject _config, bool is_delay){
+    uint32_t _delay = 0;
+    if( is_delay )_delay = _config["DELAY"].as<uint32_t>()*1000;
+    setEventMP3(_config["ENABLE"].as<bool>(),_delay,_config["DIR"].as<int>(),_config["NUM"].as<int>(),_config["LOOP"].as<bool>(),_config["COLOR"].as<uint32_t>(),_config["COLOR_TM"].as<uint32_t>()*1000 );
 }
 
 /*
@@ -447,6 +514,8 @@ void checkChangeOn(){
       case SS_BUSY:
       case SS_NAN_BUSY:   
          EventSensor->on();
+         EventBusy1->on(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>()*1000);
+         EventBusy2->on(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>()*1000);
          setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), COLOR_NONE );
          setEventRGB2( ET_NORMAL, 0, 0, jsonConfig["RGB2"]["BUSY"].as<uint32_t>(), COLOR_NONE );
          setEventMP3(jsonConfig["MP3"]["BUSY"]);
@@ -454,6 +523,8 @@ void checkChangeOn(){
       case SS_FREE:   
       case SS_NAN_FREE:   
          EventSensor->off();
+         EventBusy1->reset();
+         EventBusy2->reset();
          if( jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>() )setEventRGB1( ET_PWM, 5000, 250, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>() );
          else setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), COLOR_NONE );  
          if( jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>() )setEventRGB2( ET_PWM, 5000, 250, jsonConfig["RGB2"]["FREE"].as<uint32_t>(), jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>() );
@@ -463,11 +534,23 @@ void checkChangeOn(){
       case SS_NAN:
          if(jsonConfig["RGB1"]["IS_NAN_MODE"].as<bool>()){
             switch(jsonConfig["RGB1"]["NAN_MODE"].as<int>()){
-               case NAN_VALUE_IGNORE: setEventRGB1( ET_NORMAL, 0, 0, COLOR_NONE, COLOR_NAN); break;
-               case NAN_VALUE_BUSY:   setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), COLOR_NAN); break;
-               case NAN_VALUE_FREE:   setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), COLOR_NAN); break;
+               case NAN_VALUE_IGNORE: 
+                  setEventRGB1( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+                  setEventRGB2( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+//                  setEventRGB1( ET_NORMAL, 0, 0, COLOR_NONE, COLOR_NAN); 
+//                  setEventRGB2( ET_NORMAL, 0, 0, COLOR_NONE, COLOR_NAN); 
+                  break;
+               case NAN_VALUE_BUSY:   
+                  setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), COLOR_NAN); 
+                  setEventRGB2( ET_NORMAL, 0, 0, jsonConfig["RGB2"]["BUSY"].as<uint32_t>(), COLOR_NAN); 
+                  break;
+               case NAN_VALUE_FREE:   
+                  setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), COLOR_NAN); 
+                  setEventRGB2( ET_NORMAL, 0, 0, jsonConfig["RGB2"]["FREE"].as<uint32_t>(), COLOR_NAN); 
+                  break;
             } 
          }
+/*         
          if(jsonConfig["RGB2"]["IS_NAN_MODE"].as<bool>()){
             switch(jsonConfig["RGB2"]["NAN_MODE"].as<int>()){
                case NAN_VALUE_IGNORE: setEventRGB2( ET_NORMAL, 0, 0, COLOR_NONE, COLOR_NAN); break;
@@ -475,12 +558,14 @@ void checkChangeOn(){
                case NAN_VALUE_FREE:   setEventRGB2( ET_NORMAL, 0, 0, jsonConfig["RGB2"]["FREE"].as<uint32_t>(), COLOR_NAN); break;
             } 
          }
+         */
          if( lastSensorOn == SS_FREE )setEventMP3(jsonConfig["MP3"]["FREE_NAN"]);
          else setEventMP3(jsonConfig["MP3"]["NAN"]);
          break;
    }
    lastSensorOn = SensorOn;
    isPlayMP3 = false;
+   msSendHttp = millis();
    saveSet(Distance,SensorOn);
 }
 
@@ -620,9 +705,6 @@ void taskButton(void *pvParameters){
    SBTN btn(PIN_BTN);
    btn.setTimer(10000);
    btn.setTimerEventCount(4000);
-//   bool is_btn_click = false;
-//   uint16_t btn_count = 0;
-//   uint32_t ms_btn = 0;
    bool white_flag = false;
    uint32_t tm;
    int btn_count;
@@ -670,70 +752,6 @@ void taskButton(void *pvParameters){
              ESP.restart();  
              break;
       }
-/*      
-       uint32_t cur_ms = millis();
-       if( ms_btn == 0 || ms_btn > cur_ms || cur_ms - ms_btn > 4000 ){ btn_count = 0; }
-       switch(btn.Loop()){
-          case SB_NONE:
-              is_btn_click = false;             
-              break;     
-          case SB_WAIT:
-              if( is_btn_click == false ){
-//                  ledSetColor(COLOR_NONE,true);
-                  white_flag   = false;
-              }
-              is_btn_click = true;            
-//              if( btn.Time < 2000 )
-//                  if( white_flag)ledSetColor(COLOR_SAVE);
-//                  else ledSetColor(COLOR_NONE);
-//              else ledSetColor(COLOR_GROUND);             
-              white_flag = !white_flag;
-          case SB_CLICK:
-              Serial.printf("!!! BTN click %d\n",(int)btn_count);
-              btn_count++;
-              
-              if( btn_count == 5 ){
-                btn_count = 0;
-                jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
-                ledSetColor(COLOR_ERROR);
-                configSave();     
-                delay(1000);    
-                ESP.restart();  
-              }
-
-              ms_btn = cur_ms;
-              Serial.printf("!!! BTN click %d\n",btn.Time);
-              if( btn.Time > 2000 ){
-                  startCalibrate();
-//                 ledSetExtMode(LED_EXT_BTN3);
-//                 if( EA_Config.isWiFiAlways == false  && isWiFiAlways1 == false )
-//                    if( w_stat2 == EWS_AP_MODE )WiFi_stop("Stop AP User");
-//                    else WiFi_startAP();
-
-                 xSemaphoreTake(sensorSemaphore, portMAX_DELAY);
-                 Serial.printf("!!! Calibrate sonar %d\n",(int)Distance);
-                 ProcessingCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
-
-//                 EA_Config.GroundLevel = Distance;
-//                 xSemaphoreGive(sensorSemaphore);
-
-//             EA_default_config();
-//                EA_read_config();
- 
-              }
-              break;
-          case SB_LONG_CLICK:
-              Serial.println("!!! BTN long click");   
-              jsonSave["BOOT_COUNT"]  = 0;
-              saveSave();
-              jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
-              jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
-              configSave();
-              delay(1000);    
-              ESP.restart();  
-             break;
-       }
-*/
        vTaskDelay(200);
        
    }
@@ -817,9 +835,15 @@ void taskNet( void *pvParameters ){
 */
 
       }
-      if( (ms3 == 0 || ms < ms3 || (ms-ms3)>20000)&&WiFi.status() == WL_CONNECTED  ){
+      if( (ms3 == 0 || ms < ms3 || (ms-ms3)>2000) ){
           ms3 = ms;
-          sendHttpParam();
+          if( msSendHttp < ms ){
+             msSendHttp = 0;
+             uint32_t ms_tmp = 0;
+             if( sendHttpParam() )ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_SEND"].as<uint32_t>()*1000;
+             else ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_RETRY"].as<uint32_t>()*1000;
+             if( msSendHttp == 0)msSendHttp = ms_tmp;
+          }
       }
       HTTP_loop();
       vTaskDelay(50);      
@@ -906,7 +930,7 @@ bool sendHttpParam(){
    int httpCode = httpClient.GET();
    httpClient.end();
    Serial.print(F("!!! HTTP send "));
-   Serial.print(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>());
+   Serial.println(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>());
    
    if( httpCode == HTTP_CODE_OK ){
         String payload = httpClient.getString();
@@ -939,3 +963,18 @@ uint16_t KeyGen(){
   
 }
 */
+
+void setVolumeMP3(){
+    cmdMP3  = CMP3_VOLUME;
+ }
+
+void playMP3(int _dir, int _num){
+    cmdMP3  = CMP3_PLAY;
+    arg1MP3 = _dir;
+    arg2MP3 = _num;
+    
+}
+void stopMP3(){
+    cmdMP3  = CMP3_STOP;
+}
+

@@ -135,6 +135,7 @@ bool MySensor::init(){
       case SENSOR_SR04TM2 :  
 //#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )||(DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
          ((SonarSR04 *)Sensor)->init();
+         isInit = true;
          break;
 
 

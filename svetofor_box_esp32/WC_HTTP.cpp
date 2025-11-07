@@ -565,7 +565,7 @@ void HTTP_handleConfig3(void) {
   if( HTTP_login(out) )HTTP_goto(pages[numPage], 2, "Введите пароль");
 
   if( UID >= 0 ){
-      out += "<h1>Настройка хвуковых оповещений</h1>\n";
+      out += "<h1>Настройка звуковых оповещений</h1>\n";
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_InputHidden(out,"FLAG_CONFIG3");
       HTTP_printConfig2(out);
@@ -594,11 +594,11 @@ void HTTP_printConfigColor(String &out){
 //  out += "</table>\n";
   out += "<table width=100%>";
   HTTP_print_color3(out, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), "ColorFree", "Цвет в режиме \"Свободно\"", COLOR_FREE1, COLOR_FREE2);
-  out += "<tr><td colspan=4>";
-  HTTP_print_input_checkbox(out,"isFreeBlink","1",jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
-  out += "</td></tr>\n";
+//  out += "<tr><td colspan=4>";
+//  HTTP_print_input_checkbox(out,"isFreeBlink","1",jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
+//  out += "</td></tr>\n";
 
-  HTTP_print_color3(out, jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2);
+  HTTP_print_color3(out, jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2,"isFreeBlink",jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
   HTTP_print_color3(out, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), "ColorBusy", "Цвет в режиме \"Занято\"", COLOR_BUSY1, COLOR_BUSY2);
 
   out += "</table>";
@@ -854,16 +854,18 @@ void HTTP_printConfig2(String &out){
 
 //  out += "</table>\n";
   out += "<table width=100%>";
+//  out += "<tr><td colspan=4>";
+//  HTTP_print_input_checkbox(out,"isFreeBlink2","1",jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>());
+//  out += "</td></tr>\n";
   HTTP_print_color3(out, jsonConfig["RGB2"]["FREE"].as<uint32_t>(), "ColorFree2", "Цвет в режиме \"Свободно\"", COLOR_FREE1, COLOR_FREE2);
-  out += "<tr><td colspan=4>";
-  HTTP_print_input_checkbox(out,"isFreeBlink2","1",jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>());
-  out += "</td></tr>\n";
-  HTTP_print_color3(out, jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink2", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2);
+//  out += "<tr><td colspan=4>&nbsp;</td></tr>\n";
+  HTTP_print_color3(out, jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink2", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2,"isFreeBlink2",jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>());
+//  out += "<tr><td colspan=4>&nbsp;</td></tr>\n";
   HTTP_print_color3(out, jsonConfig["RGB2"]["BUSY"].as<uint32_t>(), "ColorBusy2", "Цвет в режиме \"Занято\"", COLOR_BUSY1, COLOR_BUSY2);
-  out += "<tr><td colspan=4>";
-  HTTP_print_input_checkbox(out,"isMP3","1",jsonConfig["RGB2"]["IS_MP3"].as<bool>());
-  out += "</td></tr>\n";
-  HTTP_print_color3(out, jsonConfig["RGB2"]["MP3"].as<uint32_t>(), "ColorMP3", "Мигание в режиме \"оповещение\"", COLOR_MP3_1, COLOR_MP3_2);
+//  out += "<tr><td colspan=4>";
+//  HTTP_print_input_checkbox(out,"isMP3","1",jsonConfig["RGB2"]["IS_MP3"].as<bool>());
+//  out += "</td></tr>\n";
+//  HTTP_print_color3(out, jsonConfig["RGB2"]["MP3"].as<uint32_t>(), "ColorMP3", "Мигание в режиме \"оповещение\"", COLOR_MP3_1, COLOR_MP3_2);
   out += "</table>";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -875,75 +877,46 @@ void HTTP_printConfig2(String &out){
 
   out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
 //  out += "<table class='tab1'>\n";
-  out += "<tr><td width='320'>Оповещение</td><td width='50'>Включить</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><tr>\n";
-  out += "<tr><td>Момент заезда автомобиля. Файл 01/001.mp3</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_BUSY_ENABLE","1",jsonConfig["MP3"]["BUSY"]["ENABLE"].as<bool>());
-  out += "</td><td>";
-  HTTP_InputInt1(out,"MP3_BUSY_DELAY",jsonConfig["MP3"]["BUSY"]["DELAY"].as<int>(),1,3600);
-  out += "</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_BUSY_LOOP","1",jsonConfig["MP3"]["BUSY"]["LOOP"].as<bool>());
-  out += "</td><td>";
-  out += "<input type='submit' name='MP3_BUSY_PLAY' value='▶' class='btn'>";
-  out += "</td></tr>\n";
+  out += "<tr><td width='320'>Оповещение</td><td width='50'>Вкл.</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><td width='50'>Цвет</td><td width='50'>Длит.</td><tr>\n";
 
-  out += "<tr><td>Датчик перестает видеть расстояние (Машина в пене). Файл 01/002.mp3</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_NAN_ENABLE","1",jsonConfig["MP3"]["NAN"]["ENABLE"].as<bool>());
-  out += "</td><td>";
-  HTTP_InputInt1(out,"MP3_NAN_DELAY",jsonConfig["MP3"]["NAN"]["DELAY"].as<int>(),1,3600);
-  out += "</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_NAN_LOOP","1",jsonConfig["MP3"]["NAN"]["LOOP"].as<bool>());
-  out += "</td><td>";
-  out += "<input type='submit' name='MP3_NAN_PLAY' value='▶' class='btn'>";
-  out += "</td></tr>\n";
-
-  out += "<tr><td>В боксе долго находится автмомбиль. Файл 01/003.mp3</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_BUSY1_ENABLE","1",jsonConfig["MP3"]["BUSY1"]["ENABLE"].as<bool>());
-  out += "</td><td>";
-  HTTP_InputInt1(out,"MP3_BUSY1_DELAY",jsonConfig["MP3"]["BUSY1"]["DELAY"].as<int>(),1,3600);
-  out += "</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_BUSY1_LOOP","1",jsonConfig["MP3"]["BUSY1"]["LOOP"].as<bool>());
-  out += "</td><td>";
-  out += "<input type='submit' name='MP3_BUSY1_PLAY' value='▶' class='btn'>";
-  out += "</td></tr>\n";
-
-  out += "<tr><td>Автомобиль слишком долго в доксе или датчик \"залип\". Файл 01/004.mp3</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_BUSY2_ENABLE","1",jsonConfig["MP3"]["BUSY2"]["ENABLE"].as<bool>());
-  out += "</td><td>";
-  HTTP_InputInt1(out,"MP3_BUSY2_DELAY",jsonConfig["MP3"]["BUSY2"]["DELAY"].as<int>(),1,3600);
-  out += "</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_BUSY2_LOOP","1",jsonConfig["MP3"]["BUSY2"]["LOOP"].as<bool>());
-  out += "</td><td>";
-  out += "<input type='submit' name='MP3_BUSY2_PLAY' value='▶' class='btn'>";
-  out += "</td></tr>\n";
-
-  out += "<tr><td>После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 01/005.mp3</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_FREE_NAN_ENABLE","1",jsonConfig["MP3"]["FREE_NAN"]["ENABLE"].as<bool>());
-  out += "</td><td>";
-  HTTP_InputInt1(out,"MP3_FREE_NAN_DELAY",jsonConfig["MP3"]["FREE_NAN"]["DELAY"].as<int>(),1,3600);
-  out += "</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_FREE_NAN_LOOP","1",jsonConfig["MP3"]["FREE_NAN"]["LOOP"].as<bool>());
-  out += "</td><td>";
-  out += "<input type='submit' name='MP3_FREE_NAN_PLAY' value='▶' class='btn'>";
-  out += "</td></tr>\n";
-
-  out += "<tr><td>Выезд автомобиля. Бокс свободен. (Можно загрузить рекламу) Файл 01/006.mp3</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_FREE_ENABLE","1",jsonConfig["MP3"]["FREE"]["ENABLE"].as<bool>());
-  out += "</td><td>";
-  HTTP_InputInt1(out,"MP3_FREE_DELAY",jsonConfig["MP3"]["FREE"]["DELAY"].as<int>(),1,3600);
-  out += "</td><td>";
-  HTTP_print_input_checkbox(out,"MP3_FREE_LOOP","1",jsonConfig["MP3"]["FREE"]["LOOP"].as<bool>());
-  out += "</td><td>";
-  out += "<input type='submit' name='MP3_FREE_PLAY' value='▶' class='btn'>";
-  out += "</td></tr>\n";
-
+  HTTP_print_MP3_7(out,"Момент заезда автомобиля. Файл 01/001.mp3", "BUSY" );
+  HTTP_print_MP3_7(out,"Датчик перестает видеть расстояние (Машина в пене). Файл 01/002.mp3", "NAN" );
+  HTTP_print_MP3_7(out,"В боксе долго находится автмомбиль. Файл 01/003.mp3", "BUSY1" );
+  HTTP_print_MP3_7(out,"Автомобиль слишком долго в доксе или датчик \"залип\". Файл 01/004.mp3", "BUSY2" );
+  HTTP_print_MP3_7(out,"После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 01/005.mp3", "FREE_NAN" );
+  HTTP_print_MP3_7(out,"Выезд автомобиля. Бокс свободен. (Можно загрузить рекламу) Файл 01/006.mp3", "FREE" );
   out += "</table>\n";
-
-
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 
 }
 
+
+void HTTP_print_MP3_7(String &out, char *text, char *name){
+   char s[32];
+   out += "<tr><td>";
+   out += text;
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_ENABLE",name);
+   HTTP_print_input_checkbox(out,s,"1",jsonConfig["MP3"][name]["ENABLE"].as<bool>());
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_DELAY",name);
+   HTTP_InputInt1(out,s,jsonConfig["MP3"][name]["DELAY"].as<int>(),1,3600);
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_LOOP",name);
+   HTTP_print_input_checkbox(out,s,"1",jsonConfig["MP3"][name]["LOOP"].as<bool>());
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_PLAY",name);
+   out += "<input type='submit' name='";out += s; out += "' value='▶' class='btn'>";
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_COLOR",name);
+   HTTP_print_color(out, jsonConfig["MP3"][name]["COLOR"].as<uint32_t>(), s);
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_COLOR_TM",name);
+   HTTP_InputInt1(out,s,jsonConfig["MP3"][name]["COLOR_TM"].as<int>(),1,100);
+   out += "</td></tr>\n";
+    
+}
 
 
 bool HTTP_checkArgs(int current){
@@ -967,28 +940,28 @@ bool HTTP_checkArgs(int current){
    }
    else if( server.hasArg("Reboot") ){ 
        HTTP_goto("/", 20000, "Перезагрузка ...");
-       delay(2000);
+       vTaskDelay(2000);
 //       HTTP_printMessage("Перезагрузка ...");
        ESP.restart();  
        return true;
    }
    else if( server.hasArg("MP3_BUSY_PLAY") ){
-       myDFPlayer.playFolder(jsonConfig["MP3"]["BUSY"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY"]["NUM"].as<int>());
+       playMP3(jsonConfig["MP3"]["BUSY"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY"]["NUM"].as<int>());
    }
    else if( server.hasArg("MP3_NAN_PLAY") ){
-       myDFPlayer.playFolder(jsonConfig["MP3"]["NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["NAN"]["NUM"].as<int>());
+       playMP3(jsonConfig["MP3"]["NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["NAN"]["NUM"].as<int>());
    }
    else if( server.hasArg("MP3_BUSY1_PLAY") ){
-       myDFPlayer.playFolder(jsonConfig["MP3"]["BUSY1"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY1"]["NUM"].as<int>());
+       playMP3(jsonConfig["MP3"]["BUSY1"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY1"]["NUM"].as<int>());
    }
    else if( server.hasArg("MP3_BUSY2_PLAY") ){
-       myDFPlayer.playFolder(jsonConfig["MP3"]["BUSY2"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY2"]["NUM"].as<int>());
+       playMP3(jsonConfig["MP3"]["BUSY2"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY2"]["NUM"].as<int>());
    }
    else if( server.hasArg("MP3_FREE_NAN_PLAY") ){
-       myDFPlayer.playFolder(jsonConfig["MP3"]["FREE_NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE_NAN"]["NUM"].as<int>());
+       playMP3(jsonConfig["MP3"]["FREE_NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE_NAN"]["NUM"].as<int>());
    }
    else if( server.hasArg("MP3_FREE_PLAY") ){
-       myDFPlayer.playFolder(jsonConfig["MP3"]["FREE"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE"]["NUM"].as<int>());
+       playMP3(jsonConfig["MP3"]["FREE"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE"]["NUM"].as<int>());
    }
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
@@ -1008,57 +981,25 @@ bool HTTP_checkArgs(int current){
 /// RGB2
       if(server.hasArg("FLAG_CONFIG3")  ){
          jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;   
-         jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
+//         jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
       }
       if(server.hasArg("ColorFree2")  )jsonConfig["RGB2"]["FREE"] = HTMLtoInt(server.arg("ColorFree2").c_str());
       if(server.hasArg("ColorBusy2")  )jsonConfig["RGB2"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy2").c_str());
       if(server.hasArg("ColorBlink2") )jsonConfig["RGB2"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink2").c_str());
-      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3").c_str());
+//      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3").c_str());
       if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
-      if( server.hasArg("isColorNan2") )jsonConfig["RGB2"]["IS_NAN_MODE"] = true;
+//      if( server.hasArg("isColorNan2") )jsonConfig["RGB2"]["IS_NAN_MODE"] = true;
       if(server.hasArg("Brightness2")  )jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();
 
 // MP3
       if(server.hasArg("FLAG_CONFIG3")  ){
-         jsonConfig["MP3"]["BUSY"]["ENABLE"] = false;
-         jsonConfig["MP3"]["BUSY"]["LOOP"] = false;
-         jsonConfig["MP3"]["NAN"]["ENABLE"] = false;
-         jsonConfig["MP3"]["NAN"]["LOOP"] = false;
-         jsonConfig["MP3"]["BUSY1"]["ENABLE"] = false;
-         jsonConfig["MP3"]["BUSY1"]["LOOP"] = false;
-         jsonConfig["MP3"]["BUSY2"]["ENABLE"] = false;
-         jsonConfig["MP3"]["BUSY2"]["LOOP"] = false;
-         jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = false;
-         jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = false;
-         jsonConfig["MP3"]["FREE"]["ENABLE"] = false;
-         jsonConfig["MP3"]["FREE"]["LOOP"] = false;
+         HTTP_checkArgsMP3("BUSY");
+         HTTP_checkArgsMP3("NAN");
+         HTTP_checkArgsMP3("BUSY1");
+         HTTP_checkArgsMP3("BUSY2");
+         HTTP_checkArgsMP3("FREE_NAN");
+         HTTP_checkArgsMP3("FREE");
       }
-
-      if(server.hasArg("MP3_VOLUME")  )jsonConfig["MP3"]["VOLUNE"] = server.arg("MP3_VOLUME").toInt();
-      if(server.hasArg("MP3_BUSY_DELAY")  )jsonConfig["MP3"]["BUSY"]["DELAY"] = server.arg("MP3_BUSY_DELAY").toInt();
-      if( server.hasArg("MP3_BUSY_ENABLE") )jsonConfig["MP3"]["BUSY"]["ENABLE"] = true;
-      if( server.hasArg("MP3_BUSY_LOOP") )jsonConfig["MP3"]["BUSY"]["LOOP"] = true;
-
-      if(server.hasArg("MP3_NAN_DELAY")  )jsonConfig["MP3"]["NAN"]["DELAY"] = server.arg("MP3_NAN_DELAY").toInt();
-      if( server.hasArg("MP3_NAN_ENABLE") )jsonConfig["MP3"]["NAN"]["ENABLE"] = true;
-      if( server.hasArg("MP3_NAN_LOOP") )jsonConfig["MP3"]["NAN"]["LOOP"] = true;
-
-      if(server.hasArg("MP3_BUSY1_DELAY")  )jsonConfig["MP3"]["BUSY1"]["DELAY"] = server.arg("MP3_BUSY1_DELAY").toInt();
-      if( server.hasArg("MP3_BUSY1_ENABLE") )jsonConfig["MP3"]["BUSY1"]["ENABLE"] = true;
-      if( server.hasArg("MP3_BUSY1_LOOP") )jsonConfig["MP3"]["BUSY1"]["LOOP"] = true;
-
-      if(server.hasArg("MP3_BUSY2_DELAY")  )jsonConfig["MP3"]["BUSY2"]["DELAY"] = server.arg("MP3_BUSY2_DELAY").toInt();
-      if( server.hasArg("MP3_BUSY2_ENABLE") )jsonConfig["MP3"]["BUSY2"]["ENABLE"] = true;
-      if( server.hasArg("MP3_BUSY2_LOOP") )jsonConfig["MP3"]["BUSY2"]["LOOP"] = true;
-
-      if(server.hasArg("MP3_FREE_NAN_DELAY")  )jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = server.arg("MP3_FREE_NAN_DELAY").toInt();
-      if( server.hasArg("MP3_FREE_NAN_ENABLE") )jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = true;
-      if( server.hasArg("MP3_FREE_NAN_LOOP") )jsonConfig["MP3"]["FREE_NAN"]["LOOP"] = true;
-
-      if(server.hasArg("MP3_FREE_DELAY")  )jsonConfig["MP3"]["FREE"]["DELAY"] = server.arg("MP3_FREE_DELAY").toInt();
-      if( server.hasArg("MP3_FREE_ENABLE") )jsonConfig["MP3"]["FREE"]["ENABLE"] = true;
-      if( server.hasArg("MP3_FREE_LOOP") )jsonConfig["MP3"]["FREE"]["LOOP"] = true;
-
 
 /// NET
       if(server.hasArg("FLAG_CONFIG2")  ){
@@ -1160,20 +1101,41 @@ if( _reboot ){
    if( _save ){
       configSave(); 
 //      configRead();      
-      ledSetColor(COLOR_SAVE,true);
+      SaveRGB1->Save(4,ET_NORMAL,0,0,COLOR_SAVE, COLOR_NONE);
+      SaveRGB2->Save(4,ET_NORMAL,0,0,COLOR_SAVE, COLOR_NONE);
+
+//      ledSetColor(COLOR_SAVE,true);
 //      HTTP_printMessage("Сохранение параметров ...");
 
       HTTP_goto(pages[current], 1000, "Сохранение параметров ...");
 //      if( EA_Config.isWiFiAlways || isWiFiAlways1)ledSetWiFiMode(LED_WIFI_AP1);
 //      else ledSetWiFiMode(LED_WIFI_AP);
 //      ledSetBaseMode(LED_SAVE,true);
-      delay(300);
-      ledRestoreColor();
+
+      vTaskDelay(500);
+      SaveRGB1->Restore(4);
+      SaveRGB2->Restore(4);
+//      ledRestoreColor();
       return true;
    }
    return false;
 }
 
+void HTTP_checkArgsMP3(char *name){
+   char s[32];
+   sprintf(s,"MP3_%s_DELAY",name);
+   if( server.hasArg(s) )jsonConfig["MP3"][name]["DELAY"] = server.arg(s).toInt();
+   sprintf(s,"MP3_%s_ENABLE",name);
+   if( server.hasArg(s) )jsonConfig["MP3"][name]["ENABLE"] = true;
+   else jsonConfig["MP3"][name]["ENABLE"] = false;
+   sprintf(s,"MP3_%s_LOOP",name);
+   if( server.hasArg(s) )jsonConfig["MP3"][name]["LOOP"] = true;
+   else jsonConfig["MP3"][name]["LOOP"] = false;
+   sprintf(s,"MP3_%s_COLOR",name);
+   if( server.hasArg(s) )jsonConfig["MP3"][name]["COLOR"] = HTMLtoInt(server.arg(s).c_str());
+   sprintf(s,"MP3_%s_COLOR_TM",name);
+   if( server.hasArg(s))jsonConfig["MP3"][name]["COLOR_TM"] = server.arg(s).toInt();   
+}
 
 
 /**
@@ -1362,7 +1324,7 @@ void HTTP_InputInt1(String &out,
    out += " max=";
    out += String(max);
 
-   out += ">";
+   out += " style=\"width: 3em\">";
 }
 
 void HTTP_InputHidden(String &out, char *name, char *value){
@@ -1514,12 +1476,24 @@ void  HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value
   out += "</td>";
 }
 
-void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2){
+void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1, bool check){
    char s[64];
+   out += "<tr><td colspan=5>&nbsp;</td></tr>\n";
+
    out += "<tr>\n";
-   out += "<td>";
-   out += label, 
-   out += "</td>";
+   if( name1 == NULL ){
+      out += "<td colspan=2>";
+      out += label, 
+      out += "</td>";
+   }
+   else {
+      out += "<td>";
+      HTTP_print_input_checkbox(out,name1,"1",check);
+      out += "</td>";
+      out += "<td>";
+      out += label, 
+      out += "</td>";
+   }
    sprintf(s,"%06lX",color1);
    out += "<td><button style=\"background-color: ";
    out += s;
@@ -1546,6 +1520,18 @@ void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uin
    out += "'></td>\n";
    out += "</tr>\n"; 
 }
+
+void HTTP_print_color(String &out, uint32_t color, char *name){
+   char s[64];
+   sprintf(s,"%06lX",color);
+   out += "<input type='color' value='#";
+   out += s;
+   out += "' name='";
+   out += name;
+   out += "'>\n";
+}
+
+
 
 void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table){
   if(is_table)out += "<table>"; 

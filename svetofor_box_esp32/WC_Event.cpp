@@ -195,21 +195,22 @@ void TEventRGB::copyTo(TEventRGB *dist){
 // Класс TEventMP3
 //***********************************************************************************************************************************************************************************
 TEventMP3::TEventMP3(uint32_t _delayOn , uint32_t _delayOff, void (*_handle)(bool), int _dir, int _sound, bool _loop ):
-   TEvent( _delayOn, _delayOff, _handle ){
+    TEvent( _delayOn, _delayOff, _handle ){
     setSound(_dir, _sound, _loop);
 }
-
-
-void TEventMP3::setSound(int _dir, int _sound, bool _loop){
-    Dir    = _dir;
-    Sound  = _sound;
-    Loop   = _loop;
+   
+void TEventMP3::setSound(int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm){
+    Dir     = _dir;
+    Sound   = _sound;
+    Loop    = _loop;
+    Color   = _color;
+    ColorTM = _tm;
     Serial.printf("!!! Set MP3 %d %d %d\n",Dir,Sound,(int)Loop);
 }
 
 void TEventMP3::copyTo(TEventMP3 *dist){
     TEvent::copyTo(dist);
-    dist->setSound(Dir,Sound,Loop);
+    dist->setSound(Dir,Sound,Loop,Color,ColorTM);
 }
 
 //***********************************************************************************************************************************************************************************
@@ -227,7 +228,7 @@ void TSaveRGB::Clear(){
 
 int TSaveRGB::Push(int _id ){
     if( Count >= MAX_RGB_STACK_ITEMS )return -1;
-//    Serial.printf("!!! Save push %d %d #%lX #%lX\n",_id,EventRGB->Type,EventRGB->Color1,EventRGB->Color2);
+    Serial.printf("!!! Save push %d %d #%lX #%lX\n",_id,EventRGB->Type,EventRGB->Color1,EventRGB->Color2);
 
     StackRGB[Count].ID      = _id;
     StackRGB[Count].Type    = EventRGB->Type;

@@ -135,13 +135,13 @@ void led2SetColor0(uint32_t _color){
 
 void led2SetColor(uint32_t _color, bool _flag){
    if(_flag)saveColor2 = _color;
-   for( int i=1; i<COUNT_RGB2; i++)strip2->setPixelColor(i,_color);
+   for( int i=0; i<COUNT_RGB2; i++)strip2->setPixelColor(i,_color);
    strip2->show();
 }
 
 void led2SetColor2(uint32_t _color1, uint32_t _color2, bool _flag){
    if(_flag)saveColor2 = _color2;
-   for( int i=1; i<COUNT_RGB2; i++)
+   for( int i=0; i<COUNT_RGB2; i++)
       if( i%2 ){
          if( _color1 != 0xFFFFFFFF ) strip2->setPixelColor(i,_color1); 
       }

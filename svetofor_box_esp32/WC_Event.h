@@ -28,7 +28,6 @@ enum TEVENT_STATUS_t {
    ES_OFF      = 4
 };
 
-
 typedef struct {
    int ID;
    TEVENT_TYPE_t Type;
@@ -87,10 +86,12 @@ class TEventRGB: public TEvent {
 class TEventMP3: public TEvent {
    public:
        TEventMP3(uint32_t _delayOn = 0, uint32_t _delayOff = 0, void (*_handle)(bool) = NULL, int _dir = 1, int _sound = 1, bool _loop = false );
-       void setSound(int _dir, int _sound, bool _loop = false);
+       void setSound(int _dir, int _sound, bool _loop = false, uint32_t _color = COLOR_MP3_1, uint32_t _tm = 5000);
        int Dir;
        int Sound; 
        bool Loop;
+       uint32_t Color;
+       uint32_t ColorTM;
    void save(TEventMP3 *dist);
    void copyTo(TEventMP3 *src);
 };
