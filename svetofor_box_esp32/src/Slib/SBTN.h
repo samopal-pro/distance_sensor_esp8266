@@ -3,10 +3,11 @@
 #include "Arduino.h"
 
 typedef enum {
-   SB_NONE    = 0,
-   SB_PRESS   = 1,
-   SB_RELEASE = 2,
-   SB_TIMER   = 3
+   SB_NONE        = 0,
+   SB_PRESS       = 1,
+   SB_RELEASE     = 2,
+   SB_TIMER       = 3,
+   SB_TIMER_COUNT = 4
 } SBTN_EVENT_t;
 
 

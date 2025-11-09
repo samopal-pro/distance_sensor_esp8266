@@ -5,9 +5,9 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.8"
+#define SOFTWARE_V           "10.0.9"
 #define HARDWARE_V           "10.0.0"
-#define CONFIG_V             "10.0.8"
+#define CONFIG_V             "10.0.9"
 
 /*
 #define SENSOR_TYPE_NONE     0
@@ -40,7 +40,7 @@ enum SENSOR_STAT_t {
   SS_NAN_BUSY  = -3
 };
 
-#define DEFAULT_SENSOR_TYPE SENSOR_LD2413_UART 
+#define DEFAULT_SENSOR_TYPE SENSOR_SR04T 
 
 #define PIN_LORA_MOSI        23
 #define PIN_LORA_MISO        19
@@ -111,6 +111,7 @@ enum SENSOR_STAT_t {
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
 #define DEVICE_NAME            "2025_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_PASSS           "svetoforbox"
 #define DEVICE_PASS0           "superadmin"
 #define DEVICE_PASS1           "admin"
 #define SENSOR_GROUND_STATE    SS_FREE;
@@ -118,6 +119,8 @@ enum SENSOR_STAT_t {
 #define COUNT_RGB2             50   //Число светодиодов
 
 #define HTTP_PATH              "/api/1/sensor/99/"
+
+#define MP3_ADD_DIR            2
 
 
 #endif

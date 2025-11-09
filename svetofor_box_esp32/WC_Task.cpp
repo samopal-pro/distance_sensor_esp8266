@@ -31,7 +31,7 @@ uint32_t msRelay1 = 0, msRelay2 = 0;
 
 CALIBRATION_MODE_t calibrMode = CM_NONE;
 float calibrAvg = 0;
-uint16_t calibrCount = 0;
+uint16_t calibrCount = 0, calibrError = 0;
 
 uint32_t ms0 = 0, ms1 = 0;
 
@@ -139,8 +139,6 @@ void taskMP3(void *pvParameters) {
    myDFPlayer.setTimeOut(500);
    myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
    myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>());
-   vTaskDelay(250);
-   myDFPlayer.playFolder(1,123);
 //   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
    while (true) {
       uint32_t ms = millis();
@@ -191,9 +189,12 @@ void taskSensors(void *pvParameters) {
    pinMode(PIN_OUT2,OUTPUT);
    setRelay1(statRelay2); 
    if( bootCount < 1 ){
+      checkPlayMP3("99",99);
+      vTaskDelay(jsonConfig["MP3"]["99"]["COLOR_TM"].as<uint32_t>()*1000);
       startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
    }
    else {
+      playMP3(1,123);
       Distance = jsonSave["DISTANCE"].as<float>();
       SensorOn = (SENSOR_STAT_t)jsonSave["STATE_ON"].as<int>();
    }
@@ -225,6 +226,9 @@ void taskSensors(void *pvParameters) {
          if( !isnan(Distance) ){
              calibrAvg += Distance;
              calibrCount++;
+         }
+         else {
+             calibrError++;
          }
       }
       if( ms0 == 0 || ms0 > ms || ms-ms0 > 5000 ){
@@ -387,6 +391,7 @@ void startCalibrate(uint32_t _delay){
    Serial.println(F("!!! Calibrate Wait ... "));
 #endif
    EventMP3->reset();
+   checkPlayMP3("97",97);
    EventCalibrate->setType(ET_PULSE,30000,0);
    EventCalibrate->on(_delay);
    calibrMode = CM_WAIT;
@@ -407,6 +412,7 @@ void handleCalibrate(bool _flag){
       calibrMode = CM_ON;
       calibrAvg = 0;
       calibrCount = 0;
+      calibrError = 0;
       SaveRGB1->Restore(2);
       SaveRGB1->Save(2,ET_NORMAL,0,0,COLOR_GROUND, COLOR_NONE);
       SaveRGB2->Restore(2);
@@ -417,6 +423,8 @@ void handleCalibrate(bool _flag){
       calibrMode   = CM_NONE;
       lastSensorOn = SS_NONE;
       if( calibrCount > 0 ){
+          if(calibrError < calibrCount)checkPlayMP3("97",93);
+          else checkPlayMP3("97",94);
           ledSetColor(COLOR_SAVE);
           led2SetColor(COLOR_SAVE);
           float x = calibrAvg/calibrCount;
@@ -430,6 +438,7 @@ void handleCalibrate(bool _flag){
           configRead();      
      }
      else {
+          checkPlayMP3("99",95);
           ledSetColor(COLOR_NAN);
           led2SetColor(COLOR_NAN);
      }
@@ -716,6 +725,7 @@ void taskButton(void *pvParameters){
              SaveRGB1->Save(3,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
              SaveRGB2->Save(3,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
              if( btn_count == 5 ){
+                checkPlayMP3("92",92);
                 ledSetColor(COLOR_ERROR);
                 btn_count = 0;
                 jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
@@ -738,15 +748,20 @@ void taskButton(void *pvParameters){
              }
              Serial.printf("!!! BTN Release %d\n",(int)tm);
              break;
+          case SB_TIMER_COUNT:
+             checkPlayMP3("97",96);
+             break;   
           case SB_TIMER:
-            SaveRGB1->Restore(3);
-            SaveRGB2->Restore(3);
+             checkPlayMP3("98",98);
+             SaveRGB1->Restore(3);
+             SaveRGB2->Restore(3);
              Serial.printf("!!! BTN Timer %d\n",(int)btn.getPressTime());
              ledSetColor(COLOR_ERROR);
-             jsonSave["BOOT_COUNT"]  = 0;
-             saveSave();
+//             jsonSave["BOOT_COUNT"]  = 0;
+//             saveSave();
              jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
              jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
+             jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль администратора
              configSave();
              delay(1000);    
              ESP.restart();  
@@ -978,3 +993,6 @@ void stopMP3(){
     cmdMP3  = CMP3_STOP;
 }
 
+void checkPlayMP3(  char *check, int num ){
+    if( jsonConfig["MP3"][check]["ENABLE"].as<bool>() )playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(),num);
+}

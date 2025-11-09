@@ -55,6 +55,7 @@ void configDefault(){
    jsonConfig["SYSTEM"]["AP_START"]    = AP_ALWAYS;  
    jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
+   jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль светофорбока (мегоадминистратора)
 // Параметры моединения WiFi
    jsonConfig["WIFI"]["NAME"]              = "";                         //Имя сети WiFi
    jsonConfig["WIFI"]["PASS"]              = "";                         //Пароль сети WiFi
@@ -91,7 +92,7 @@ void configDefault(){
    jsonConfig["CALIBR"]["NUMBER"]      = 10;                          //Количество корректных измерений при калибровке
 
 // Настройка подсветки датчика RGB1      
-   jsonConfig["RGB1"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB1"]["BRIGHTNESS"]    = 5;                          // Яркость ленты 1-10
    jsonConfig["RGB1"]["FREE"]          = COLOR_FREE_DEFAULT;
    jsonConfig["RGB1"]["FREE_BLINK"]    = COLOR_BLINK_DEFAULT;
    jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
@@ -100,7 +101,7 @@ void configDefault(){
    jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_IGNORE;
 
 // Настройка подсветки датчика RGB2      
-   jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB2"]["BRIGHTNESS"]    = 5;                          // Яркость ленты 1-10
    jsonConfig["RGB2"]["FREE"]          = COLOR_FREE_DEFAULT;
    jsonConfig["RGB2"]["FREE_BLINK"]    = COLOR_BLINK_DEFAULT;
    jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
@@ -182,6 +183,26 @@ void configDefault(){
    jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
    jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;                          // Задержка при отключении реле
 
+// Стартовые настройки
+   jsonConfig["MP3"]["ADD"]["DIR"]     = 2;                          // Каталог с дорожками дополнительных сообщений
+   jsonConfig["BOOT0"]["DELAY0"]       = 10;                         // Задержка начала первой калибровки при нажатии "Активировать"
+   jsonConfig["BOOT0"]["DELAY10"]      = 10;                         // Задержка начала первой калибровки при удержании 10 сек кнопки 
+   
+   jsonConfig["MP3"]["99"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["99"]["DELAY"]    = 10; 
+   jsonConfig["MP3"]["99"]["COLOR_TM"] = 10; 
+   
+   jsonConfig["MP3"]["98"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["97"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["96"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["93"]["ENABLE"]   = true; 
+//   jsonConfig["MP3"]["93"]["COLOR_TM"] = 10; 
+   jsonConfig["MP3"]["92"]["ENABLE"]   = true; 
+//   jsonConfig["MP3"]["92"]["COLOR_TM"] = 10; 
+
+   jsonConfig["MP3"]["92"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["89"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["88"]["ENABLE"]   = true; 
 
 
 }

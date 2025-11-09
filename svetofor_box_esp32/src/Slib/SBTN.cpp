@@ -122,7 +122,10 @@ SBTN_EVENT_t SBTN_base::loop(){
          return SB_RELEASE;    
       }
    }
-   if( ms_delta > timer_reset_count_event )count_event = 0;
+   if( ms_delta > timer_reset_count_event && count_event > 0 ){
+	  count_event = 0;
+	  return SB_TIMER_COUNT;
+   }
    return SB_NONE;
 }
 
