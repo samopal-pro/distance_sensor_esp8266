@@ -119,6 +119,7 @@ SBTN_EVENT_t SBTN_base::loop(){
          }
          if( ReleasePtr != NULL )ReleasePtr(number_btn,count_event,ms_delta);   
 //         ms_press = 0;    
+//	     count_event = 0;
          return SB_RELEASE;    
       }
    }

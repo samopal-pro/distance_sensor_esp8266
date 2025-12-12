@@ -52,7 +52,7 @@ void taskMP3(void *pvParameters);
 void setVolumeMP3();
 void playMP3(int dir, int num);
 void stopMP3();
-void checkPlayMP3(char *check, int num);
+bool checkPlayMP3(char *check, int num);
 
 void handleSensor( bool _flag  );
 void handleRelay1( bool _flag  );

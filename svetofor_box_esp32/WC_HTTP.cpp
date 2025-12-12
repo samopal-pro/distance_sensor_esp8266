@@ -191,6 +191,7 @@ void HTTP_begin(void){
    server.on ( "/relay3.png", HTTP_handlePngRelay3 );
    server.on ( "/relay4.png", HTTP_handlePngRelay4 );
    server.on ( "/relay5.png", HTTP_handlePngRelay5 );
+   server.on ( "/playMP3", HTTP_handlePlayMP3 );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -243,7 +244,12 @@ void HTTP_loop(void){
  */
 void HTTP_printJS(String &out){
    out += "<script>\n";   
-   out += "function setColorVal(id,color){  event.preventDefault();document.getElementById(id).value = color; }";
+   out += "function setColorVal(id,color){  event.preventDefault();document.getElementById(id).value = color; }\n";
+
+   out += "function playMP3(dir,num){ fetch(\"/playMP3?DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
+//  out += " .then(response => { console.log(\"Запрос MP3, статус:\", response.status);return false; })\n";
+//   out += " .catch(err => console.error(\"Ошибка запроса MP3:\", err));return false; });\n";
+//   out += "}";
    out += "</script>\n";     
 }
 
@@ -446,7 +452,7 @@ void HTTP_handleRoot(void) {
 // Блок №1
   out += "<fieldset>\n";
 
-  out += "<iframe src='/distance' width=100% height=80 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
+  out += "<iframe src='/distance' width=100% height=100 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
   out += "<p class='t1'> расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.";
   out += "Если датчик светится МАЛИНОВЫМ - НЕ ОБНОВЛЯЙТЕ СТРАНИЦУ Сначала расположите датчик так, чтобы он стабильно замерял, видел расстояние и не светился малиновым.</p>";
   out += "</fieldset>\n";
@@ -936,7 +942,7 @@ void HTTP_printConfig2(String &out){
 * Настройка подсветки
 **/
 void HTTP_printConfig4(String &out){
-int Dir = jsonConfig["MP3"]["BUSY"]["DIR"].as<int>();
+int Dir = jsonConfig["MP3"]["ADD"]["DIR"].as<int>();
 
   out += "<fieldset>\n";
   out += "<legend>Первый запуск</legend>\n";
@@ -953,6 +959,18 @@ int Dir = jsonConfig["MP3"]["BUSY"]["DIR"].as<int>();
 //  out += "<tr><td width='500'>Оповещение</td><td width='50'>Тест</td><td width='50'>Длит.</td><tr>\n";
   HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 02/99.mp3",Dir,99,jsonConfig["MP3"]["99"]["COLOR_TM"].as<int>());
   out += "</table>\n";
+
+
+  HTTP_print_input_checkbox(out,"MP3_100_ENABLE","1",jsonConfig["MP3"]["100"]["ENABLE"].as<bool>());
+  out += "Включить звуковые оповещения для каждого запуска";
+//  out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
+  out += "<table width=100%>\n";
+  out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
+
+  HTTP_print_MP3(out,"Запуск датчика, приветствие. Дорожка 02/100.mp3",Dir,100);
+  out += "</table>\n";
+
+
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 
@@ -1003,6 +1021,8 @@ int Dir = jsonConfig["MP3"]["BUSY"]["DIR"].as<int>();
   out += "Включить звуковые оповещения для WEB интерфейса";
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
+  HTTP_print_MP3(out,"Сброс до заводских настроек. Дорожка 02/91.mp3",Dir,91);
+  HTTP_print_MP3(out,"Обновление прошивки. Дорожка 02/90.mp3",Dir,90);
   HTTP_print_MP3(out,"Нажатие на кнопку \"Обновление прошивки\". Дорожка 02/89.mp3",Dir,89);
   HTTP_print_MP3(out,"Успешное обновление прошивки. Дорожка 02/88.mp3",Dir,88);
   HTTP_print_MP3(out,"Ошибка обновления прошивки. Дорожка 02/87.mp3",Dir,87);
@@ -1032,7 +1052,12 @@ void HTTP_print_MP3_7(String &out, char *text, char *name){
    HTTP_print_input_checkbox(out,s,"1",jsonConfig["MP3"][name]["LOOP"].as<bool>());
    out += "</td><td>";
    sprintf(s,"MP3_%s_PLAY",name);
-   out += "<input type='submit' name='";out += s; out += "' value='▶' class='btn'>";
+//   out += "<input type='submit' name='";out += s; out += "' value='▶' class='btn'>";
+   out += "<input type='button' value='▶' class='btn' onClick='playMP3(";
+   out += jsonConfig["MP3"][name]["DIR"].as<int>();
+   out += ",";
+   out += jsonConfig["MP3"][name]["NUM"].as<int>();
+   out += ");'>";
 //   out += "<input type='submit' name='MP3_PLAY' value='▶' class='btn'>";
 //   HTTP_InputHidden(out,"MP3_DIR",(char *)jsonConfig["MP3"][name]["DIR"].as<const char *>());
 //   HTTP_InputHidden(out,"MP3_NUM",(char *)jsonConfig["MP3"][name]["NUM"].as<const char *>());
@@ -1064,7 +1089,12 @@ void HTTP_print_MP3(String &out, char *text,int dir, int num, int _delay){
    }
    out += "</td><td align='right'>"; 
    sprintf(s,"%02d",num);
-   out += "<input type='submit' name='MP3_"; out += s; out += "_PLAY' value='▶' class='btn'>";
+//   out += "<input type='submit' name='MP3_"; out += s; out += "_PLAY' value='▶' class='btn' onClick='playMP3(";
+   out += "<input type='button' value='▶' class='btn' onClick='playMP3(";
+   out += dir;
+   out += ",";
+   out += num;
+   out += ");'>";
 //   sprintf(s,"%02d",dir);
 //   HTTP_InputHidden(out,"MP3_DIR",s);
 //   sprintf(s,"%02d",num);
@@ -1083,6 +1113,8 @@ bool HTTP_checkArgs(int current){
        startCalibrate(1000);
    }
    else if( server.hasArg("Default") ){ 
+       checkPlayMP3("89",91);
+
        String ss = jsonConfig["SYSTEM"]["NAME"].as<String>();
        configDefault();
        jsonConfig["SYSTEM"]["NAME"] = ss;
@@ -1090,13 +1122,14 @@ bool HTTP_checkArgs(int current){
        configRead();
 //       HTTP_printMessage("Загрузка заводских параметров. Перезагрузка ...");
        HTTP_goto("/", 2000, "Загрузка заводских параметров. Перезагрузка ..."); //1.12.24
+       vTaskDelay(5000);
        ESP.restart();  
        return true;
    }
    else if( server.hasArg("Reboot") ){ 
        checkPlayMP3("89",86);
        HTTP_goto("/", 20000, "Перезагрузка ...");
-       vTaskDelay(2000);
+       vTaskDelay(5000);
 //       HTTP_printMessage("Перезагрузка ...");
        ESP.restart();  
        return true;
@@ -1263,6 +1296,8 @@ bool HTTP_checkArgs(int current){
 
       if(server.hasArg("FLAG_CONFIG4")  ){
          if( server.hasArg("MP3_99_COLOR_TM"))jsonConfig["MP3"]["99"]["COLOR_TM"] = server.arg("MP3_99_COLOR_TM").toInt();
+         if(server.hasArg("MP3_100_ENABLE"))jsonConfig["MP3"]["100"]["ENABLE"] = true;
+         else jsonConfig["MP3"]["100"]["ENABLE"] = false;
          if(server.hasArg("MP3_99_ENABLE"))jsonConfig["MP3"]["99"]["ENABLE"] = true;
          else jsonConfig["MP3"]["99"]["ENABLE"] = false;
          if(server.hasArg("MP3_98_ENABLE"))jsonConfig["MP3"]["98"]["ENABLE"] = true;
@@ -1311,6 +1346,17 @@ if( _reboot ){
    }
    return false;
 }
+
+
+void HTTP_handlePlayMP3(void){
+  int dir =  server.arg("DIR").toInt();
+  int num =  server.arg("NUM").toInt();
+  Serial.printf("!!! MP3 %d %d ok\n",dir,num); 
+//  if( HTTP_redirect() )return;
+  playMP3(dir, num);         
+
+}
+
 
 void HTTP_checkArgsMP3(char *name){
    char s[32];
@@ -1943,12 +1989,17 @@ void HTTP_handleUpload() {
    is_update = true;
   String content;
   HTTP_printHeader(content,"Update",0);
-  content += "<script>\n";
+//  content += "<script>\n";
 //  content += "function F1(){$('#main').html(\"Begin firmware update. Please wait 30 sec\");}\n";
-  content += "</script>\n";
+//  content += "</script>\n";
+  checkPlayMP3("89",90);
+
+
   content += " <form method='POST' action='/update1' enctype='multipart/form-data'>\n";
   content += "  <fieldset>\n";
-// content += "    <legend>Upload firmware</legend>\n";
+  content += "    <legend>Обновление прошивки</legend>\n";
+  content += "<p class='t1'>Для обновление прошивки выберите файл с прошивкой нажмите \"Update\" ";
+  content += "Дождитесь завершения прошивки и перезагрузки датчика.</p>";
 //  content += "    <p><label class=\"file-upload\">";
   content += "    <p><input type='file' name='update' id=\"userfile\" size=\"30\">\n";
 //  content += "    <span id=\"userfile-name\">Not file firmware</span>\n";

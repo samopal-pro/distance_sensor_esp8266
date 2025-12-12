@@ -11,7 +11,7 @@ TEventRGB *EventRGB1, *EventRGB2;
 TSaveRGB *SaveRGB1, *SaveRGB2;
 
 
-TEventMP3 *EventMP3;
+TEventMP3 *EventMP3 = NULL;
 TEvent *EventCalibrate; 
 
 bool isDFPlayer = false;
@@ -64,7 +64,9 @@ void tasksStart() {
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
   sensorSemaphore = xSemaphoreCreateMutex();
   xTaskCreateUniversal(taskMP3, "mp3", 10000, NULL, 1, NULL, CORE);
+  vTaskDelay(500);
   xTaskCreateUniversal(taskEvents, "events", 30000, NULL, 3, NULL, CORE);
+  vTaskDelay(500);
 
   xTaskCreateUniversal(taskSensors, "sensors", 30000, NULL, 4, NULL, CORE);
   //    vTaskDelay(500);
@@ -103,9 +105,6 @@ void taskEvents(void *pvParameters) {
 //   EventMP3            = new TEventMP3(0,0,handleMP3,1,1,false);
    EventCalibrate      = new TEvent(0,0,handleCalibrate);
 
-   setEventRGB1( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
-   setEventRGB2( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
-
 //   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
    while (true) {
       uint32_t ms = millis();
@@ -132,6 +131,7 @@ void taskMP3(void *pvParameters) {
 #if defined(DEBUG_SERIAL)
    Serial.println(F("!!! MP3 task start"));
 #endif
+
    DFRobotDFPlayerMini myDFPlayer;
    EventMP3            = new TEventMP3(0,0,handleMP3,1,1,false);
    FPSerial.begin(9600, SERIAL_8N1, /*rx =*/PIN_RX1, /*tx =*/PIN_TX1);
@@ -139,6 +139,8 @@ void taskMP3(void *pvParameters) {
    myDFPlayer.setTimeOut(500);
    myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
    myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>());
+   checkPlayMP3("100",100);
+
 //   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
    while (true) {
       uint32_t ms = millis();
@@ -182,19 +184,24 @@ void taskSensors(void *pvParameters) {
    Serial.println(F("!!! Sensors task start"));
 #endif
    ledInit();
+   setEventRGB1( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+   setEventRGB2( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
    sensor = new MySensor();
    sensor->init();
    pinMode(PIN_OUT1,OUTPUT);
    setRelay1(statRelay1); 
    pinMode(PIN_OUT2,OUTPUT);
    setRelay1(statRelay2); 
+//   checkPlayMP3("100",100);
+
    if( bootCount < 1 ){
+      vTaskDelay(2000);
       checkPlayMP3("99",99);
       vTaskDelay(jsonConfig["MP3"]["99"]["COLOR_TM"].as<uint32_t>()*1000);
       startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
    }
    else {
-      playMP3(1,123);
+//      playMP3(1,123);
       Distance = jsonSave["DISTANCE"].as<float>();
       SensorOn = (SENSOR_STAT_t)jsonSave["STATE_ON"].as<int>();
    }
@@ -294,8 +301,14 @@ void handleRelay2(bool _flag){
 */
 void handleRGB1(bool _flag){
 #if defined(DEBUG_SERIAL)
-///   Serial.print(F("!!! EventsRGB1 "));
-///   Serial.println((int)_flag);
+//   Serial.print(F("!!! EventsRGB1 "));
+//  Serial.print(EventRGB1->Type);
+//   Serial.print(" #");
+//   Serial.print(EventRGB1->Color1,HEX);
+//   Serial.print(" #");
+//   Serial.print(EventRGB1->Color2,HEX);
+//   Serial.print(' ');
+//   Serial.println((int)_flag);
 #endif
    if( _flag ){
       if( EventRGB1->Type == ET_NORMAL && EventRGB1->Color2 != COLOR_NONE )ledSetColor2(EventRGB1->Color1,EventRGB1->Color2);
@@ -423,8 +436,9 @@ void handleCalibrate(bool _flag){
       calibrMode   = CM_NONE;
       lastSensorOn = SS_NONE;
       if( calibrCount > 0 ){
-          if(calibrError < calibrCount)checkPlayMP3("97",93);
-          else checkPlayMP3("97",94);
+          bool ret = false;
+          if(calibrError < calibrCount)ret = checkPlayMP3("97",93);
+          else ret = checkPlayMP3("97",94);
           ledSetColor(COLOR_SAVE);
           led2SetColor(COLOR_SAVE);
           float x = calibrAvg/calibrCount;
@@ -435,10 +449,11 @@ void handleCalibrate(bool _flag){
           jsonConfig["SENSOR"]["DIST_MIN2"]    = (int)x;
           jsonConfig["SENSOR"]["DIST_MAX2"]    = (int)x;
           configSave(); 
-          configRead();      
+          configRead();
+          if( ret )vTaskDelay(3000);      
      }
      else {
-          checkPlayMP3("99",95);
+          if(checkPlayMP3("99",95))vTaskDelay(3000);
           ledSetColor(COLOR_NAN);
           led2SetColor(COLOR_NAN);
      }
@@ -459,11 +474,11 @@ void setNanMode(){
          if(isChangeNan)Serial.println(F("!!! NAN. Skiping"));
          break;  
       case NAN_VALUE_BUSY:
-         SensorOn = SS_BUSY;
+         SensorOn = SS_NAN;
          if(isChangeNan)Serial.println(F("!!! NAN. BUSY"));
          break;
       case NAN_VALUE_FREE:
-         SensorOn = SS_FREE;
+         SensorOn = SS_NAN;
          if(isChangeNan)Serial.println(F("!!! NAN. FREE"));
          break;         
    }
@@ -517,20 +532,21 @@ void setEventMP3( JsonObject _config, bool is_delay){
 * Проверка состояния сенсора и формирование нудный событий
 */
 void checkChangeOn(){
+   uint32_t _color1, _color2;
    if( SensorOn == lastSensorOn )return;
    Serial.printf("!!! Set change stat %d\n", (int)SensorOn);
    switch(SensorOn){
       case SS_BUSY:
-      case SS_NAN_BUSY:   
+//      case SS_NAN_BUSY:   
          EventSensor->on();
-         EventBusy1->on(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>()*1000);
-         EventBusy2->on(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>()*1000);
+         if(EventBusy1->State != ES_WAIT_ON && EventBusy1->State != ES_ON)EventBusy1->on(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>()*1000);
+         if(EventBusy2->State != ES_WAIT_ON && EventBusy2->State != ES_ON)EventBusy2->on(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>()*1000);
          setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), COLOR_NONE );
          setEventRGB2( ET_NORMAL, 0, 0, jsonConfig["RGB2"]["BUSY"].as<uint32_t>(), COLOR_NONE );
-         setEventMP3(jsonConfig["MP3"]["BUSY"]);
+         if(lastSensorOn != SS_NAN)setEventMP3(jsonConfig["MP3"]["BUSY"]);
          break;
       case SS_FREE:   
-      case SS_NAN_FREE:   
+//      case SS_NAN_FREE:   
          EventSensor->off();
          EventBusy1->reset();
          EventBusy2->reset();
@@ -541,13 +557,17 @@ void checkChangeOn(){
          setEventMP3(jsonConfig["MP3"]["FREE"]);
          break;
       case SS_NAN:
+      case SS_NAN_FREE:   
+      case SS_NAN_BUSY:   
          if(jsonConfig["RGB1"]["IS_NAN_MODE"].as<bool>()){
             switch(jsonConfig["RGB1"]["NAN_MODE"].as<int>()){
                case NAN_VALUE_IGNORE: 
-                  setEventRGB1( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
-                  setEventRGB2( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
-//                  setEventRGB1( ET_NORMAL, 0, 0, COLOR_NONE, COLOR_NAN); 
-//                  setEventRGB2( ET_NORMAL, 0, 0, COLOR_NONE, COLOR_NAN); 
+                  _color1 = EventRGB1->Color1;
+                  _color2 = EventRGB2->Color1;
+//                  setEventRGB1( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+//                  setEventRGB2( ET_NORMAL, 0, 0, COLOR_NAN, COLOR_NONE); 
+                  setEventRGB1( ET_NORMAL, 0, 0, _color1, COLOR_NAN); 
+                  setEventRGB2( ET_NORMAL, 0, 0, _color2, COLOR_NAN); 
                   break;
                case NAN_VALUE_BUSY:   
                   setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), COLOR_NAN); 
@@ -715,11 +735,13 @@ void taskButton(void *pvParameters){
    btn.setTimer(10000);
    btn.setTimerEventCount(4000);
    bool white_flag = false;
+   bool is_early = false;
    uint32_t tm;
    int btn_count;
    while(true){
       switch(btn.loop()){
           case SB_PRESS:
+             is_early = true;
              btn_count = (int)btn.getCountEvent();
              Serial.printf("!!! BTN Press %d\n",btn_count);
              SaveRGB1->Save(3,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
@@ -739,6 +761,7 @@ void taskButton(void *pvParameters){
             SaveRGB2->Restore(3);
              tm = btn.getPressTime();
              if( tm >= 2000 && tm < 10000 ){
+                 is_early = false;
                  startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
                  if( bootCount>=1 ){
                     if( isAP )isAP = false;
@@ -746,10 +769,11 @@ void taskButton(void *pvParameters){
  //                   Serial.printf("!!! WiFi is %d\n",(int)isAP);
                  }
              }
+//             else if( tm < 2000 && btn_cont )
              Serial.printf("!!! BTN Release %d\n",(int)tm);
              break;
           case SB_TIMER_COUNT:
-             checkPlayMP3("97",96);
+             if( is_early)checkPlayMP3("97",96);
              break;   
           case SB_TIMER:
              checkPlayMP3("98",98);
@@ -993,6 +1017,10 @@ void stopMP3(){
     cmdMP3  = CMP3_STOP;
 }
 
-void checkPlayMP3(  char *check, int num ){
-    if( jsonConfig["MP3"][check]["ENABLE"].as<bool>() )playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(),num);
+bool checkPlayMP3(  char *check, int num ){
+    if( jsonConfig["MP3"][check]["ENABLE"].as<bool>() ){
+       playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(),num);
+       return true;
+    }
+    return false;
 }

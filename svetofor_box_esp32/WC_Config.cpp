@@ -188,6 +188,7 @@ void configDefault(){
    jsonConfig["BOOT0"]["DELAY0"]       = 10;                         // Задержка начала первой калибровки при нажатии "Активировать"
    jsonConfig["BOOT0"]["DELAY10"]      = 10;                         // Задержка начала первой калибровки при удержании 10 сек кнопки 
    
+   jsonConfig["MP3"]["100"]["ENABLE"]  = true; 
    jsonConfig["MP3"]["99"]["ENABLE"]   = true; 
    jsonConfig["MP3"]["99"]["DELAY"]    = 10; 
    jsonConfig["MP3"]["99"]["COLOR_TM"] = 10; 
