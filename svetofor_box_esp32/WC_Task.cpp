@@ -39,8 +39,10 @@ bool isChangeNan   = true;
 bool isChangeStat  = false; //Изменение отслеживания изменения состояния для немедленной отправки 
 uint16_t bootCount;
 bool isWiFiAlways1 = true; 
-SemaphoreHandle_t sensorSemaphore;
+SemaphoreHandle_t sensorSemaphore, soundSemaphore;
 uint32_t msSendHttp = 0;
+uint32_t colorMP3   = COLOR_SAVE;
+
 
 HTTPClient httpClient;
 
@@ -63,6 +65,7 @@ void tasksStart() {
   
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
   sensorSemaphore = xSemaphoreCreateMutex();
+  soundSemaphore  = xSemaphoreCreateMutex();
   xTaskCreateUniversal(taskMP3, "mp3", 10000, NULL, 1, NULL, CORE);
   vTaskDelay(500);
   xTaskCreateUniversal(taskEvents, "events", 30000, NULL, 3, NULL, CORE);
@@ -128,6 +131,7 @@ void taskEvents(void *pvParameters) {
  * @param pvParameters
  */
 void taskMP3(void *pvParameters) {
+   isPlayMP3 = true;
 #if defined(DEBUG_SERIAL)
    Serial.println(F("!!! MP3 task start"));
 #endif
@@ -139,7 +143,7 @@ void taskMP3(void *pvParameters) {
    myDFPlayer.setTimeOut(500);
    myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
    myDFPlayer.volume(jsonConfig["MP3"]["VOLUNE"].as<int>());
-   checkPlayMP3("100",100);
+   isPlayMP3 = false;
 
 //   Serial.printf("!!! EventRelay1 Init %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
    while (true) {
@@ -157,7 +161,8 @@ void taskMP3(void *pvParameters) {
             int _stat = myDFPlayer.readState();
             if(  _stat == 0 ){
                 Serial.printf("!!! Play MP3 completed %d\n",_stat);
-//                EventMP3->off(0);
+ //               xSemaphoreGive(soundSemaphore);
+                EventMP3->off(0);
                 if( EventMP3->Loop ){
                    EventMP3->reset();
                    EventMP3->on(2000);
@@ -193,10 +198,13 @@ void taskSensors(void *pvParameters) {
    pinMode(PIN_OUT2,OUTPUT);
    setRelay1(statRelay2); 
 //   checkPlayMP3("100",100);
+   waitMP3(MAX_MP3_WAIT);
+   checkPlayMP3("100",100, true);
+
 
    if( bootCount < 1 ){
-      vTaskDelay(2000);
-      checkPlayMP3("99",99);
+      vTaskDelay(1000);
+      checkPlayMP3("99",99,true);
       vTaskDelay(jsonConfig["MP3"]["99"]["COLOR_TM"].as<uint32_t>()*1000);
       startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
    }
@@ -228,7 +236,9 @@ void taskSensors(void *pvParameters) {
          checkChangeOn();
       }
       else if( calibrMode == CM_ON){ //Режим калибровки
-         if( calibrCount >= jsonConfig["CALIBR"]["NUMBER"].as<int>() )EventCalibrate->off();
+         int calibrMax =  jsonConfig["CALIBR"]["NUMBER"].as<int>();
+         if( calibrCount >= calibrMax )EventCalibrate->off();
+         if( calibrCount + calibrError >= calibrMax*3 )EventCalibrate->off();
          Serial.printf("!!! Calibrate %d %d\n",(int)Distance,calibrCount);
          if( !isnan(Distance) ){
              calibrAvg += Distance;
@@ -356,7 +366,8 @@ void handleMP3(bool _flag){
       isPlayMP3 = true;
       if( EventMP3->ColorTM != 0 ){
 //         if( flag )SaveRGB2->Restore(1);
-         SaveRGB2->Save(1,ET_PWM,500,500,EventRGB2->Color1, jsonConfig["RGB2"]["MP3"].as<uint32_t>());
+//         SaveRGB2->Save(1,ET_PWM,500,500,EventRGB2->Color1, jsonConfig["RGB2"]["MP3"].as<uint32_t>());
+         SaveRGB2->Save(1,ET_PWM,500,500,EventRGB2->Color1, colorMP3);
       }
       ms1 = millis();
    }
@@ -404,7 +415,8 @@ void startCalibrate(uint32_t _delay){
    Serial.println(F("!!! Calibrate Wait ... "));
 #endif
    EventMP3->reset();
-   checkPlayMP3("97",97);
+   checkPlayMP3("97",97,true,10000);
+   EventCalibrate->reset();
    EventCalibrate->setType(ET_PULSE,30000,0);
    EventCalibrate->on(_delay);
    calibrMode = CM_WAIT;
@@ -422,6 +434,7 @@ void handleCalibrate(bool _flag){
    Serial.println((int)_flag);
 #endif
    if( _flag ){
+      Serial.println("!!! Start calibr");
       calibrMode = CM_ON;
       calibrAvg = 0;
       calibrCount = 0;
@@ -433,12 +446,11 @@ void handleCalibrate(bool _flag){
       isPlayMP3 = false;
    }
    else {
-      calibrMode   = CM_NONE;
-      lastSensorOn = SS_NONE;
+      Serial.println("!!! Stop calibr");
       if( calibrCount > 0 ){
           bool ret = false;
-          if(calibrError < calibrCount)ret = checkPlayMP3("97",93);
-          else ret = checkPlayMP3("97",94);
+          if(calibrError < calibrCount)ret = checkPlayMP3("97",93,true);
+          else ret = checkPlayMP3("97",94,true);
           ledSetColor(COLOR_SAVE);
           led2SetColor(COLOR_SAVE);
           float x = calibrAvg/calibrCount;
@@ -450,13 +462,18 @@ void handleCalibrate(bool _flag){
           jsonConfig["SENSOR"]["DIST_MAX2"]    = (int)x;
           configSave(); 
           configRead();
-          if( ret )vTaskDelay(3000);      
+//          if( ret )vTaskDelay(3000);      
      }
      else {
-          if(checkPlayMP3("99",95))vTaskDelay(3000);
+          Serial.println("!!! cal1");
+          checkPlayMP3("99",95,true);
+          Serial.println("!!! cal2");
           ledSetColor(COLOR_NAN);
           led2SetColor(COLOR_NAN);
      }
+     calibrMode   = CM_NONE;
+     lastSensorOn = SS_NONE;
+
      SaveRGB1->Restore(2);
      SaveRGB2->Restore(2);
      vTaskDelay(250);
@@ -525,6 +542,7 @@ void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _l
 void setEventMP3( JsonObject _config, bool is_delay){
     uint32_t _delay = 0;
     if( is_delay )_delay = _config["DELAY"].as<uint32_t>()*1000;
+    colorMP3 = _config["COLOR"];
     setEventMP3(_config["ENABLE"].as<bool>(),_delay,_config["DIR"].as<int>(),_config["NUM"].as<int>(),_config["LOOP"].as<bool>(),_config["COLOR"].as<uint32_t>(),_config["COLOR_TM"].as<uint32_t>()*1000 );
 }
 
@@ -543,7 +561,7 @@ void checkChangeOn(){
          if(EventBusy2->State != ES_WAIT_ON && EventBusy2->State != ES_ON)EventBusy2->on(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>()*1000);
          setEventRGB1( ET_NORMAL, 0, 0, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), COLOR_NONE );
          setEventRGB2( ET_NORMAL, 0, 0, jsonConfig["RGB2"]["BUSY"].as<uint32_t>(), COLOR_NONE );
-         if(lastSensorOn != SS_NAN)setEventMP3(jsonConfig["MP3"]["BUSY"]);
+         if(lastSensorOn != SS_NAN) setEventMP3(jsonConfig["MP3"]["BUSY"]);
          break;
       case SS_FREE:   
 //      case SS_NAN_FREE:   
@@ -744,8 +762,8 @@ void taskButton(void *pvParameters){
              is_early = true;
              btn_count = (int)btn.getCountEvent();
              Serial.printf("!!! BTN Press %d\n",btn_count);
-             SaveRGB1->Save(3,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
-             SaveRGB2->Save(3,ET_PWM,500,500,COLOR_GROUND, COLOR_BLACK);
+             SaveRGB1->Save(3,ET_PWM,500,500,COLOR_SAVE, COLOR_BLACK);
+             SaveRGB2->Save(3,ET_PWM,500,500,COLOR_SAVE, COLOR_BLACK);
              if( btn_count == 5 ){
                 checkPlayMP3("92",92);
                 ledSetColor(COLOR_ERROR);
@@ -1007,19 +1025,39 @@ void setVolumeMP3(){
     cmdMP3  = CMP3_VOLUME;
  }
 
-void playMP3(int _dir, int _num){
-    cmdMP3  = CMP3_PLAY;
-    arg1MP3 = _dir;
-    arg2MP3 = _num;
+void playMP3(int _dir, int _num, bool isWait, uint32_t delay){
+    cmdMP3    = CMP3_PLAY;
+    arg1MP3   = _dir;
+    arg2MP3   = _num;
+    isPlayMP3 = true;
+//    if( isWait )Serial.println(F("!!! MP3 end wait ..."));
+//    else xSemaphoreGive(soundSemaphore);
+   Serial.printf("!!! MP3 play %d %d %d\n", _dir, _num, (int)isWait);
+   if( isWait )waitMP3(delay);
     
 }
 void stopMP3(){
     cmdMP3  = CMP3_STOP;
+    isPlayMP3 = false;
 }
 
-bool checkPlayMP3(  char *check, int num ){
+void waitMP3(uint32_t _delay){
+    uint32_t _ms = millis() + _delay;
+    Serial.println(F("!!! MP3 start wait ..."));
+    while( isPlayMP3 ){
+       if( _delay > 0 && _ms < millis() )break;
+       vTaskDelay(1000);   
+    }
+    Serial.println(F("!!! MP3 stop wait ..."));
+
+
+}
+
+
+
+bool checkPlayMP3(  char *check, int num, bool isWait, uint32_t delay ){
     if( jsonConfig["MP3"][check]["ENABLE"].as<bool>() ){
-       playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(),num);
+       playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(),num, isWait, delay);
        return true;
     }
     return false;

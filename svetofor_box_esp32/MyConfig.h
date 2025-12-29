@@ -5,7 +5,7 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.10"
+#define SOFTWARE_V           "10.0.11"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.9"
 

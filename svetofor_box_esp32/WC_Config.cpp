@@ -204,6 +204,7 @@ void configDefault(){
    jsonConfig["MP3"]["92"]["ENABLE"]   = true; 
    jsonConfig["MP3"]["89"]["ENABLE"]   = true; 
    jsonConfig["MP3"]["88"]["ENABLE"]   = true; 
+   jsonConfig["MP3"]["70"]["ENABLE"]   = true; 
 
 
 }

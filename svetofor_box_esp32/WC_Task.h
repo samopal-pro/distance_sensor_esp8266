@@ -18,6 +18,9 @@
 #define SAMPLE_LEN       10
 #define RELIABILITY_PROC 0.15
 #define FPSerial Serial1
+#define MAX_MP3_WAIT    30000
+
+
 enum ES_STAT {
   STAT_OFF,
   STAT_BT_ON,
@@ -36,7 +39,8 @@ enum CMD_MP3_t {
    CMP3_NONE   =  0,
    CMP3_PLAY   =  1,
    CMP3_STOP   =  2,
-   CMP3_VOLUME =  3
+   CMP3_WAIT   =  3,
+   CMP3_VOLUME =  4
 };
 
 //extern DFRobotDFPlayerMini myDFPlayer;
@@ -50,9 +54,11 @@ void taskButton(void *pvParameters);
 void taskNet(void *pvParameters);
 void taskMP3(void *pvParameters);
 void setVolumeMP3();
-void playMP3(int dir, int num);
+void playMP3(int dir, int num, bool isWait=false, uint32_t delay=MAX_MP3_WAIT);
 void stopMP3();
-bool checkPlayMP3(char *check, int num);
+bool checkPlayMP3(char *check, int num, bool isWait=false, uint32_t delay=MAX_MP3_WAIT);
+void waitMP3(uint32_t _delay);
+
 
 void handleSensor( bool _flag  );
 void handleRelay1( bool _flag  );
