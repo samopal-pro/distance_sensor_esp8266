@@ -7,8 +7,12 @@
 #define WS_EVENT_h
 #include <arduino.h>
 #include "MyConfig.h"
+#include "src/DFPlayer/DFRobotDFPlayerMini.h"
+#include "src/NeoPixel/Adafruit_NeoPixel.h"    // https://github.com/adafruit/Adafruit_NeoPixel
+
 
 #define MAX_RGB_STACK_ITEMS 10
+#define TIMER_MP3           500
 
 enum TEVENT_TYPE_t {
   ET_DISABLE    = 0, //CСобытие отключено
@@ -18,6 +22,14 @@ enum TEVENT_TYPE_t {
   ET_PWM        = 4, //Событие выдает имульсы с заданной длительностью и паузой
   ET_PULSE2     = 5  //Событие выдает имульс на заданное время при включение и выключении
    
+};
+
+enum TEVENT_RGB_TYPE_t {
+  ERT_NONE      = 0, //Cобытие отключено
+  ERT_NORMAL    = 1, //Горит постоянно
+  ERT_BLINK     = 2, //Мигает с частотой DelayOn, DelauOff
+  ERT_MP3       = 3, //Мигает цветом ColorMP3 и частотой TIMER_MP3
+  ERT_RAINBOW   = 4 //Проигрывает радугу   
 };
 
 enum TEVENT_STATUS_t {
@@ -74,28 +86,80 @@ private:
    void setOff();
 };
 
-class TEventRGB: public TEvent {
-   public:
-       TEventRGB(uint32_t _delayOn = 0, uint32_t _delayOff = 0, void (*_handle)(bool) = NULL, uint32_t _color1 = COLOR_BLACK, uint32_t _color2 = COLOR_NONE );
-       void setColor(uint32_t _color1, uint32_t _color2);
-       uint32_t Color1;
-       uint32_t Color2; 
-   void copyTo(TEventRGB *dist);
+class TEventRGB{
+public:
+    TEventRGB( uint8_t _pin, int _num, int _first );
+    void set(uint32_t _color1, uint32_t _color2, uint32_t _color11=COLOR_NONE, uint32_t _color12=COLOR_NONE, uint32_t _timer_on=0, uint32_t _timer_off=0 );
+    void setColor( uint32_t _color1, uint32_t _color2 );
+    void setColor0( uint32_t _color );
+    void setColor1( uint32_t _color );
+    void setMP3( uint32_t _color );
+    void setRainbow( bool _flag );
+    void setBrightness( int br);
+    void copyTo(TEventRGB *dist);
+    void set(TEventRGB *src);
+    TEVENT_RGB_TYPE_t  loop();
+    TEVENT_STATUS_t State;
+    bool isRainbow;
+    bool isMP3;
+    uint32_t Color1;
+    uint32_t Color2; 
+    uint32_t ColorBlink1;
+    uint32_t ColorBlink2;
+    uint32_t ColorMP3;
+    uint32_t TimerOn;
+    uint32_t TimerOff;
+private:
+    Adafruit_NeoPixel *Strip;
+    int      Num;
+    int      First;
+    uint32_t msOn;
+    uint32_t msOff;
+
+    int      IncRainbow;
+    int      HueRainbow;
 };
 
-class TEventMP3: public TEvent {
-   public:
-       TEventMP3(uint32_t _delayOn = 0, uint32_t _delayOff = 0, void (*_handle)(bool) = NULL, int _dir = 1, int _sound = 1, bool _loop = false );
-       void setSound(int _dir, int _sound, bool _loop = false, uint32_t _color = COLOR_MP3_1, uint32_t _tm = 5000);
-       int Dir;
-       int Sound; 
-       bool Loop;
-       uint32_t Color;
-       uint32_t ColorTM;
-   void save(TEventMP3 *dist);
-   void copyTo(TEventMP3 *src);
+class TEventMP3 {
+private:
+    DFRobotDFPlayerMini *Player;
+    bool isPlayer;
+    bool isLoop;
+    Stream *SerialPlayer;
+    void init();
+    int Dir;
+    int Track;
+
+    uint32_t msOn;
+    uint32_t msOff;
+    uint32_t ms1;
+    bool waitPlayer;
+
+    bool isOn;
+    void _start();
+    void _stop();
+    void _replay(uint32_t _delay);
+
+
+public:
+    uint32_t DelayOn;
+    uint32_t TimerOn;
+
+    TEvent *ColorEvent;
+    uint32_t Color;
+    uint32_t ColorTimer;
+    TEVENT_STATUS_t State;
+    TEventMP3(Stream &_stream,  void (*_handle)(bool) = NULL );
+    void setVolume(int _volume);
+    void setColor(uint32_t _color=COLOR_NONE, uint32_t _timer=0);
+    void start(int _dir, int _track, uint32_t _delay = 0, uint32_t _timer = 30000, bool _is_wait = true, bool _loop=false );
+    void stop();
+    TEVENT_STATUS_t loop();
+
+    void (*Handle)(bool);
 };
 
+/*
 
 class TSaveRGB {
    public:
@@ -111,5 +175,5 @@ class TSaveRGB {
       int Push(int _id );
       int Pop();
 };
-
+*/
 #endif

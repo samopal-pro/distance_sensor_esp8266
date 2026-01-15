@@ -14,7 +14,7 @@
 #include <Update.h>
 #include "MyConfig.h"
 #include "WC_Config.h"
-#include "WC_Led.h"
+//#include "WC_Led.h"
 #include "WC_Task.h"
 
 
@@ -27,6 +27,8 @@ extern bool isAP, isSTA;
 extern float Temp, LastTemp, Hum, LastHum, LastDistance, Distance;
 extern unsigned long Time;
 extern uint32_t msAP, msSTA, msLoad;
+extern bool isChangeConfig;
+extern SENSOR_STAT_t lastSensorOn;
 
 enum ES_WIFI_STAT {
   EWS_OFF,
@@ -47,12 +49,12 @@ typedef enum {
 extern ES_WIFI_STAT w_stat2;
 extern bool is_load_page;
 extern bool isWiFiAlways1;
-void WiFi_test();
-void WiFi_stop(const char * msg);
-void WiFi_startAP();
+//void WiFi_test();
+//void WiFi_stop(const char * msg);
+//void WiFi_startAP();
 
 void WiFi_begin(void);
-bool ConnectWiFi(void);
+//bool ConnectWiFi(void);
 
 
 void HTTP_begin(void);

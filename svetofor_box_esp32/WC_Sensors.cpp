@@ -87,7 +87,7 @@ MySensor::MySensor(){
 //#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )
 
          Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 10);
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 5000.0, NAN, 1, SIMPLE_SIZE );
+         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 5900.0, NAN, 1, SIMPLE_SIZE );
          Name   = "Sonar SR04T";
          Serial.println("!!! new Sonar SR04T");
          break;
@@ -95,9 +95,15 @@ MySensor::MySensor(){
 
       case SENSOR_SR04TM2 :  
          Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 7500.0, NAN, 1, SIMPLE_SIZE );
+         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 4900.0, NAN, 1, SIMPLE_SIZE );
          Name   = "Sonar SR04TM2";
          Serial.println("!!! new Sonar SR04TM2");
+         break;
+      case SENSOR_SR04_75 :  
+         Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
+         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 7400.0, NAN, 1, SIMPLE_SIZE );
+         Name   = "Sonar SR04_75";
+         Serial.println("!!! new Sonar SR04TM2_75");
          break;
 //      case SENSOR_A21_I2C:   
 //         Sensor = new SonarA21();
@@ -133,6 +139,7 @@ bool MySensor::init(){
    switch(jsonConfig["SENSOR"]["TYPE"].as<int>()){
       case SENSOR_SR04T :  
       case SENSOR_SR04TM2 :  
+      case SENSOR_SR04_75 :  
 //#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )||(DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
          ((SonarSR04 *)Sensor)->init();
          isInit = true;
@@ -211,6 +218,7 @@ bool MySensor::get(){
    switch(jsonConfig["SENSOR"]["TYPE"].as<int>()){
       case SENSOR_SR04T:
       case SENSOR_SR04TM2:
+      case SENSOR_SR04_75:
          value1 = ((SonarSR04 *)Sensor)->getDistance();
          stat = Value->set(value1,true);
          break;

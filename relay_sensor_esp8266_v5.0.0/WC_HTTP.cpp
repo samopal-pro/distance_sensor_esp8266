@@ -737,15 +737,23 @@ void HTTP_printConfigNet(String &out){
   out += "<legend>Тип сенсора</legend>\n"; 
   out += "<div class='lab2'><p><label>Выберите тип сенсора:</label>\n";
   out += "<select name='SensorType'>\n";
+
   out += "<option value='";out += String(SONAR_SR04T);out += "'";
   if( EA_Config.SensorType == SONAR_SR04T)out += " selected";
   out += ">Двойной ультразвуковой сенсор (SR04T)</option>";  
+
   out += "<option value='";out += String(SONAR_SR04TM2);out += "'";
   if( EA_Config.SensorType == SONAR_SR04TM2)out += " selected";
   out += ">Одинарный ультразвуковой сенсор (SR04M2)</option>";  
+
+  out += "<option value='";out += String(SONAR_SR04T75);out += "'";
+  if( EA_Config.SensorType == SONAR_SR04T75)out += " selected";
+  out += ">Одинарный ультразвуковой сенсор на 7.5м</option>";  
+
   out += "<option value='";out += String(SONAR_TFLUNA);out += "'";
   if( EA_Config.SensorType == SONAR_TFLUNA)out += " selected";
   out += ">Лазерный сенсор (TF-Luna)</option>";  
+
   out += "</select>\n";
   out += "</div>\n";
   out += "<p class='t1'>После смены типа сенсора нужно кратковременно передернуть питание.";

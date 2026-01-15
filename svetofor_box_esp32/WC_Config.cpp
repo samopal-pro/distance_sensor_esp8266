@@ -112,11 +112,11 @@ void configDefault(){
    jsonConfig["RGB2"]["MP3"]           = COLOR_MP3_DEFAULT;
 
 // Настройка плеера MP3      
-   jsonConfig["MP3"]["VOLUNE"]            = 30;                          // Громкость 0-30
+   jsonConfig["MP3"]["VOLUME"]            = 30;                          // Громкость 0-30
    jsonConfig["MP3"]["EQ"]                = 0;                           // Режим эквалайзера 0-5
 // Автомобиль заехал
    jsonConfig["MP3"]["BUSY"]["ENABLE"]    = true;
-   jsonConfig["MP3"]["BUSY"]["DIR"]       = 1;
+//   jsonConfig["MP3"]["BUSY"]["DIR"]       = 1;
    jsonConfig["MP3"]["BUSY"]["NUM"]       = 1;
    jsonConfig["MP3"]["BUSY"]["DELAY"]     = 5;
    jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
@@ -124,7 +124,7 @@ void configDefault(){
    jsonConfig["MP3"]["BUSY"]["COLOR_TM"]  = 4;
 // Датчик NAN (пена) 
    jsonConfig["MP3"]["NAN"]["ENABLE"]     = true;
-   jsonConfig["MP3"]["NAN"]["DIR"]        = 1;
+//   jsonConfig["MP3"]["NAN"]["DIR"]        = 1;
    jsonConfig["MP3"]["NAN"]["NUM"]        = 2;
    jsonConfig["MP3"]["NAN"]["DELAY"]      = 10;
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
@@ -132,36 +132,36 @@ void configDefault(){
    jsonConfig["MP3"]["NAN"]["COLOR_TM"]   = 4;
 // Слишком долго автомобиль в боксе
    jsonConfig["MP3"]["BUSY1"]["ENABLE"]   = true;
-   jsonConfig["MP3"]["BUSY1"]["DIR"]      = 1;
+//   jsonConfig["MP3"]["BUSY1"]["DIR"]      = 1;
    jsonConfig["MP3"]["BUSY1"]["NUM"]      = 3;
    jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 900;
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
    jsonConfig["MP3"]["BUSY1"]["COLOR"]    = COLOR_MP3_2;
    jsonConfig["MP3"]["BUSY1"]["COLOR_TM"] = 4;
 // Слишком долго автомобиль в боксе или датчик "залип"
-   jsonConfig["MP3"]["BUSY2"]["ENABLE"]   = true;
-   jsonConfig["MP3"]["BUSY2"]["DIR"]      = 1;
-   jsonConfig["MP3"]["BUSY2"]["NUM"]      = 4;
-   jsonConfig["MP3"]["BUSY2"]["DELAY"]    = 1800;
-   jsonConfig["MP3"]["BUSY2"]["LOOP"]     = true;
-   jsonConfig["MP3"]["BUSY2"]["COLOR"]    = COLOR_MP3_2;
-   jsonConfig["MP3"]["BUSY2"]["COLOR_TM"] = 4;
+   jsonConfig["MP3"]["BUSY2"]["ENABLE"]      = true;
+//   jsonConfig["MP3"]["BUSY2"]["DIR"]      = 1;
+   jsonConfig["MP3"]["BUSY2"]["NUM"]         = 4;
+   jsonConfig["MP3"]["BUSY2"]["DELAY"]       = 1800;
+   jsonConfig["MP3"]["BUSY2"]["LOOP"]        = true;
+   jsonConfig["MP3"]["BUSY2"]["COLOR"]       = COLOR_MP3_2;
+   jsonConfig["MP3"]["BUSY2"]["COLOR_TM"]    = 4;
 // После выезда NAN
-   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"]= true;
-   jsonConfig["MP3"]["FREE_NAN"]["DIR"]   = 1;
-   jsonConfig["MP3"]["FREE_NAN"]["NUM"]   = 5;
-   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 4;
-   jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = true;
+   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"]   = true;
+//   jsonConfig["MP3"]["FREE_NAN"]["DIR"]   = 1;
+   jsonConfig["MP3"]["FREE_NAN"]["NUM"]      = 5;
+   jsonConfig["MP3"]["FREE_NAN"]["DELAY"]    = 4;
+   jsonConfig["MP3"]["FREE_NAN"]["LOOP"]     = true;
    jsonConfig["MP3"]["FREE_NAN"]["COLOR"]    = COLOR_MP3_2;
    jsonConfig["MP3"]["FREE_NAN"]["COLOR_TM"] = 4;
 // Автомобиль выехал
-   jsonConfig["MP3"]["FREE"]["ENABLE"]    = true;
-   jsonConfig["MP3"]["FREE"]["DIR"]       = 1;
-   jsonConfig["MP3"]["FREE"]["NUM"]       = 6;
-   jsonConfig["MP3"]["FREE"]["DELAY"]     = 5;
-   jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
-   jsonConfig["MP3"]["FREE"]["COLOR"]    = COLOR_MP3_1;
-   jsonConfig["MP3"]["FREE"]["COLOR_TM"] = 4;
+   jsonConfig["MP3"]["FREE"]["ENABLE"]       = true;
+//   jsonConfig["MP3"]["FREE"]["DIR"]       = 1;
+   jsonConfig["MP3"]["FREE"]["NUM"]          = 6;
+   jsonConfig["MP3"]["FREE"]["DELAY"]        = 5;
+   jsonConfig["MP3"]["FREE"]["LOOP"]         = false;
+   jsonConfig["MP3"]["FREE"]["COLOR"]        = COLOR_MP3_1;
+   jsonConfig["MP3"]["FREE"]["COLOR_TM"]     = 4;
 
 //   jsonConfig["MP3"]["SYSTEM"]["DIR"] = 1;                           // Номер папки с системными звуками
 
@@ -184,7 +184,7 @@ void configDefault(){
    jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;                          // Задержка при отключении реле
 
 // Стартовые настройки
-   jsonConfig["MP3"]["ADD"]["DIR"]     = 2;                          // Каталог с дорожками дополнительных сообщений
+//   jsonConfig["MP3"]["ADD"]["DIR"]     = 2;                          // Каталог с дорожками дополнительных сообщений
    jsonConfig["BOOT0"]["DELAY0"]       = 10;                         // Задержка начала первой калибровки при нажатии "Активировать"
    jsonConfig["BOOT0"]["DELAY10"]      = 10;                         // Задержка начала первой калибровки при удержании 10 сек кнопки 
    

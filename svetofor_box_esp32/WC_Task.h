@@ -5,12 +5,11 @@
 #include "MyConfig.h"
 #include "WC_Config.h"
 #include "WC_Sensors.h"
-#include "WC_Led.h"
+//#include "WC_Led.h"
 #include "WC_HTTP.h"
 #include "WC_Event.h"
 //#include "src/Slib/SButton.h"
 #include "src/Slib/SBTN.h"
-#include "src/DFPlayer/DFRobotDFPlayerMini.h"
 //#include <WiFi.h>
 #include <HTTPClient.h>
 
@@ -18,7 +17,6 @@
 #define SAMPLE_LEN       10
 #define RELIABILITY_PROC 0.15
 #define FPSerial Serial1
-#define MAX_MP3_WAIT    30000
 
 
 enum ES_STAT {
@@ -43,9 +41,10 @@ enum CMD_MP3_t {
    CMP3_VOLUME =  4
 };
 
-//extern DFRobotDFPlayerMini myDFPlayer;
 
-extern TSaveRGB *SaveRGB1, *SaveRGB2;
+extern TEventRGB *EventRGB1, *EventRGB2;
+extern TEventMP3 *EventMP3;
+
 
 void tasksStart();
 void taskEvents(void *pvParameters);
@@ -53,12 +52,21 @@ void taskSensors(void *pvParameters);
 void taskButton(void *pvParameters);
 void taskNet(void *pvParameters);
 void taskMP3(void *pvParameters);
+void taskRGB(void *pvParameters);
 void setVolumeMP3();
-void playMP3(int dir, int num, bool isWait=false, uint32_t delay=MAX_MP3_WAIT);
-void stopMP3();
-bool checkPlayMP3(char *check, int num, bool isWait=false, uint32_t delay=MAX_MP3_WAIT);
-void waitMP3(uint32_t _delay);
 
+//void baseMP3(int)
+
+//void playMP3_1(int dir, int num, bool isWait=false, uint32_t delay=30);
+//void stopMP3_1();
+//bool checkPlayMP3_1(char *check, int num, bool isWait=false, uint32_t delay=30);
+//void waitMP3(uint32_t _delay);
+//void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm);
+//void setEventMP3( JsonObject _config, bool is_delay = true );
+void baseMP3( JsonObject _config, bool is_delay = true );
+void systemMP3( char *_check, int _num, bool _wait=false, uint32_t _timer=DEFAULT_TIMER_MP3, bool _busy=true );
+void playMP3(int _dir, int _num, uint32_t _color=COLOR_MP3_1);
+void waitMP3(uint32_t _delay);
 
 void handleSensor( bool _flag  );
 void handleRelay1( bool _flag  );
@@ -72,8 +80,6 @@ void handleCalibrate(bool _flag);
 void startCalibrate(uint32_t _delay);
 void setEventRGB1(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
 void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
-void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm);
-void setEventMP3( JsonObject _config, bool is_delay = true );
 void setNanMode();
 
 void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);

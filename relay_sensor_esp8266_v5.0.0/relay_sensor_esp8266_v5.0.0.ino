@@ -127,7 +127,7 @@ void loop() {
    cur_ms       = millis();
    t_cur        = cur_ms/1000;
 // Действие по длинному нажатию кнопки
-   if( is_load_page == false && (ms0 == 0 || cur_ms < ms0 || (cur_ms - ms0) > 200)  ){
+   if( ( is_load_page == false && (ms0 == 0 || cur_ms < ms0 || (cur_ms - ms0) > 200) )&&PinCalibrateSonar>=0  ){
        ms0 = cur_ms;
        if( ms_btn == 0 || ms_btn > cur_ms || cur_ms - ms_btn > 4000 ){
            btn_count = 0;

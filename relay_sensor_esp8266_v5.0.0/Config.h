@@ -5,7 +5,7 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 8.16.4"
+#define FW_VERSION   "VERSION 8.16.6"
 #define DEVICE_NAME  "3139_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
@@ -27,6 +27,7 @@ enum T_SENSOR_TYPE {
   SONAR_SR04T   = 1, // Все платы работающие по протоколу Trig/Echo
   SONAR_SR04TV2 = 2, // Глючные платы  SR04TV2 у которых плывет значение расстояния
   SONAR_SR04TM2 = 3, // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
+  SONAR_SR04T75 = 4, // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 7500
   SONAR_TFMINI  = 10,// LiDAR TF Mini Plus по I2C
   SONAR_TFLUNA  = 11 // LiDAR TF Luna по I2C
 };

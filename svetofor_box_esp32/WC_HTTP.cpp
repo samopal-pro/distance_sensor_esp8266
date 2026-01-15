@@ -33,103 +33,6 @@ bool is_load_page = false;
 uint32_t   http_ms = 0;
 char *pages[] =  {"/", "/conf1", "/conf2", "/conf3", "/conf4" };
 
-
-void WiFi_test(){
-   uint32_t _ms = millis();
-// Если режим точки доступа
-    if( w_stat2 == EWS_AP_MODE ){   
-       return;
-    }
-// WiFi не сконфигурен  
-   if ( jsonConfig["WIFI"]["NAME"] =="" &&  w_stat2 != EWS_AP_MODE) {
-      if( w_stat2 != EWS_NOT_CONFIG ){
-         Serial.println(F("??? WiFi is not config"));
-         w_stat2 = EWS_NOT_CONFIG;
-         ledSetColorAP(COLOR_WIFI_OFF);
-      }         
-      return;
-   }   
-// Пытаемся подключиться к WiFi   
-   if( w_stat2 == EWS_OFF || w_stat2 == EWS_NOT_CONFIG ){
-      WiFi_ScanNetwork();
-      WiFi.mode(WIFI_STA);
-      if( jsonConfig["WIFI"]["DHCP"].as<bool>() == false ){
-      IPAddress ip_addr,ip_mask,ip_gate,ip_dns;
-         if( ip_addr.fromString( jsonConfig["WIFI"]["IP"]["ADDR"].as<String>() ) &&
-          ip_mask.fromString( jsonConfig["WIFI"]["IP"]["MASK"].as<String>() ) &&
-          ip_gate.fromString( jsonConfig["WIFI"]["IP"]["GW"].as<String>() ) &&
-          ip_dns.fromString(  jsonConfig["WIFI"]["IP"]["DNS"].as<String>()     ) ){
-             Serial.println("Config static IP address");
-             WiFi.config(ip_addr,ip_gate,ip_mask,ip_dns);    
-         }
-      }      
-      WiFi.begin(jsonConfig["WIFI"]["NAME"].as<String>(), jsonConfig["WIFI"]["PASS"].as<String>());
-      w_stat2 = EWS_WAIT;
-      msSTA = _ms;
-      ledSetColorAP(COLOR_WIFI_WAIT);
-      Serial.print(F("!!! WiFi connect wait "));
-      Serial.println(jsonConfig["WIFI"]["NAME"].as<String>());
-      return;
-   }
-// Проверяем что есть подключение к WiFi   
-   if(  WiFi.status() == WL_CONNECTED && w_stat2 == EWS_WAIT ){
-      Serial.print(F("!!! WiFi connect "));
-      Serial.print(WiFi.localIP());
-      Serial.print(" MASK: ");
-      Serial.print(WiFi.subnetMask());
-      Serial.print(" GW: ");
-      Serial.print(WiFi.gatewayIP());
-      Serial.print(" DNS: ");
-      Serial.println(WiFi.dnsIP());
-      ledSetColorAP(COLOR_WIFI_ON);
-      w_stat2 = EWS_ON;
-      
-      return;
-   }
-// Нет соединения с WiFi
-   if( WiFi.status() != WL_CONNECTED ){
-// Проверяем что время соединения вышло    
-      if( w_stat2 == EWS_WAIT && ( msSTA > _ms || ( _ms - msSTA ) > TM_WIFI_CONNECT ) ){
-         WiFi_stop("??? WiFi Connect Timeout");     
-      }
-      if( w_stat2 == EWS_ON ){
-        WiFi_stop("??? WiFi Connect Lost");             
-      }
-   }
-
-}
-
-void WiFi_startAP(){
-   WiFi_ScanNetwork();
-   WiFi.mode(WIFI_AP);
-   WiFi.softAP(jsonConfig["SYSTEM"]["NAME"].as<String>());
-   Serial.printf("!!! Start AP %s\n",jsonConfig["SYSTEM"]["NAME"].as<const char *>());
-   Serial.println(F("Open http://192.168.4.1 in your browser"));
-// Стартуем DNS сервер   
-   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-   dnsServer.start(53, "*", WiFi.softAPIP());
-// Стартуем WEBсервер
-   HTTP_begin();
-   msAP = millis();
-   w_stat2 = EWS_AP_MODE;
-   if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() || isWiFiAlways1 )ledSetColorAP(COLOR_WIFI_AP1);
-   else ledSetColorAP(COLOR_WIFI_AP);
-//   server.begin();
-
-}
-
-void WiFi_stop(const char *msg){
-#ifdef DNS_SERVER
-   dnsServer.stop();
-#endif
-   WiFi.disconnect(); //  this alone is not enough to stop the autoconnecter
-   WiFi.mode(WIFI_OFF);
-   Serial.println(msg);
-   server.stop();
-   w_stat2 = EWS_OFF;
-   ledSetColorAP(COLOR_WIFI_OFF);
- }
-
 /** 
 * Редирект с любого домена на главную страницу сервера
 * 
@@ -246,7 +149,10 @@ void HTTP_printJS(String &out){
    out += "<script>\n";   
    out += "function setColorVal(id,color){  event.preventDefault();document.getElementById(id).value = color; }\n";
 
+//   out += "function playMP3(dir,num){ fetch(\"/playMP3?DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
+   out += "function playMP3c(dir,num,color){ fetch(\"/playMP3?COLOR=\"+color+\"&DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
    out += "function playMP3(dir,num){ fetch(\"/playMP3?DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
+   out += "function systemMP3(check,num){ fetch(\"/playMP3?CHECK=\"+check+\"&NUM=\"+num, {method: \"GET\" }); }\n";
 //   out += "function playMP3s(dir,num){ fetch(\"/playMP3?DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); return true;}\n";
 //  out += " .then(response => { console.log(\"Запрос MP3, статус:\", response.status);return false; })\n";
 //   out += " .catch(err => console.error(\"Ошибка запроса MP3:\", err));return false; });\n";
@@ -346,7 +252,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
  * Выаод окнчания файла HTML
  */
 void HTTP_printTail(String &out){
-  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2025&nbsp;&nbsp;&nbsp;&nbsp;Made from Russia";
+  out += "<br><hr align=\"left\" width=\"500\">Copyright (C) Miller-Ti, A.Shikharbeev, 2026&nbsp;&nbsp;&nbsp;&nbsp;Made from Russia";
   out += "</div>";
   out += "</body>\n</html>\n";
 }
@@ -409,7 +315,7 @@ void HTTP_printBottomMenu(String &out){
 void HTTP_handleDistance(void) {
   String out = "";
   char str[50];
-  if( server.hasArg("Refresh"))checkPlayMP3("89",84,true);
+  if( server.hasArg("Refresh"))systemMP3("89",84);
 
   out += "<html>\n<head>\n<meta charset=\"utf-8\" />\n";
 //  out += "<meta http-equiv='refresh' content='5'>\n";
@@ -444,7 +350,6 @@ void HTTP_handleRoot(void) {
      Serial.println(F("!!! Skip HTTP root ..."));
      return;
   }
-//  checkPlayMP3("70",70);
   msLoad = millis();
   char str[50];
   String out = "";
@@ -490,7 +395,6 @@ void HTTP_handleConfig1(void) {
      Serial.println(F("!!! Skip HTTP config ..."));
      return;
   }
-//  checkPlayMP3("70",71);
   msLoad = millis();
   char str[50];
   String out = "";
@@ -528,7 +432,6 @@ void HTTP_handleConfig2(void) {
      Serial.println(F("!!! Skip HTTP config ..."));
      return;
   }
-//  checkPlayMP3("70",72);
   msLoad = millis();
   char str[50];
   String out = "";
@@ -566,7 +469,6 @@ void HTTP_handleConfig3(void) {
      Serial.println(F("!!! Skip HTTP config ..."));
      return;
   }
-//  checkPlayMP3("70",73);
   msLoad = millis();
   char str[50];
   String out = "";
@@ -604,7 +506,6 @@ void HTTP_handleConfig4(void) {
      Serial.println(F("!!! Skip HTTP config ..."));
      return;
   }
-//  checkPlayMP3("70",74);
   msLoad = millis();
   char str[50];
   String out = "";
@@ -820,6 +721,9 @@ void HTTP_printConfigNet(String &out){
   out += "<option value='";out += String(SENSOR_SR04TM2);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04TM2)out += " selected";
   out += ">Одинарный ультразвуковой сенсор (SR04M2)</option>";  
+  out += "<option value='";out += String(SENSOR_SR04_75);out += "'";
+  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04_75)out += " selected";
+  out += ">Одинарный ультразвуковой сенсор на 7.5м</option>";  
 
   out += "<option value='";out += String(SENSOR_TFLUNA_I2C);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_TFLUNA_I2C)out += " selected";
@@ -925,7 +829,7 @@ void HTTP_printConfig2(String &out){
 
   out += "<fieldset>\n";
   out += "<legend>Настройка оповещения</legend>\n";
-  HTTP_InputInt(out,"Громкость звука 0-30","MP3_VOLUME",jsonConfig["MP3"]["VOLUNE"].as<int>(),0,30,32);
+  HTTP_InputInt(out,"Громкость звука 0-30","MP3_VOLUME",jsonConfig["MP3"]["VOLUME"].as<int>(),0,30,32);
 
 
   out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
@@ -1077,10 +981,12 @@ void HTTP_print_MP3_7(String &out, char *text, char *name){
    out += "</td><td>";
    sprintf(s,"MP3_%s_PLAY",name);
 //   out += "<input type='submit' name='";out += s; out += "' value='▶' class='btn'>";
-   out += "<input type='button' value='▶' class='btn' onClick='playMP3(";
+   out += "<input type='button' value='▶' class='btn' onClick='playMP3c(";
    out += jsonConfig["MP3"][name]["DIR"].as<int>();
    out += ",";
    out += jsonConfig["MP3"][name]["NUM"].as<int>();
+   out += ",";
+   out += jsonConfig["MP3"][name]["COLOR"].as<uint32_t>();
    out += ");'>";
 //   out += "<input type='submit' name='MP3_PLAY' value='▶' class='btn'>";
 //   HTTP_InputHidden(out,"MP3_DIR",(char *)jsonConfig["MP3"][name]["DIR"].as<const char *>());
@@ -1133,11 +1039,10 @@ bool HTTP_checkArgs(int current){
    bool _reboot = false;
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Calibrate")  ){  
-       checkPlayMP3("89",85,true);
-       startCalibrate(1000);
+       systemMP3("89",85);
+       startCalibrate(2000);
    }
    else if( server.hasArg("Default") ){ 
-       checkPlayMP3("89",91,true);
 
        String ss = jsonConfig["SYSTEM"]["NAME"].as<String>();
        configDefault();
@@ -1146,14 +1051,15 @@ bool HTTP_checkArgs(int current){
        configRead();
 //       HTTP_printMessage("Загрузка заводских параметров. Перезагрузка ...");
        HTTP_goto("/", 2000, "Загрузка заводских параметров. Перезагрузка ..."); //1.12.24
-       vTaskDelay(5000);
+       systemMP3("89",91,true);
+       vTaskDelay(3000);
        ESP.restart();  
        return true;
    }
    else if( server.hasArg("Reboot") ){ 
-       checkPlayMP3("89",86,true);
        HTTP_goto("/", 20000, "Перезагрузка ...");
-       vTaskDelay(5000);
+       systemMP3("89",86,true);
+       vTaskDelay(3000);
 //       HTTP_printMessage("Перезагрузка ...");
        ESP.restart();  
        return true;
@@ -1164,13 +1070,13 @@ bool HTTP_checkArgs(int current){
    else if( server.hasArg("BOOT0") ){ 
        jsonSave["BOOT_COUNT"]  = 0;
        saveSave();
-       checkPlayMP3("70",75,true);
        HTTP_goto("/conf4", 5000, "Активирован первый запуск датчика. Сброшен счетчик загрузок");
-       vTaskDelay(5000);
+       systemMP3("70",75,true);
+       vTaskDelay(2000);
        return true;
    }
 
-   
+/*   
    else if( server.hasArg( "MP3_BUSY_PLAY"     ) ){ playMP3(jsonConfig["MP3"]["BUSY"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY"]["NUM"].as<int>());         }
    else if( server.hasArg( "MP3_NAN_PLAY"      ) ){ playMP3(jsonConfig["MP3"]["NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["NAN"]["NUM"].as<int>());           }
    else if( server.hasArg( "MP3_BUSY1_PLAY"    ) ){ playMP3(jsonConfig["MP3"]["BUSY1"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY1"]["NUM"].as<int>());       }
@@ -1194,10 +1100,10 @@ bool HTTP_checkArgs(int current){
    else if( server.hasArg( "MP3_85_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 85);     }
    else if( server.hasArg( "MP3_84_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 84);     }
    else if( server.hasArg( "MP3_83_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 83);     }
-
+*/
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
-      checkPlayMP3("89",83,true);
+      systemMP3("89",83);
 // RGB1
       if(server.hasArg("ColorFree")   )jsonConfig["RGB1"]["FREE"] = HTMLtoInt(server.arg("ColorFree").c_str());
       if(server.hasArg("ColorBusy")   )jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy").c_str());
@@ -1209,7 +1115,7 @@ bool HTTP_checkArgs(int current){
       }
       if( server.hasArg("isFreeBlink"))jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
       if( server.hasArg("isColorNan") )jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
-      if(server.hasArg("Brightness")  )jsonConfig["RGB1"]["BRIGHTNESS"] = server.arg("Brightness").toInt();
+      if(server.hasArg("Brightness")  ){jsonConfig["RGB1"]["BRIGHTNESS"] = server.arg("Brightness").toInt();isChangeConfig = true;}
 
 /// RGB2
       if(server.hasArg("FLAG_CONFIG3")  ){
@@ -1222,7 +1128,7 @@ bool HTTP_checkArgs(int current){
 //      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3").c_str());
       if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
 //      if( server.hasArg("isColorNan2") )jsonConfig["RGB2"]["IS_NAN_MODE"] = true;
-      if(server.hasArg("Brightness2")  )jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();
+      if(server.hasArg("Brightness2")  ){jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();isChangeConfig = true;}
 
 // MP3
       if(server.hasArg("FLAG_CONFIG3")  ){
@@ -1232,6 +1138,7 @@ bool HTTP_checkArgs(int current){
          HTTP_checkArgsMP3("BUSY2");
          HTTP_checkArgsMP3("FREE_NAN");
          HTTP_checkArgsMP3("FREE");
+         if(server.hasArg("MP3_VOLUME")){jsonConfig["MP3"]["VOLUME"] = server.arg("MP3_VOLUME").toInt();isChangeConfig = true;}
       }
 
 /// NET
@@ -1352,10 +1259,11 @@ if( _reboot ){
 */
 
    if( _save ){
-      configSave(); 
+      configSave();
+      EventRGB1->set(COLOR_SAVE,COLOR_SAVE);
 //      configRead();      
-      SaveRGB1->Save(4,ET_NORMAL,0,0,COLOR_SAVE, COLOR_NONE);
-      SaveRGB2->Save(4,ET_NORMAL,0,0,COLOR_SAVE, COLOR_NONE);
+//      SaveRGB1->Save(4,ET_NORMAL,0,0,COLOR_SAVE, COLOR_NONE);
+//      SaveRGB2->Save(4,ET_NORMAL,0,0,COLOR_SAVE, COLOR_NONE);
 
 //      ledSetColor(COLOR_SAVE,true);
 //      HTTP_printMessage("Сохранение параметров ...");
@@ -1366,9 +1274,10 @@ if( _reboot ){
 //      ledSetBaseMode(LED_SAVE,true);
 
       vTaskDelay(500);
-      SaveRGB1->Restore(4);
-      SaveRGB2->Restore(4);
+//      SaveRGB1->Restore(4);
+//      SaveRGB2->Restore(4);
 //      ledRestoreColor();
+      lastSensorOn = SS_RESTORE;
       return true;
    }
    return false;
@@ -1376,12 +1285,19 @@ if( _reboot ){
 
 
 void HTTP_handlePlayMP3(void){
-  int dir =  server.arg("DIR").toInt();
-  int num =  server.arg("NUM").toInt();
-  Serial.printf("!!! MP3 %d %d ok\n",dir,num); 
-//  if( HTTP_redirect() )return;
-  playMP3(dir, num);         
-
+   int dir        =  0;
+   if( server.hasArg("DIR") )dir = server.arg("DIR").toInt();
+   int num        =  server.arg("NUM").toInt();
+   uint32_t color =  COLOR_MP3_1;
+   if( server.hasArg("COLOR") )color = server.arg("COLOR").toInt();
+   if( server.hasArg("CHECK") ){
+      systemMP3((char *)server.arg("CHECK").c_str(),num);       
+      Serial.printf("!!! HTTP MP3 system %d\n",num); 
+   }
+   else {
+      playMP3(dir,num,color);
+      Serial.printf("!!! HTTP MP3 %d %d %06lx\n",dir,num,color); 
+   }
 }
 
 
@@ -1986,7 +1902,7 @@ void HTTP_handleUpdate() {
   HTTPUpload& upload = server.upload();
 ///  Serial.printf("!!! Update %d\n",upload.status);
   if (upload.status == UPLOAD_FILE_START) {
-     checkPlayMP3("89",89,true);
+     systemMP3("89",89);
 #if defined(DEBUG_SERIAL)
      Serial.setDebugOutput(true);
      Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -2005,7 +1921,7 @@ void HTTP_handleUpdate() {
        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
 #endif
 //       HTTP_goto("/", 5000, "Обновление прошивки завершено успешно. Перезагрузка через 5 сек");
-       checkPlayMP3("89",88);
+       systemMP3("89",88);
 #if defined(DEBUG_SERIAL)
        Serial.println(F("Обновление прошивки завершено успешно."));
 #endif
@@ -2013,7 +1929,7 @@ void HTTP_handleUpdate() {
 //       ESP.restart();
 
      } else {
-       checkPlayMP3("89",87,true);
+       systemMP3("89",87,true);
        Update.printError(Serial);
        HTTP_printMessage("Ошибка обновление прошивки");
      }
@@ -2062,7 +1978,7 @@ void HTTP_handleUpload() {
 //  content += "<script>\n";
 //  content += "function F1(){$('#main').html(\"Begin firmware update. Please wait 30 sec\");}\n";
 //  content += "</script>\n";
-  checkPlayMP3("89",90,true);
+  systemMP3("89",90);
 
 
   content += " <form method='POST' action='/update1' enctype='multipart/form-data'>\n";

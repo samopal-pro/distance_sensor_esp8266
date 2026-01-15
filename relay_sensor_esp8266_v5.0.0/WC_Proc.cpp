@@ -75,6 +75,7 @@ void InitSonar(){
        case SONAR_SR04T :
        case SONAR_SR04TV2 :
        case SONAR_SR04TM2 :
+       case SONAR_SR04T75 :
           if( PinDistanceTrig >= 0 ){
              Serial.printf("Init Sonar trig=%d, echo=%d ...\n",PinDistanceTrig,PinDistanceEcho);
              pinMode(PinDistanceTrig , OUTPUT);
@@ -139,13 +140,16 @@ void GetDistance(){
    if(!isSonarEnable)return;
    switch(EA_Config.SensorType){
        case SONAR_SR04T :
-          GetDistanceSR04(2, 10, 2, 0, 5000);
+          GetDistanceSR04(2, 10, 2, 0, 5900);
           break;        
        case SONAR_SR04TV2 :
           GetDistanceSR04(2, 10, 1);
           break;        
        case SONAR_SR04TM2 :
-          GetDistanceSR04(2, 500, 2, 0, 7500);
+          GetDistanceSR04(2, 500, 2, 0, 4900);
+          break;        
+       case SONAR_SR04T75 :
+          GetDistanceSR04(2, 500, 2, 0, 7400);
           break;        
        case SONAR_SERIAL :
           GetDistanceSerial();
