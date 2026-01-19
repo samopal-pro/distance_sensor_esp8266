@@ -7,7 +7,8 @@ typedef enum {
    SB_PRESS       = 1,
    SB_RELEASE     = 2,
    SB_TIMER       = 3,
-   SB_TIMER_COUNT = 4
+   SB_TIMER2      = 4,
+   SB_TIMER_COUNT = 5
 } SBTN_EVENT_t;
 
 
@@ -18,16 +19,19 @@ class SBTN_base {
    private:
       void (*PressPtr)(uint16_t, uint16_t) = NULL;
       void (*TimerPtr)(uint16_t, uint16_t) = NULL;
+      void (*TimerPtr2)(uint16_t, uint16_t) = NULL;
       void (*ReleasePtr)(uint16_t, uint16_t,uint32_t) = NULL;
       bool (*isPressPtr)(void) = NULL;
       uint32_t ms_press;
       bool is_press;
       bool is_timer;
+      bool is_timer2;
       uint32_t tm_bounce;
       uint16_t number_btn;
       uint16_t count_event;
       uint32_t ms_delta;
       uint32_t timer_press;
+      uint32_t timer_press2;
 	  uint32_t timer_reset_count_event;
       bool     is_debug;
    public:
@@ -42,6 +46,7 @@ class SBTN_base {
       uint16_t getCountEvent(void);
       uint16_t getNumberBtn(void);
       void setTimer(uint32_t _tm);
+      void setTimer2(uint32_t _tm);
       uint32_t getPressTime(void);
 	  void setTimerEventCount(uint32_t _tm);
 };

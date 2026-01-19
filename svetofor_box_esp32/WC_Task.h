@@ -64,7 +64,7 @@ void setVolumeMP3();
 //void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm);
 //void setEventMP3( JsonObject _config, bool is_delay = true );
 void baseMP3( JsonObject _config, bool is_delay = true );
-void systemMP3( char *_check, int _num, bool _wait=false, uint32_t _timer=DEFAULT_TIMER_MP3, bool _busy=true );
+void systemMP3( char *_check, int _num, bool _wait=false, uint32_t _timer=DEFAULT_TIMER_MP3, bool _busy=false );
 void playMP3(int _dir, int _num, uint32_t _color=COLOR_MP3_1);
 void waitMP3(uint32_t _delay);
 
@@ -85,6 +85,7 @@ void setNanMode();
 void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
 
 bool sendHttpParam();
+uint16_t KeyGen(char *str);
 
 
 void checkChangeOn();

@@ -586,7 +586,8 @@ void taskButton(void *pvParameters){
 #endif
    pinMode(PIN_BTN,INPUT);
    SBTN btn(PIN_BTN);
-   btn.setTimer(10000);
+   btn.setTimer(2000);
+   btn.setTimer2(10000);
    btn.setTimerEventCount(4000);
    bool white_flag = false;
    bool is_early = false;
@@ -595,21 +596,21 @@ void taskButton(void *pvParameters){
    while(true){
       switch(btn.loop()){
           case SB_PRESS:
-             is_early = true;
+             is_early = false;
              btn_count = (int)btn.getCountEvent();
              Serial.printf("!!! BTN Press %d\n",btn_count);
 //             EventRGB1->copyTo(SaveRGB1);
 //             EventRGB2->copyTo(SaveRGB2);
-             EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,500,500);               
-             EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,500,500);               
+             EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
+             EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
              if( btn_count == 5 ){
                 systemMP3("92",92,true);
-                EventRGB1->set(COLOR_ERROR,COLOR_ERROR);               
-                EventRGB2->set(COLOR_ERROR,COLOR_ERROR);               
+                EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
+                EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
                 btn_count = 0;
                 jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
                 configSave();     
-                delay(1000);    
+                waitMP3(10000);    
                 ESP.restart();  
              }
              break;
@@ -624,25 +625,35 @@ void taskButton(void *pvParameters){
  //                   Serial.printf("!!! WiFi is %d\n",(int)isAP);
                  }
              }
-             else lastSensorOn = SS_RESTORE;
+             else {
+                lastSensorOn = SS_RESTORE;
+                is_early = true;
+             }
 //             else if( tm < 2000 && btn_cont )
              Serial.printf("!!! BTN Release %d\n",(int)tm);
              break;
           case SB_TIMER_COUNT:
+             EventMP3->stop();             
              if( is_early)systemMP3("97",96,true);
+             is_early = false;
              break;   
           case SB_TIMER:
-             systemMP3("98",98,true);
              Serial.printf("!!! BTN Timer %d\n",(int)btn.getPressTime());
-             EventRGB1->set(COLOR_ERROR,COLOR_ERROR);               
-             EventRGB2->set(COLOR_ERROR,COLOR_ERROR);               
+             EventRGB1->set(COLOR_GROUND,COLOR_GROUND);               
+             EventRGB2->set(COLOR_GROUND,COLOR_GROUND);               
+             break;
+          case SB_TIMER2:
+             is_early = false;
+             EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
+             EventRGB2->set(COLOR_SAVE,COLOR_SAVE);  
+              systemMP3("98",98,true);
 //             jsonSave["BOOT_COUNT"]  = 0;
 //             saveSave();
              jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
              jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
              jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль администратора
              configSave();
-             delay(1000);    
+             waitMP3(10000);    
              ESP.restart();  
              break;
       }
@@ -794,6 +805,12 @@ void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
 
 bool sendHttpParam(){
    bool ret = false;
+   char s[64];
+   uint32_t tm = millis()/1000;
+
+   sprintf(s,"%s;%ld;%d;%d;%d",strID,tm,(int)Distance,tm,0);
+   uint16_t crc = KeyGen(s);
+
    String str = "";
    str += "http://";
    str += jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>();
@@ -801,9 +818,10 @@ bool sendHttpParam(){
    str += jsonConfig["CRM_MOSCOW"]["PORT"].as<int>();
    str += HTTP_PATH;
    str += "?id=";
-   str += jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"].as<String>();
-   str += "_";
-   str += jsonConfig["CRM_MOSCOW"]["BOX_ID"].as<String>();
+//   str += jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"].as<String>();
+//   str += "_";
+//   str += jsonConfig["CRM_MOSCOW"]["BOX_ID"].as<String>();
+   str += strID;
    str += "&temp=0&hum=0&dist=";
    str += String(Distance,0);
    str += "&tm=";
@@ -818,6 +836,8 @@ bool sendHttpParam(){
    }   
    str += "&uptime=";
    str += String(millis()/1000);
+   str += "&key=";
+   str += (int)crc;
 
 //   httpClient.begin(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>(), jsonConfig["CRM_MOSCOW"]["PORT"].as<int>(),str);
    Serial.println(str);
@@ -846,18 +866,19 @@ bool sendHttpParam(){
 /**
  * Генерация контрольной суммы 
  */
- /*
-uint16_t KeyGen(){
-   sprintf_P(rbuf,KeyGenStrParam,SensorID,Time,Distance,Time,Hum);
+ 
+uint16_t KeyGen(char *str){
+//   char s[64];
+//   sprintf(s,"%s;%ld;%d;%d;%d",strID,Time,Distance,Time,Hum);
    uint16_t crc = 0;
-   for( int i=0; i< strlen(rbuf); i++ ){
-       crc += (int)rbuf[i];
+   for( int i=0; i< strlen(str); i++ ){
+       crc += (int)str[i];
    }    
    crc = ( ~ crc )&0xfff;   
    return crc;
   
 }
-*/
+
 
 void setVolumeMP3(){
    EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());

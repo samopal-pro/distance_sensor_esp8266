@@ -43,15 +43,17 @@ bool SBTN::isPress(void){
 * @param _bounce - таймаут на подавление дребезга контактов (мс). По умолчанию 250
 */
 SBTN_base::SBTN_base(bool (*func)(void), uint32_t _bounce){
-   isPressPtr  = func;  
-   ms_press    = 0;
-   is_press    = false;
-   tm_bounce   = _bounce;
-   number_btn  = _count_btn++;
-   count_event = 0;
-   is_debug    = false;
-   is_timer    = false;
-   timer_press = 0;
+   isPressPtr   = func;  
+   ms_press     = 0;
+   is_press     = false;
+   tm_bounce    = _bounce;
+   number_btn   = _count_btn++;
+   count_event  = 0;
+   is_debug     = false;
+   is_timer     = false;
+   is_timer2    = false;
+   timer_press  = 0;
+   timer_press2 = 0;
    timer_reset_count_event = 0;
 }
 
@@ -75,8 +77,9 @@ SBTN_EVENT_t SBTN_base::loop(){
    if( ms_press > _ms )ms_delta = 0 - ms_press + _ms; 
    if( _press_flag ){ //Фиксируем событие нажатой кнопки
       if( !is_press ){ //Фиксируем первое событие нажатой кнопки
-         is_press = true;
-         is_timer = true;
+         is_press  = true;
+         is_timer  = true;
+		 is_timer2 = true;
          ms_press = _ms;     
          count_event++;
          if( is_debug ){
@@ -102,7 +105,19 @@ SBTN_EVENT_t SBTN_base::loop(){
 
          if( PressPtr != NULL )TimerPtr(number_btn,count_event);   
          return SB_TIMER;
+     }
+     if( is_press && timer_press2>0 && is_timer2 && timer_press2<ms_delta ){
+         is_timer2 = false;
+         if( is_debug ){
+            Serial.print(F("!!! Timer2 key="));
+            Serial.print(number_btn);
+            Serial.print(F(" event="));
+            Serial.print(count_event);
+            Serial.println();
+         }
 
+         if( PressPtr != NULL )TimerPtr(number_btn,count_event);   
+         return SB_TIMER2;
      }
    }
    else {  //Фиксируем событие отжатой кнопки
@@ -159,6 +174,11 @@ uint32_t SBTN_base::getPressTime(void){ return ms_delta; }
 * Установить таймер удержания кнопки
 */
 void SBTN_base::setTimer(uint32_t _tm){ timer_press = _tm; }
+
+/**
+* Установить таймер2 удержания кнопки
+*/
+void SBTN_base::setTimer2(uint32_t _tm){ timer_press2 = _tm; }
 
 /**
 * Установить таймер сброса счетчика нажатий кнопки
