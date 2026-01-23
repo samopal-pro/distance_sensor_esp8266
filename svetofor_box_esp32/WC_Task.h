@@ -28,11 +28,12 @@ enum ES_STAT {
 };
 
 enum CALIBRATION_MODE_t {
-   CM_NONE      = 0,
-   CM_WAIT      = 1,
-   CM_WAIT_MP3  = 2,
-   CM_WAIT_WAIT = 3,
-   CM_ON        = 100
+   CM_NONE        = 0,
+   CM_WAIT        = 1,
+   CM_WAIT_MP3    = 2,
+   CM_WAIT_WAIT   = 3,
+   CM_WAIT_REBOOT = 4,
+   CM_ON          = 100
 };
 
 enum CMD_MP3_t {
@@ -47,6 +48,7 @@ enum CMD_MP3_t {
 extern TEventRGB *EventRGB1, *EventRGB2;
 extern TEventMP3 *EventMP3;
 extern bool isSensorBlock;
+extern CALIBRATION_MODE_t calibrMode;
 
 void tasksStart();
 void taskEvents(void *pvParameters);
@@ -69,6 +71,7 @@ void baseMP3( JsonObject _config, bool is_delay = true );
 void systemMP3( char *_check, int _num, int _priority );
 void playMP3(int _dir, int _num, int _priority=DAFAULT_PRIORITY_MP3, uint32_t _color=COLOR_MP3_1);
 void waitMP3(uint32_t _delay=DEFAULT_TIMER_MP3);
+void waitMP3andReboot();
 
 void handleSensor( bool _flag  );
 void handleRelay1( bool _flag  );

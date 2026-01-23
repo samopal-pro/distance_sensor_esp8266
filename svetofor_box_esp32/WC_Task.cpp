@@ -274,6 +274,11 @@ void taskSensors(void *pvParameters) {
             EventCalibrate->on(0);            
          } 
       }
+      else if( calibrMode == CM_WAIT_REBOOT ){
+         if( EventMP3->State == ES_NONE ){
+             ESP.restart();
+         }
+      }
       if( ms0 == 0 || ms0 > ms || ms-ms0 > 5000 ){
          ms0 = ms;
          printStat("TM");
@@ -631,7 +636,7 @@ void taskButton(void *pvParameters){
    uint32_t tm;
    int btn_count;
    while(true){
-      if(isSensorBlock){ //Сенсор заблокирован до выключения питания
+      if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
          vTaskDelay(1000);    
          continue;
       }
@@ -652,9 +657,11 @@ void taskButton(void *pvParameters){
                 EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
                 btn_count = 0;
                 jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
-                configSave();     
-                waitMP3(10000);    
-                ESP.restart();  
+                configSave();  
+                waitMP3andReboot();
+   
+//                waitMP3(10000);    
+//                ESP.restart();  
              }
              break;
           case SB_RELEASE:
@@ -699,8 +706,10 @@ void taskButton(void *pvParameters){
              jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
              jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль администратора
              configSave();
-             waitMP3(10000);    
-             ESP.restart();  
+             waitMP3andReboot();
+
+//             waitMP3(10000);    
+//             ESP.restart();  
              break;
       }
        vTaskDelay(200);
@@ -726,7 +735,7 @@ void taskNet( void *pvParameters ){
    else isAP = false;
 //   HTTP_begin();
    while(true){
-      if(isSensorBlock){ //Сенсор заблокирован до выключения питания
+      if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
          vTaskDelay(1000);    
          continue;
       }
@@ -1045,6 +1054,11 @@ void waitMP3(uint32_t _delay){
        vTaskDelay(500);   
     }
     Serial.println(F("!!! MP3 stop wait ..."));
+}
 
 
+void waitMP3andReboot(){
+   EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
+   EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);     
+   calibrMode = CM_WAIT_REBOOT;          
 }

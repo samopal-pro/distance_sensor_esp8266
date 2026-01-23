@@ -852,7 +852,7 @@ void HTTP_printConfig2(String &out){
 * Настройка подсветки
 **/
 void HTTP_printConfig4(String &out){
-int Dir = jsonConfig["MP3"]["ADD"]["DIR"].as<int>();
+  int Dir = MP3_ADD_DIR;
 
   out += "<fieldset>\n";
   out += "<legend>Первый запуск</legend>\n";
@@ -983,7 +983,7 @@ void HTTP_print_MP3_7(String &out, char *text, char *name){
    sprintf(s,"MP3_%s_PLAY",name);
 //   out += "<input type='submit' name='";out += s; out += "' value='▶' class='btn'>";
    out += "<input type='button' value='▶' class='btn' onClick='playMP3c(";
-   out += jsonConfig["MP3"][name]["DIR"].as<int>();
+   out += MP3_BASE_DIR;
    out += ",";
    out += jsonConfig["MP3"][name]["NUM"].as<int>();
    out += ",";
@@ -1053,16 +1053,18 @@ bool HTTP_checkArgs(int current){
 //       HTTP_printMessage("Загрузка заводских параметров. Перезагрузка ...");
        HTTP_goto("/", 2000, "Загрузка заводских параметров. Перезагрузка ..."); //1.12.24
        systemMP3("89",91,PRIORITY_MP3_MAXIMAL);
-       vTaskDelay(3000);
-       ESP.restart();  
+//       vTaskDelay(3000);
+//       ESP.restart();  
+       waitMP3andReboot();
        return true;
    }
    else if( server.hasArg("Reboot") ){ 
        HTTP_goto("/", 20000, "Перезагрузка ...");
        systemMP3("89",86,PRIORITY_MP3_MAXIMAL);
-       vTaskDelay(3000);
+       waitMP3andReboot();
+//Vj;tn       vTaskDelay(3000);
 //       HTTP_printMessage("Перезагрузка ...");
-       ESP.restart();  
+//       ESP.restart();  
        return true;
    }
 //   else if( server.hasArg( "MP3_PLAY" ) ){
@@ -1948,8 +1950,9 @@ void HTTP_handleUpdate() {
 
 void HTTP_fileUpload1(){ // upload a new file to the Filing system
     HTTP_goto("/", 5000, "Обновление прошивки завершено успешно. Перезагрузка через 5 сек");
-    delay(5000);
-    ESP.restart();
+//    delay(5000);
+//    ESP.restart();
+    waitMP3andReboot();
 
 }
 
