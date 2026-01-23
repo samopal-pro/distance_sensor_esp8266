@@ -28,9 +28,11 @@ enum ES_STAT {
 };
 
 enum CALIBRATION_MODE_t {
-   CM_NONE = 0,
-   CM_WAIT = 1,
-   CM_ON = 2
+   CM_NONE      = 0,
+   CM_WAIT      = 1,
+   CM_WAIT_MP3  = 2,
+   CM_WAIT_WAIT = 3,
+   CM_ON        = 100
 };
 
 enum CMD_MP3_t {
@@ -44,7 +46,7 @@ enum CMD_MP3_t {
 
 extern TEventRGB *EventRGB1, *EventRGB2;
 extern TEventMP3 *EventMP3;
-
+extern bool isSensorBlock;
 
 void tasksStart();
 void taskEvents(void *pvParameters);
@@ -64,9 +66,9 @@ void setVolumeMP3();
 //void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm);
 //void setEventMP3( JsonObject _config, bool is_delay = true );
 void baseMP3( JsonObject _config, bool is_delay = true );
-void systemMP3( char *_check, int _num, bool _wait=false, uint32_t _timer=DEFAULT_TIMER_MP3, bool _busy=false );
-void playMP3(int _dir, int _num, uint32_t _color=COLOR_MP3_1);
-void waitMP3(uint32_t _delay);
+void systemMP3( char *_check, int _num, int _priority );
+void playMP3(int _dir, int _num, int _priority=DAFAULT_PRIORITY_MP3, uint32_t _color=COLOR_MP3_1);
+void waitMP3(uint32_t _delay=DEFAULT_TIMER_MP3);
 
 void handleSensor( bool _flag  );
 void handleRelay1( bool _flag  );
@@ -77,7 +79,9 @@ void handleMP3(    bool _flag  );
 void handleBusy1(  bool _flag  );
 void handleBusy2(  bool _flag  );
 void handleCalibrate(bool _flag);
-void startCalibrate(uint32_t _delay);
+
+void startCalibrate(uint32_t _delay, char *_check=NULL, int _num=-1, CALIBRATION_MODE_t _mode=CM_WAIT_MP3 );
+
 void setEventRGB1(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
 void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
 void setNanMode();

@@ -11,8 +11,21 @@
 #include "src/NeoPixel/Adafruit_NeoPixel.h"    // https://github.com/adafruit/Adafruit_NeoPixel
 
 
-#define MAX_RGB_STACK_ITEMS 10
-#define TIMER_MP3           500
+#define MAX_RGB_STACK_ITEMS    10
+#define TIMER_MP3              500
+#define DEFAULT_TIMER_MP3      300000
+#define DEFAULT_DELAY_MP3      0
+
+
+#define PRIORITY_MP3_MINIMAL   0
+#define PRIORITY_MP3_MEDIUM    1
+#define PRIORITY_MP3_HIGH      2
+#define PRIORITY_MP3_MAXIMAL   3
+#define PRIORITY_MP3_75        4
+
+#define DAFAULT_PRIORITY_MP3   PRIORITY_MP3_MINIMAL
+
+
 
 enum TEVENT_TYPE_t {
   ET_DISABLE    = 0, //CСобытие отключено
@@ -130,6 +143,8 @@ private:
     int Dir;
     int Track;
 
+    int Priority;
+
     uint32_t msOn;
     uint32_t msOff;
     uint32_t ms1;
@@ -152,7 +167,10 @@ public:
     TEventMP3(Stream &_stream,  void (*_handle)(bool) = NULL );
     void setVolume(int _volume);
     void setColor(uint32_t _color=COLOR_NONE, uint32_t _timer=0);
-    void start(int _dir, int _track, uint32_t _delay = 0, uint32_t _timer = 30000, bool _is_wait = true, bool _loop=false );
+
+
+    void start(int _dir, int _track, int _priority = DAFAULT_PRIORITY_MP3, uint32_t _delay = DEFAULT_DELAY_MP3, uint32_t _timer = DEFAULT_TIMER_MP3, bool _is_wait = true, bool _loop=false );
+    
     void stop();
     TEVENT_STATUS_t loop();
 

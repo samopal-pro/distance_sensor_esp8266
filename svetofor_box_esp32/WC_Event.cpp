@@ -335,6 +335,7 @@ TEventMP3::TEventMP3(Stream &_stream, void (*_handle)(bool) ){
    isLoop       = false;
    Color        = COLOR_NONE;
    ColorEvent   = new TEvent(0,0,_handle);
+   Priority     = DAFAULT_PRIORITY_MP3;
    init(); 
 }
 
@@ -357,22 +358,29 @@ void TEventMP3::setColor(uint32_t _color, uint32_t _timer){
     else ColorEvent->setType(ET_PULSE, _timer);
 }
 
-void TEventMP3::start(int _dir, int _track, uint32_t _delay, uint32_t _timer, bool _is_wait, bool _loop ){
-    if( State == ES_WAIT_ON || State == ES_ON )return;
+void TEventMP3::start(int _dir, int _track,int _priority, uint32_t _delay, uint32_t _timer, bool _is_wait, bool _loop ){   
+    Serial.printf("!!! MP3 check %d %d %d\n", _priority, Priority, State);
+
+    if( _priority < Priority && (State == ES_WAIT_ON || State == ES_ON) )return;
+
+//    if( State != ES_NONE && _priority >= Priority  )return;
     msOn       = millis();
     Dir        = _dir;
     Track      = _track;
     DelayOn    = _delay;
     TimerOn    = _timer;
     waitPlayer = _is_wait;
+    Priority   = _priority;
     isLoop     = _loop;
     if( DelayOn == 0 ){
        State = ES_ON;
        _start();
     }
     else {
+       _stop();
        State = ES_WAIT_ON;
     }    
+    Serial.printf("!!! MP3 start %d/%d.mp3 %l %l %d %d\n", Dir, Track, DelayOn, TimerOn, (int)waitPlayer, (int)isLoop);
 }
 
 void TEventMP3::stop(){
@@ -390,6 +398,7 @@ void TEventMP3::_start(){
 }
 
 void TEventMP3::_stop(){
+    Serial.printf("!!! MP3 stop %d/%d.mp3\n", Dir, Track);
    if(isPlayer)Player->stop();
    if( Handle != NULL && isOn )ColorEvent->off();
    State = ES_NONE;   

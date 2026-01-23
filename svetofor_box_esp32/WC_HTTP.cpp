@@ -315,7 +315,7 @@ void HTTP_printBottomMenu(String &out){
 void HTTP_handleDistance(void) {
   String out = "";
   char str[50];
-  if( server.hasArg("Refresh"))systemMP3("89",84);
+   if( server.hasArg("Refresh"))systemMP3("89",84,PRIORITY_MP3_MEDIUM);
 
   out += "<html>\n<head>\n<meta charset=\"utf-8\" />\n";
 //  out += "<meta http-equiv='refresh' content='5'>\n";
@@ -589,7 +589,7 @@ void HTTP_printConfig(String &out){
 // Блок №3 
 //  sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
 
-  HTTP_InputInt(out,"Задержка начала калибровки (сек):","TMCalibr",jsonConfig["CALIBR"]["DELAY_START"].as<int>(),0,60);
+//  HTTP_InputInt(out,"Задержка начала калибровки (сек):","TMCalibr",jsonConfig["CALIBR"]["DELAY_START"].as<int>(),0,60);
 //  sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
   HTTP_InputInt(out,"Количество тестовых замеров для калибровки:","NumCalibr",jsonConfig["CALIBR"]["NUMBER"].as<int>(),0,60);
 
@@ -867,7 +867,8 @@ int Dir = jsonConfig["MP3"]["ADD"]["DIR"].as<int>();
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
 //  out += "<tr><td width='500'>Оповещение</td><td width='50'>Тест</td><td width='50'>Длит.</td><tr>\n";
-  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 02/099.mp3",Dir,99,jsonConfig["MP3"]["99"]["COLOR_TM"].as<int>());
+//  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 02/099.mp3",Dir,99,jsonConfig["MP3"]["99"]["COLOR_TM"].as<int>());
+  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 02/099.mp3",Dir,99);
   out += "</table>\n";
 
 
@@ -1039,8 +1040,8 @@ bool HTTP_checkArgs(int current){
    bool _reboot = false;
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Calibrate")  ){  
-       systemMP3("89",85);
-       startCalibrate(2000);
+       systemMP3("89",85,PRIORITY_MP3_HIGH);
+       startCalibrate(0,"97",97);
    }
    else if( server.hasArg("Default") ){ 
 
@@ -1051,14 +1052,14 @@ bool HTTP_checkArgs(int current){
        configRead();
 //       HTTP_printMessage("Загрузка заводских параметров. Перезагрузка ...");
        HTTP_goto("/", 2000, "Загрузка заводских параметров. Перезагрузка ..."); //1.12.24
-       systemMP3("89",91,true);
+       systemMP3("89",91,PRIORITY_MP3_MAXIMAL);
        vTaskDelay(3000);
        ESP.restart();  
        return true;
    }
    else if( server.hasArg("Reboot") ){ 
        HTTP_goto("/", 20000, "Перезагрузка ...");
-       systemMP3("89",86,true);
+       systemMP3("89",86,PRIORITY_MP3_MAXIMAL);
        vTaskDelay(3000);
 //       HTTP_printMessage("Перезагрузка ...");
        ESP.restart();  
@@ -1071,8 +1072,10 @@ bool HTTP_checkArgs(int current){
        jsonSave["BOOT_COUNT"]  = 0;
        saveSave();
        HTTP_goto("/conf4", 5000, "Активирован первый запуск датчика. Сброшен счетчик загрузок");
-       systemMP3("70",75,true);
-       vTaskDelay(2000);
+       systemMP3("70",75,PRIORITY_MP3_75);
+       EventRGB1->setRainbow(true);
+       EventRGB2->setRainbow(true);
+       isSensorBlock = true;
        return true;
    }
 
@@ -1103,7 +1106,6 @@ bool HTTP_checkArgs(int current){
 */
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
-      systemMP3("89",83);
 // RGB1
       if(server.hasArg("ColorFree")   )jsonConfig["RGB1"]["FREE"] = HTMLtoInt(server.arg("ColorFree").c_str());
       if(server.hasArg("ColorBusy")   )jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy").c_str());
@@ -1272,7 +1274,7 @@ if( _reboot ){
 //      if( EA_Config.isWiFiAlways || isWiFiAlways1)ledSetWiFiMode(LED_WIFI_AP1);
 //      else ledSetWiFiMode(LED_WIFI_AP);
 //      ledSetBaseMode(LED_SAVE,true);
-
+      systemMP3("89",83,PRIORITY_MP3_MEDIUM);
       vTaskDelay(500);
 //      SaveRGB1->Restore(4);
 //      SaveRGB2->Restore(4);
@@ -1291,11 +1293,11 @@ void HTTP_handlePlayMP3(void){
    uint32_t color =  COLOR_MP3_1;
    if( server.hasArg("COLOR") )color = server.arg("COLOR").toInt();
    if( server.hasArg("CHECK") ){
-      systemMP3((char *)server.arg("CHECK").c_str(),num);       
+      systemMP3((char *)server.arg("CHECK").c_str(),num,PRIORITY_MP3_MEDIUM);       
       Serial.printf("!!! HTTP MP3 system %d\n",num); 
    }
    else {
-      playMP3(dir,num,color);
+      playMP3(dir,num,PRIORITY_MP3_MEDIUM,color);
       Serial.printf("!!! HTTP MP3 %d %d %06lx\n",dir,num,color); 
    }
 }
@@ -1902,7 +1904,7 @@ void HTTP_handleUpdate() {
   HTTPUpload& upload = server.upload();
 ///  Serial.printf("!!! Update %d\n",upload.status);
   if (upload.status == UPLOAD_FILE_START) {
-     systemMP3("89",89);
+     systemMP3("89",89,PRIORITY_MP3_MEDIUM);
 #if defined(DEBUG_SERIAL)
      Serial.setDebugOutput(true);
      Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -1921,7 +1923,7 @@ void HTTP_handleUpdate() {
        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
 #endif
 //       HTTP_goto("/", 5000, "Обновление прошивки завершено успешно. Перезагрузка через 5 сек");
-       systemMP3("89",88);
+       systemMP3("89",88,PRIORITY_MP3_MEDIUM);
 #if defined(DEBUG_SERIAL)
        Serial.println(F("Обновление прошивки завершено успешно."));
 #endif
@@ -1978,7 +1980,7 @@ void HTTP_handleUpload() {
 //  content += "<script>\n";
 //  content += "function F1(){$('#main').html(\"Begin firmware update. Please wait 30 sec\");}\n";
 //  content += "</script>\n";
-  systemMP3("89",90);
+  systemMP3("89",90,PRIORITY_MP3_MEDIUM);
 
 
   content += " <form method='POST' action='/update1' enctype='multipart/form-data'>\n";

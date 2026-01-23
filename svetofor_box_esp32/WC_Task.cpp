@@ -29,11 +29,15 @@ bool inverseRelay1 = false, inverseRelay2 = false;
 uint16_t eventRelay1 = 0, eventRelay2 = 0;
 uint32_t msRelay1 = 0, msRelay2 = 0;
 
+char calibrCheck[5], calibrNum = -1;
+
 CALIBRATION_MODE_t calibrMode = CM_NONE;
 float calibrAvg = 0;
 uint16_t calibrCount = 0, calibrError = 0;
 
 uint32_t ms0 = 0, ms1 = 0;
+
+bool isSensorBlock = false; //Полная блокировка сенсора до перезагрузки. Работают только звук и свет
 
 bool isChangeNan   = true;
 bool isChangeStat  = false; //Изменение отслеживания изменения состояния для немедленной отправки 
@@ -181,37 +185,42 @@ void taskSensors(void *pvParameters) {
    pinMode(PIN_OUT2,OUTPUT);
    setRelay1(statRelay2); 
 //   checkPlayMP3("100",100);
+
+// Стартовое приветсвие
    EventRGB1->setRainbow(true);
    EventRGB2->setRainbow(true);
-   EventRGB1->set(COLOR_NAN,COLOR_NAN);
-   EventRGB2->set(COLOR_NAN,COLOR_NAN);
    uint32_t _ms1 = millis();
    waitMP3(DEFAULT_TIMER_MP3);
-   systemMP3("100",100, true);
+   systemMP3("100", 100, PRIORITY_MP3_MAXIMAL );
+   waitMP3(30000);
    uint32_t _ms2 = millis();
    if( _ms2 - _ms1 < 3000 )vTaskDelay( 3000 - (_ms2-_ms1) );
-
    EventRGB1->setRainbow(false);
    EventRGB2->setRainbow(false);
 
-
-
-
    EventRGB1->set(COLOR_NAN,COLOR_NAN);
    EventRGB2->set(COLOR_NAN,COLOR_NAN);
 
+// Если самый первый старт
    if( bootCount < 1 ){
       vTaskDelay(1000);
-      systemMP3("99",99,true);
-      vTaskDelay(jsonConfig["MP3"]["99"]["COLOR_TM"].as<uint32_t>()*1000);
-      startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
+      systemMP3("99",99,PRIORITY_MP3_MAXIMAL);
+      startCalibrate(0,"97",97,CM_WAIT_WAIT);
+//      vTaskDelay(jsonConfig["MP3"]["99"]["COLOR_TM"].as<uint32_t>()*1000);
+//      startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
    }
    else {
       Distance = jsonSave["DISTANCE"].as<float>();
       SensorOn = (SENSOR_STAT_t)jsonSave["STATE_ON"].as<int>();
    }
+
    while (true) {
       uint32_t ms = millis();
+      if(isSensorBlock){ //Сенсор заблокирован до выключения питания
+         Serial.println(F("!!! Sensor blocked. Wait reboot ..."));
+         vTaskDelay(5000);    
+         continue;
+      }
 
       xSemaphoreTake(sensorSemaphore, portMAX_DELAY);
       uint16_t _status = (uint16_t)sensor->get();
@@ -232,7 +241,9 @@ void taskSensors(void *pvParameters) {
          }
          checkChangeOn();
       }
-      else if( calibrMode == CM_ON){ //Режим калибровки
+
+// Режим калибровки
+      else if( calibrMode == CM_ON){ 
          int calibrMax =  jsonConfig["CALIBR"]["NUMBER"].as<int>();
          if( calibrCount >= calibrMax )EventCalibrate->off();
          if( calibrCount + calibrError >= calibrMax*3 )EventCalibrate->off();
@@ -244,12 +255,30 @@ void taskSensors(void *pvParameters) {
          else {
              calibrError++;
          }
+      }     
+      else if( calibrMode == CM_WAIT_WAIT ){
+         if( EventMP3->State == ES_NONE ){
+            Serial.printf("!!! Wait clibrate");
+            if( calibrNum >0 )systemMP3(calibrCheck,calibrNum,PRIORITY_MP3_HIGH);
+            startCalibrate(0);
+         } 
+
+      }
+      else if( calibrMode == CM_WAIT_MP3 ){
+//         Serial.printf( "!!! Calibr Wait MP3 %d\n",EventMP3->State);
+         if( EventMP3->State == ES_NONE ){
+            Serial.printf("!!! Start clibrate");
+            if( calibrNum >0 )systemMP3(calibrCheck,calibrNum,PRIORITY_MP3_HIGH);
+            EventCalibrate->reset();
+            EventCalibrate->setType(ET_NORMAL);
+            EventCalibrate->on(0);            
+         } 
       }
       if( ms0 == 0 || ms0 > ms || ms-ms0 > 5000 ){
-         ms0 = millis();
+         ms0 = ms;
          printStat("TM");
       } 
-
+// Если поменялая яркость лент и громкость звуков
       if( isChangeConfig ){
           isChangeConfig = false;
           EventRGB1->setBrightness( jsonConfig["RGB1"]["BRIGHTNESS"].as<int>() );
@@ -352,20 +381,28 @@ void handleBusy2(bool _flag){
 /**
 * Начало калибровки через событие
 */
-void startCalibrate(uint32_t _delay){
+void startCalibrate(uint32_t _delay, char *_check, int _num, CALIBRATION_MODE_t _mode){
 #if defined(DEBUG_SERIAL)
    Serial.println(F("!!! Calibrate Wait ... "));
 #endif
 //   EventMP3->reset();
-   waitMP3(10000);
-   systemMP3("97",97,true,DEFAULT_TIMER_MP3);
+   
+   if( _check!= NULL)strncpy(calibrCheck, _check, 4);
+   else calibrCheck[0] = '\0';
+   calibrNum = _num;
    EventCalibrate->reset();
-   EventCalibrate->setType(ET_PULSE,30000,0);
-   EventCalibrate->on(_delay);
-   calibrMode = CM_WAIT;
-   EventRGB1->set(COLOR_GROUND,COLOR_GROUND,COLOR_BLACK,COLOR_BLACK,250,250);
-   EventRGB2->set(COLOR_GROUND,COLOR_GROUND,COLOR_BLACK,COLOR_BLACK,250,250);
-   isPlayMP3 = false;
+   calibrMode = _mode;
+   if( _mode == CM_WAIT_MP3){
+      EventRGB1->set(COLOR_GROUND,COLOR_GROUND,COLOR_BLACK,COLOR_BLACK,250,250);
+      EventRGB2->set(COLOR_GROUND,COLOR_GROUND,COLOR_BLACK,COLOR_BLACK,250,250);
+   }
+//   systemMP3("97",97,PRIORITY_MP3_HIGH);
+//   waitMP3();
+
+//   EventCalibrate->reset();
+//   EventCalibrate->setType(ET_PULSE,30000,0);
+//   EventCalibrate->on(_delay);
+//   isPlayMP3 = false;
 }
 
 /**
@@ -390,8 +427,8 @@ void handleCalibrate(bool _flag){
       Serial.println("!!! Stop calibr");
       if( calibrCount > 0 ){
           bool ret = false;
-          if(calibrError < calibrCount)systemMP3("97",93,true);
-          else systemMP3("97",94,true);
+          if(calibrError < calibrCount)systemMP3("97",93,PRIORITY_MP3_HIGH);
+          else systemMP3("97",94,PRIORITY_MP3_HIGH);
           EventRGB1->set(COLOR_SAVE,COLOR_SAVE);
           EventRGB2->set(COLOR_SAVE,COLOR_SAVE);
           float x = calibrAvg/calibrCount;
@@ -407,7 +444,7 @@ void handleCalibrate(bool _flag){
      }
      else {
           Serial.println("!!! cal1");
-          systemMP3("97",95,true);
+          systemMP3("97",95,PRIORITY_MP3_HIGH);
           Serial.println("!!! cal2");
           EventRGB1->set(COLOR_NAN,COLOR_NAN);
           EventRGB2->set(COLOR_NAN,COLOR_NAN);
@@ -508,7 +545,7 @@ void checkChangeOn(){
          }
          */
          if(lastSensorOn==SS_NONE){
-            systemMP3("97",95,true);
+            systemMP3("97",95,PRIORITY_MP3_HIGH);
          }
          else if(lastSensorOn!=SS_RESTORE){   
             if( lastSensorOn == SS_FREE )baseMP3(jsonConfig["MP3"]["FREE_NAN"]);
@@ -594,6 +631,12 @@ void taskButton(void *pvParameters){
    uint32_t tm;
    int btn_count;
    while(true){
+      if(isSensorBlock){ //Сенсор заблокирован до выключения питания
+         vTaskDelay(1000);    
+         continue;
+      }
+
+
       switch(btn.loop()){
           case SB_PRESS:
              is_early = false;
@@ -604,7 +647,7 @@ void taskButton(void *pvParameters){
              EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
              EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
              if( btn_count == 5 ){
-                systemMP3("92",92,true);
+                systemMP3("92",92,PRIORITY_MP3_HIGH);
                 EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
                 EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
                 btn_count = 0;
@@ -618,6 +661,7 @@ void taskButton(void *pvParameters){
              tm = btn.getPressTime();
              if( tm >= 2000 && tm < 10000 ){
                  is_early = false;
+                 systemMP3("97",97,PRIORITY_MP3_HIGH);
                  startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
                  if( bootCount>=1 ){
                     if( isAP )isAP = false;
@@ -633,8 +677,10 @@ void taskButton(void *pvParameters){
              Serial.printf("!!! BTN Release %d\n",(int)tm);
              break;
           case SB_TIMER_COUNT:
-             EventMP3->stop();             
-             if( is_early)systemMP3("97",96,true);
+             if( is_early){
+               EventMP3->stop();             
+               systemMP3("97",96,PRIORITY_MP3_HIGH);
+             }
              is_early = false;
              break;   
           case SB_TIMER:
@@ -646,7 +692,7 @@ void taskButton(void *pvParameters){
              is_early = false;
              EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
              EventRGB2->set(COLOR_SAVE,COLOR_SAVE);  
-              systemMP3("98",98,true);
+             systemMP3("98",98,PRIORITY_MP3_HIGH);
 //             jsonSave["BOOT_COUNT"]  = 0;
 //             saveSave();
              jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
@@ -680,6 +726,11 @@ void taskNet( void *pvParameters ){
    else isAP = false;
 //   HTTP_begin();
    while(true){
+      if(isSensorBlock){ //Сенсор заблокирован до выключения питания
+         vTaskDelay(1000);    
+         continue;
+      }
+
       uint32_t ms = millis();
       if( ms2 == 0 || ms < ms2 || (ms-ms2)>3000){
           ms2 = ms;
@@ -963,26 +1014,26 @@ void baseMP3( JsonObject _config, bool is_delay ){
     uint32_t _delay      = 0;
     if( is_delay )_delay = _config["DELAY"].as<uint32_t>()*1000;
     if(_enable){
-       EventMP3->stop();
+//       EventMP3->stop();
        EventMP3->setColor( _color, _ctimer );
-       EventMP3->start(MP3_BASE_DIR, _num, _delay, _timer, true, _loop);
+       EventMP3->start(MP3_BASE_DIR, _num, PRIORITY_MP3_MINIMAL, _delay, _timer, true, _loop);
     }
 }
  
-void systemMP3(char *_check, int _num, bool _wait, uint32_t _timer, bool _busy ){
+void systemMP3(char *_check, int _num, int _priority ){
     if( !jsonConfig["MP3"][_check]["ENABLE"].as<bool>() )return;
-    if( _busy && EventMP3->State != ES_NONE )return;
+//    if( _busy && EventMP3->State != ES_NONE )return;
     EventMP3->setColor( COLOR_MP3_1 ,0);
-    EventMP3->start(MP3_ADD_DIR, _num, 0, DEFAULT_TIMER_MP3, true, false);
-    if( _wait )waitMP3(DEFAULT_TIMER_MP3);
+    EventMP3->start(MP3_ADD_DIR, _num, _priority );
+//    if( _wait )waitMP3(DEFAULT_TIMER_MP3);
 
 
 }
 
-void playMP3(int _dir, int _num, uint32_t _color){
-    EventMP3->stop();
+void playMP3(int _dir, int _num, int _priority, uint32_t _color){
+ //   EventMP3->stop();
     EventMP3->setColor( _color ,0);
-    EventMP3->start(_dir, _num, 0, DEFAULT_TIMER_MP3, true, false);
+    EventMP3->start(_dir, _num, _priority);
     
 }
 

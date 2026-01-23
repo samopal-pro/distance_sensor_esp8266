@@ -5,7 +5,7 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.14"
+#define SOFTWARE_V           "10.0.15"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.9"
 
@@ -125,7 +125,5 @@ enum SENSOR_STAT_t {
 #define MP3_BASE_DIR           1
 #define MP3_ADD_DIR            2
 
-#define DEFAULT_TIMER_MP3      300000
-#define DEFAULT_DELAY_MP3      0
 
 #endif
