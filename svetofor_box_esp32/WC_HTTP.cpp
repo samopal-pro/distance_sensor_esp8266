@@ -29,7 +29,8 @@ std::vector <int> n_rssi;
 bool isHTTP = false;
 
 bool is_update     = false;
-bool is_load_page = false;
+bool is_load_page  = false;
+bool is_first_root = true;
 uint32_t   http_ms = 0;
 char *pages[] =  {"/", "/conf1", "/conf2", "/conf3", "/conf4" };
 
@@ -226,15 +227,33 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += "</title>\n";
   HTTP_printCSS(out);
   HTTP_printJS(out);
-  
+  if( jsonSave["MSG_AUTH"].as<bool>() ){
+     if( UID < 0 ){  
+        if( EventMP3->State == ES_NONE ){
+           systemMP3("89",86,PRIORITY_MP3_MEDIUM);
+           jsonSave["MSG_AUTH"] = false;
+           saveSave();
+        }  
+     }
+     else {
+        jsonSave["MSG_AUTH"] = false;
+        saveSave();
+     }
+  }
+
   out += "<body>\n";
   out += " <div class=\"main\" id=\"main\">\n  "; 
   out += "<h2>ДАТЧИК ПРИСУТСТВИЯ</h2>";
   out += "<p><img src=/logo.png></p>\n";
-
+  
   //out += "<p><br>Сенсор: ";
   //out += EA_Config.ESP_NAME;
   //out += " ";
+  out += "ID:";
+  out += strID;
+  out += " S/N:";
+  out += serNo;
+  out += " VER:";
   out += SOFTWARE_V;
   out += "\n";
   out += "<p>";
@@ -354,6 +373,10 @@ void HTTP_handleRoot(void) {
   char str[50];
   String out = "";
   is_load_page = true;
+  if( is_first_root ){
+     is_first_root = false;
+     systemMP3("70", 70, PRIORITY_MP3_MEDIUM);
+  }
   HTTP_printHeader(out,"Главная",0);
   HTTP_print_menu(out, numPage);
 // Блок №1
@@ -836,12 +859,12 @@ void HTTP_printConfig2(String &out){
 //  out += "<table class='tab1'>\n";
   out += "<tr><td width='320'>Оповещение</td><td width='50'>Вкл.</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><td width='50'>Цвет</td><td width='50'>Длит.</td><tr>\n";
 
-  HTTP_print_MP3_7(out,"Момент заезда автомобиля. Файл 01/001.mp3", "BUSY" );
-  HTTP_print_MP3_7(out,"Датчик перестает видеть расстояние (Машина в пене). Файл 01/002.mp3", "NAN" );
-  HTTP_print_MP3_7(out,"В боксе долго находится автмомбиль. Файл 01/003.mp3", "BUSY1" );
-  HTTP_print_MP3_7(out,"Автомобиль слишком долго в доксе или датчик \"залип\". Файл 01/004.mp3", "BUSY2" );
-  HTTP_print_MP3_7(out,"После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 01/005.mp3", "FREE_NAN" );
-  HTTP_print_MP3_7(out,"Выезд автомобиля. Бокс свободен. (Можно загрузить рекламу) Файл 01/006.mp3", "FREE" );
+  HTTP_print_MP3_7(out,"Момент заезда автомобиля. Файл 001.mp3", "BUSY" );
+  HTTP_print_MP3_7(out,"Датчик перестает видеть расстояние (Машина в пене). Файл 002.mp3", "NAN" );
+  HTTP_print_MP3_7(out,"В боксе долго находится автмомбиль. Файл 003.mp3", "BUSY1" );
+  HTTP_print_MP3_7(out,"Автомобиль слишком долго в доксе или датчик \"залип\". Файл 004.mp3", "BUSY2" );
+  HTTP_print_MP3_7(out,"После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 005.mp3", "FREE_NAN" );
+  HTTP_print_MP3_7(out,"Выезд автомобиля. Бокс свободен. (Можно загрузить рекламу) Файл 006.mp3", "FREE" );
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -867,8 +890,8 @@ void HTTP_printConfig4(String &out){
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
 //  out += "<tr><td width='500'>Оповещение</td><td width='50'>Тест</td><td width='50'>Длит.</td><tr>\n";
-//  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 02/099.mp3",Dir,99,jsonConfig["MP3"]["99"]["COLOR_TM"].as<int>());
-  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 02/099.mp3",Dir,99);
+//  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 099.mp3",Dir,99,jsonConfig["MP3"]["99"]["COLOR_TM"].as<int>());
+  HTTP_print_MP3(out,"Первый запуск, приветствие. Дорожка 099.mp3",Dir,99);
   out += "</table>\n";
 
 
@@ -878,8 +901,12 @@ void HTTP_printConfig4(String &out){
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
 
-  HTTP_print_MP3(out,"Запуск датчика, приветствие. Дорожка 02/100.mp3",Dir,100);
+  HTTP_print_MP3(out,"Запуск датчика, приветствие. Дорожка 100.mp3",Dir,100);
   out += "</table>\n";
+
+  out += "<p class='t1'>";
+  HTTP_print_input_checkbox(out,"MP3_SHORT_MSG","1",jsonConfig["MP3"]["SHORT_MSG"].as<bool>());
+  out += "Включить короткие звуковые оповещения";
 
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
@@ -892,11 +919,11 @@ void HTTP_printConfig4(String &out){
   out += "Включить звуковые оповещения для калибровки";
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
-  HTTP_print_MP3(out,"Начало калибровки. Дорожка 02/097.mp3",Dir,97);
-  HTTP_print_MP3(out,"Рано убрал магнит. Дорожка 02/096.mp3",Dir,96);
-  HTTP_print_MP3(out,"Датчик не видит расстояние. Дорожка 02/095.mp3",Dir,95);
-  HTTP_print_MP3(out,"Датчик плохо видит расстояние. Дорожка 02/094.mp3",Dir,94);
-  HTTP_print_MP3(out,"Датчик успешно откалибровался. Дорожка 02/093.mp3",Dir,93);
+  HTTP_print_MP3(out,"Начало калибровки. Дорожка 097.mp3",Dir,97);
+  HTTP_print_MP3(out,"Рано убрал магнит. Дорожка 096.mp3",Dir,96);
+  HTTP_print_MP3(out,"Датчик не видит расстояние. Дорожка 095.mp3",Dir,95);
+  HTTP_print_MP3(out,"Датчик плохо видит расстояние. Дорожка 094.mp3",Dir,94);
+  HTTP_print_MP3(out,"Датчик успешно откалибровался. Дорожка 093.mp3",Dir,93);
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -908,7 +935,7 @@ void HTTP_printConfig4(String &out){
   out += "Включить звуковые оповещения для сброса паролей";
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
-  HTTP_print_MP3(out,"Сброс паролей. Дорожка 02/098.mp3",Dir,98);
+  HTTP_print_MP3(out,"Сброс паролей. Дорожка 098.mp3",Dir,98);
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -920,7 +947,7 @@ void HTTP_printConfig4(String &out){
   out += "Включить звуковые оповещения для сброса имени WiFi";
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
-  HTTP_print_MP3(out,"Сброс имени WiFi. Дорожка 02/092.mp3",Dir,92);
+  HTTP_print_MP3(out,"Сброс имени WiFi. Дорожка 092.mp3",Dir,92);
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -932,15 +959,16 @@ void HTTP_printConfig4(String &out){
   out += "Включить звуковые оповещения для WEB интерфейса";
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
-  HTTP_print_MP3(out,"Сброс до заводских настроек. Дорожка 02/091.mp3",Dir,91);
-  HTTP_print_MP3(out,"Обновление прошивки. Дорожка 02/090.mp3",Dir,90);
-  HTTP_print_MP3(out,"Нажатие на кнопку \"Обновление прошивки\". Дорожка 02/089.mp3",Dir,89);
-  HTTP_print_MP3(out,"Успешное обновление прошивки. Дорожка 02/088.mp3",Dir,88);
-  HTTP_print_MP3(out,"Ошибка обновления прошивки. Дорожка 02/087.mp3",Dir,87);
-  HTTP_print_MP3(out,"Нажатие на кнопку \"Перезагрузки\". Дорожка 02/086.mp3",Dir,86);
-  HTTP_print_MP3(out,"Нажатие на кнопку \"Автокалибровки\". Дорожка 02/085.mp3",Dir,85);
-  HTTP_print_MP3(out,"Нажатие на кнопку \"Обновить расстояние\". Дорожка 02/084.mp3",Dir,84);
-  HTTP_print_MP3(out,"Нажатие на кнопку \"Сохранить\". Дорожка 02/083.mp3",Dir,83);
+  HTTP_print_MP3(out,"Сброс до заводских настроек. Дорожка 091.mp3",Dir,91);
+  HTTP_print_MP3(out,"Обновление прошивки. Дорожка 090.mp3",Dir,90);
+  HTTP_print_MP3(out,"Нажатие на кнопку \"Обновление прошивки\". Дорожка 089.mp3",Dir,89);
+  HTTP_print_MP3(out,"Успешное обновление прошивки. Дорожка 088.mp3",Dir,88);
+  HTTP_print_MP3(out,"Ошибка обновления прошивки. Дорожка 087.mp3",Dir,87);
+  HTTP_print_MP3(out,"Нажатие на кнопку \"Перезагрузки\". Дорожка 086.mp3",Dir,86);
+  HTTP_print_MP3(out,"Нажатие на кнопку \"Автокалибровки\". Дорожка 085.mp3",Dir,85);
+  HTTP_print_MP3(out,"Нажатие на кнопку \"Обновить расстояние\". Дорожка 084.mp3",Dir,84);
+  HTTP_print_MP3(out,"Нажатие на кнопку \"Сохранить\". Дорожка 083.mp3",Dir,83);
+  HTTP_print_MP3(out,"Подсказка пароля при первом неавторизованном заходе. Дорожка 082.mp3",Dir,82);
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -952,12 +980,12 @@ void HTTP_printConfig4(String &out){
   out += "Включить оповещение кнопок переключения страниц";
   out += "<table width=100%>\n";
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
-  HTTP_print_MP3(out,"Кнопка \"Основные настройки\". Дорожка 02/070.mp3",Dir,70);
-  HTTP_print_MP3(out,"Кнопка \"Настройки реле\". Дорожка 02/071.mp3",Dir,71);
-  HTTP_print_MP3(out,"Кнопка \"Сеть и сенсор\". Дорожка 02/072.mp3",Dir,72);
-  HTTP_print_MP3(out,"Кнопка \"Звуковые оповещения\". Дорожка 02/073.mp3",Dir,73);
-  HTTP_print_MP3(out,"Кнопка \"Стартовые настройки\". Дорожка 02/074.mp3",Dir,74);
-  HTTP_print_MP3(out,"Кнопка \"Активация первого запуска\". Дорожка 02/075.mp3",Dir,75);
+  HTTP_print_MP3(out,"Кнопка \"Основные настройки\". Дорожка 070.mp3",Dir,70);
+  HTTP_print_MP3(out,"Кнопка \"Настройки реле\". Дорожка 071.mp3",Dir,71);
+  HTTP_print_MP3(out,"Кнопка \"Сеть и сенсор\". Дорожка 072.mp3",Dir,72);
+  HTTP_print_MP3(out,"Кнопка \"Звуковые оповещения\". Дорожка 073.mp3",Dir,73);
+  HTTP_print_MP3(out,"Кнопка \"Стартовые настройки\". Дорожка 074.mp3",Dir,74);
+  HTTP_print_MP3(out,"Кнопка \"Активация первого запуска\". Дорожка 075.mp3",Dir,75);
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -1072,6 +1100,7 @@ bool HTTP_checkArgs(int current){
 //   }
    else if( server.hasArg("BOOT0") ){ 
        jsonSave["BOOT_COUNT"]  = 0;
+       jsonSave["MSG_AUTH"]    = true;
        saveSave();
        HTTP_goto("/conf4", 5000, "Активирован первый запуск датчика. Сброшен счетчик загрузок");
        systemMP3("70",75,PRIORITY_MP3_75);
@@ -1081,31 +1110,7 @@ bool HTTP_checkArgs(int current){
        return true;
    }
 
-/*   
-   else if( server.hasArg( "MP3_BUSY_PLAY"     ) ){ playMP3(jsonConfig["MP3"]["BUSY"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY"]["NUM"].as<int>());         }
-   else if( server.hasArg( "MP3_NAN_PLAY"      ) ){ playMP3(jsonConfig["MP3"]["NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["NAN"]["NUM"].as<int>());           }
-   else if( server.hasArg( "MP3_BUSY1_PLAY"    ) ){ playMP3(jsonConfig["MP3"]["BUSY1"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY1"]["NUM"].as<int>());       }
-   else if( server.hasArg( "MP3_BUSY2_PLAY"    ) ){ playMP3(jsonConfig["MP3"]["BUSY2"]["DIR"].as<int>(), jsonConfig["MP3"]["BUSY2"]["NUM"].as<int>());       }
-   else if( server.hasArg( "MP3_FREE_NAN_PLAY" ) ){ playMP3(jsonConfig["MP3"]["FREE_NAN"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE_NAN"]["NUM"].as<int>()); }
-   else if( server.hasArg( "MP3_FREE_PLAY"     ) ){ playMP3(jsonConfig["MP3"]["FREE"]["DIR"].as<int>(), jsonConfig["MP3"]["FREE"]["NUM"].as<int>());         }
-   else if( server.hasArg( "MP3_99_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 99);     }
-   else if( server.hasArg( "MP3_98_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 98);     }
-   else if( server.hasArg( "MP3_97_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 97);     }
-   else if( server.hasArg( "MP3_96_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 96);     }
-   else if( server.hasArg( "MP3_95_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 95);     }
-   else if( server.hasArg( "MP3_94_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 94);     }
-   else if( server.hasArg( "MP3_93_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 93);     }
-   else if( server.hasArg( "MP3_92_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 92);     }
-   else if( server.hasArg( "MP3_91_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 91);     }
-   else if( server.hasArg( "MP3_90_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 90);     }
-   else if( server.hasArg( "MP3_89_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 89);     }
-   else if( server.hasArg( "MP3_88_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 88);     }
-   else if( server.hasArg( "MP3_87_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 87);     }
-   else if( server.hasArg( "MP3_86_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 86);     }
-   else if( server.hasArg( "MP3_85_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 85);     }
-   else if( server.hasArg( "MP3_84_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 84);     }
-   else if( server.hasArg( "MP3_83_PLAY"       ) ){ playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(), 83);     }
-*/
+
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
 // RGB1
@@ -1246,6 +1251,11 @@ bool HTTP_checkArgs(int current){
          else jsonConfig["MP3"]["89"]["ENABLE"] = false;
          if(server.hasArg("MP3_70_ENABLE"))jsonConfig["MP3"]["70"]["ENABLE"] = true;
          else jsonConfig["MP3"]["70"]["ENABLE"] = false;
+
+         if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
+         else jsonConfig["MP3"]["SHORT_MSG"] = false;
+         isChangeConfig = true;
+
      }
 
    
@@ -1756,12 +1766,55 @@ void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked)
   out += ">";   
 }
 
+
+void HTTP_print_menu_item(String &out, bool _isCur, int _proc, char *_label, char *_url, bool _isMP3, int _dirMP3, int _numMP3){
+  out += "<td width=";
+  out += _proc;
+  out += "% align='center'>";
+  if( _isCur ){
+      out += "<form method='GET'><input type='submit' value='";
+      out += _label;
+      out += "' class='btn0'";
+  }
+  else {
+      out += "<form action='";
+      out += _url;
+      out += "' method='GET'><input type='submit' value='";
+      out += _label;
+      out += "' class='btn2'";
+  }
+  if( _isMP3 ){
+     out += " onClick='playMP3(";
+     out += _dirMP3;
+     out += ",";
+     out += _numMP3;
+     out += ");'";
+  }
+  out += "></form></td>\n";
+  Serial.printf("!!! HTTP Menu %d %s %s %d %d %d\n",(int)_isCur, _label, _url, (int)_isMP3, _dirMP3, _numMP3 );
+
+}
+
 void HTTP_print_menu(String &out, int current){
   bool isMP3 =  jsonConfig["MP3"]["70"]["ENABLE"].as<bool>(); 
 //  isMP3 = false;
   
-  
   out += "\n<p><table width='100%'><tr>";
+  HTTP_print_menu_item(out, ( current == 0 ), 40, "Основные настройки",  "/",       isMP3, MP3_ADD_DIR, 70);
+  HTTP_print_menu_item(out, ( current == 1 ), 35, "Настройки реле",      "/conf1",  isMP3, MP3_ADD_DIR, 71);
+  HTTP_print_menu_item(out, ( current == 2 ), 25, "Сеть и сенсор",       "/conf2",  isMP3, MP3_ADD_DIR, 72);
+  out += "</tr><tr>\n";
+  HTTP_print_menu_item(out, ( current == 3 ), 33, "Звуковые оповещения", "/conf3",  isMP3, MP3_ADD_DIR, 73);
+  if( UID >= 2 ){
+      HTTP_print_menu_item(out, ( current == 4 ), 33, "Стартовые настройки", "/conf4", isMP3, MP3_ADD_DIR, 74);
+  }
+  else {
+      out += "<td>&nbsp;</td>";
+  }
+  out += "<td'>&nbsp;</td>";
+
+/*
+
   out += "<td width=40% align='center'>";
   if( current == 0 )out += "<form method='GET'><input type='submit' value='Основные настройки' class='btn0'";
   else out += "<form action='/' method='GET'><input type='submit' value='Основные настройки' class='btn2'";
@@ -1799,7 +1852,6 @@ void HTTP_print_menu(String &out, int current){
       out += "<td'>&nbsp;</td>";
       out += "<td>&nbsp;</td>";
   }
-/*
 
 
   if( current == 0 )out += "<form method='GET'><input type='submit' value='Основные настройки' class='btn0'></form>\n";

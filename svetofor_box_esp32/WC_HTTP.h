@@ -127,6 +127,7 @@ void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);
 void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table);
 void HTTP_print_menu(String &out, int current);
+void HTTP_print_menu_item(String &out, bool _isCur, int _proc, char *_label, char *_url, bool _isMP3, int _dirMP3, int _numMP3);
 char *HTTP_url( int current );
 
 bool HTTP_redirect();

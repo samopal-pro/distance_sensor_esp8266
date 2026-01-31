@@ -1,7 +1,9 @@
 #include "WC_Task.h"
 char strID[16];
 uint64_t chipID;
+char serNo[33];
 
+int MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR;
 
 MySensor *sensor;
 TEvent *EventSensor, *EventRelay1, *EventRelay2;
@@ -42,13 +44,26 @@ bool isSensorBlock = false; //Полная блокировка сенсора �
 bool isChangeNan   = true;
 bool isChangeStat  = false; //Изменение отслеживания изменения состояния для немедленной отправки 
 uint16_t bootCount;
-bool isWiFiAlways1 = true; 
 SemaphoreHandle_t sensorSemaphore, soundSemaphore/*, bootSemaphore */;
-uint32_t msSendHttp = 0;
 uint32_t colorMP3   = COLOR_SAVE;
 
+bool isSendNet = false; // Флаг отсылки парамтров на сервер
 
-HTTPClient httpClient;
+
+
+//typedef struct {
+//    union {
+//       uint32_t data32;
+//       uint8_t  data8[4];
+//    };
+//} uint32_to_uint8;
+
+    union uint32_to_uint8 {
+       uint32_t data32;
+       char  data8[4];
+    };
+
+
 
 /**
  * Старт всех параллельных задач
@@ -58,20 +73,27 @@ void tasksStart() {
   configInit();
 //  configDefault();
 //  configSave();
-
+  ;
   configRead();
   saveRead();
   bootCount = saveCount(); 
   chipID = ESP.getEfuseMac();
   sprintf(strID,"%012llX",chipID);
-  Serial.printf("!!! ID %s ",strID);
+// Считываем серийник с efuse
+// Прошивать SAV00001 espefuse  -c auto -p COM3 burn_efuse BLOCK3 0x5341563030303031000000000000000000000000000000000000000000000000  
+  uint32_to_uint8 dd;
+  for( int i=0; i<8; i++){
+     dd.data32 = esp_efuse_read_reg(EFUSE_BLK3, 7-i);
+     for( int j=0; j<4; j++)serNo[i*4+j] = dd.data8[3-j];
+  }
+  serNo[32] = '\0';
+  Serial.printf("!!! ID=%s SER=%s ID1=",strID,serNo);
   Serial.println(chipID,HEX);
   
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
   sensorSemaphore = xSemaphoreCreateMutex();
   soundSemaphore  = xSemaphoreCreateMutex();
 //  bootSemaphore   = xSemaphoreCreateMutex();
-
 
    EventSensor         = new TEvent(0,0,handleSensor);
    EventRelay1         = new TEvent((uint32_t)(jsonConfig["RELAY1"]["DELAY_ON"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY1"]["DELAY_OFF"].as<float>()*1000),handleRelay1);
@@ -88,9 +110,11 @@ void tasksStart() {
    EventRGB2->setBrightness( jsonConfig["RGB2"]["BRIGHTNESS"].as<int>() );
 
    isPlayMP3 = true;
-   FPSerial.begin(9600, SERIAL_8N1, /*rx =*/PIN_RX1, /*tx =*/PIN_TX1);
+   FPSerial.begin(9600, SERIAL_8N1, PIN_RX1, PIN_TX1);
    EventMP3 = new TEventMP3(Serial1,handleMP3);
    EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
+   if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
+   else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
 
    xTaskCreateUniversal(taskEvents, "events", 10000, NULL, 3, NULL, CORE);
    xTaskCreateUniversal(taskRGB, "rgb", 10000, NULL, 3, NULL, CORE);
@@ -100,6 +124,8 @@ void tasksStart() {
    xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 4, NULL,CORE);
    vTaskDelay(500);
    xTaskCreateUniversal(taskNet, "net", 10000, NULL, 3, NULL, CORE);
+//   vTaskDelay(500);
+//   xTaskCreateUniversal(taskLora, "lora", 10000, NULL, 3, NULL, CORE);
 }
 
 /**
@@ -289,6 +315,8 @@ void taskSensors(void *pvParameters) {
           EventRGB1->setBrightness( jsonConfig["RGB1"]["BRIGHTNESS"].as<int>() );
           EventRGB2->setBrightness( jsonConfig["RGB2"]["BRIGHTNESS"].as<int>() );
           EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
+          if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
+          else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
       }
       
       xSemaphoreGive(sensorSemaphore);
@@ -492,6 +520,7 @@ void checkChangeOn(){
    uint32_t _color1, _color2;
    if( SensorOn == lastSensorOn )return;
    Serial.printf("!!! Stat is change %d %d\n", (int)SensorOn,(int)lastSensorOn);
+   isSendNet = true;
    switch(SensorOn){
       case SS_BUSY:
 //      case SS_NAN_BUSY:   
@@ -560,7 +589,6 @@ void checkChangeOn(){
    }
    lastSensorOn = SensorOn;
    isPlayMP3 = false;
-   msSendHttp = millis();
    saveSet(Distance,SensorOn);
 }
 
@@ -718,299 +746,13 @@ void taskButton(void *pvParameters){
 
 }
 
-/**
- * Задача передача данных через WiFi
- * @param pvParameters
- */
-void taskNet( void *pvParameters ){
-#if defined(DEBUG_SERIAL)
-    Serial.println(F("!!! WiFi task start"));
-#endif
-   WiFi.mode(WIFI_OFF);
-   uint32_t ms2 = 0, ms3 = 0;
-   EventRGB1->setColor0(COLOR_BLACK);
-   EventRGB1->setColor1(COLOR_BLACK);
-   Network.onEvent(handleEventWiFi);
-   if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() ||  bootCount<1 )isAP = true;
-   else isAP = false;
-//   HTTP_begin();
-   while(true){
-      if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
-         vTaskDelay(1000);    
-         continue;
-      }
 
-      uint32_t ms = millis();
-      if( ms2 == 0 || ms < ms2 || (ms-ms2)>3000){
-          ms2 = ms;
-          wifi_mode_t curWiFi = WiFi.getMode(); 
-          if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() == true && !jsonConfig["WIFI"]["NAME"].isNull() )isSTA = true;
-          else isSTA = false;
-// Стартуем точку доступа          
-          if( isAP && ( curWiFi != WIFI_AP && curWiFi != WIFI_AP_STA) ){
-             WiFi_ScanNetwork();
-             WiFi.enableAP(true);
-             WiFi.softAP(jsonConfig["SYSTEM"]["NAME"].as<String>());
-             HTTP_begin();
-             msAP = millis();                
-          }
-// Гасим точку доступа
-          if( !isAP && ( curWiFi == WIFI_AP || curWiFi == WIFI_AP_STA) ){
-//             Serial.println(F("!!! Disable AP"));
-             WiFi.enableAP(false);
-          }
-          if( isSTA && ( curWiFi != WIFI_STA && curWiFi != WIFI_AP_STA) ){
-             Serial.println(F("!!! Start STA"));
-             msSTA = ms;
-             WiFi_ScanNetwork();
-             WiFi.enableSTA(true);
-             if( jsonConfig["WIFI"]["DHCP"].as<bool>() == false ){
-                IPAddress ip_addr,ip_mask,ip_gate,ip_dns;
-                if( ip_addr.fromString( jsonConfig["WIFI"]["IP"]["ADDR"].as<String>() ) &&
-                    ip_mask.fromString( jsonConfig["WIFI"]["IP"]["MASK"].as<String>() ) &&
-                    ip_gate.fromString( jsonConfig["WIFI"]["IP"]["GW"].as<String>() ) &&
-                    ip_dns.fromString(  jsonConfig["WIFI"]["IP"]["DNS"].as<String>()     ) ){
-                   Serial.println("Config static IP address");
-                   WiFi.config(ip_addr,ip_gate,ip_mask,ip_dns);
-                }                 
-             }
-             WiFi.begin(jsonConfig["WIFI"]["NAME"].as<String>(), jsonConfig["WIFI"]["PASS"].as<String>());
-//             ledSTA(true);
-             EventRGB1->setColor1(COLOR_WIFI_WAIT);
-          }      
-          if( isSTA && ( curWiFi == WIFI_STA || curWiFi == WIFI_AP_STA) ){
-             if( WiFi.status() != WL_CONNECTED && (ms - msSTA)>10000 ){
-                 Serial.println(F("!!! Error WiFi"));
-                 EventRGB1->setColor1(COLOR_WIFI_OFF);
-                 WiFi.enableSTA(false);
-             }
-          }
-          if( !isSTA && ( curWiFi == WIFI_STA || curWiFi == WIFI_AP_STA) ){
-             WiFi.enableSTA(false);
-//             ledSTA( false );
-             EventRGB1->setColor1(COLOR_BLACK);
-          }
-
-// Стартуем подключение
-
-/*
-          wifi_mode_t modeWiFi =  WIFI_OFF;
-          if( isAP && isSTA )modeWiFi = WIFI_AP_STA;
-          else if( isAP )modeWiFi     = WIFI_AP;
-          else if( isSTA )modeWiFi    = WIFI_STA; 
-*/
-
-      }
-      if( (ms3 == 0 || ms < ms3 || (ms-ms3)>2000) &&  WiFi.status() == WL_CONNECTED){
-          ms3 = ms;
-          if( msSendHttp < ms ){
-             msSendHttp = 0;
-             uint32_t ms_tmp = 0;
-             if( sendHttpParam() )ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_SEND"].as<uint32_t>()*1000;
-             else ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_RETRY"].as<uint32_t>()*1000;
-             if( msSendHttp == 0)msSendHttp = ms_tmp;
-          }
-      }
-      HTTP_loop();
-      vTaskDelay(50);      
-   }
-
-
-}
-
-void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
-  switch (event) {
-    case ARDUINO_EVENT_WIFI_STA_START:     Serial.println("STA Started"); break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("STA Connected"); break;
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      EventRGB1->setColor1(COLOR_WIFI_ON);
-      Serial.println("!!! STA Got IP");
-      Serial.println(WiFi.STA);
-//      WiFi.AP.enableNAPT(true);
-      break;
-    case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-      Serial.println("!!! STA Lost IP");
-      EventRGB1->setColor1(COLOR_WIFI_WAIT);          
-      msSTA = millis();
-//      WiFi.AP.enableNAPT(false);
-      break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.println("!!! STA Disconnected");
-//      WiFi.AP.enableNAPT(false);
-      break;
-    case ARDUINO_EVENT_WIFI_STA_STOP: Serial.println("STA Stopped"); break;
-
-    case ARDUINO_EVENT_WIFI_AP_START:
-//      w_stat2 = EWS_AP_MODE;
-      if( bootCount<0 )   EventRGB1->setColor0(COLOR_WIFI_AP);
-      else EventRGB1->setColor0(COLOR_WIFI_AP1);
-      Serial.println("AP Started");
-      Serial.println(WiFi.AP);
-      break;
-    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    Serial.println("AP STA Connected"); break;
-    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("AP STA Disconnected"); break;
-    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-      Serial.print("AP STA IP Assigned: ");
-      Serial.println(IPAddress(info.wifi_ap_staipassigned.ip.addr));
-      break;
-    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED: Serial.println("AP Probe Request Received"); break;
-    case ARDUINO_EVENT_WIFI_AP_STOP:       
-      Serial.println("AP Stopped"); 
-      EventRGB1->setColor0(COLOR_BLACK);
-      break;
-
-    default: break;
-  }
-}
-
-bool sendHttpParam(){
-   bool ret = false;
-   char s[64];
-   uint32_t tm = millis()/1000;
-
-   sprintf(s,"%s;%ld;%d;%d;%d",strID,tm,(int)Distance,tm,0);
-   uint16_t crc = KeyGen(s);
-
-   String str = "";
-   str += "http://";
-   str += jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>();
-   str += ":";
-   str += jsonConfig["CRM_MOSCOW"]["PORT"].as<int>();
-   str += HTTP_PATH;
-   str += "?id=";
-//   str += jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"].as<String>();
-//   str += "_";
-//   str += jsonConfig["CRM_MOSCOW"]["BOX_ID"].as<String>();
-   str += strID;
-   str += "&temp=0&hum=0&dist=";
-   str += String(Distance,0);
-   str += "&tm=";
-   str += String(millis()/1000);
-   str += "&btn=";
-   switch(SensorOn){
-      case SS_BUSY:
-      case SS_NAN_BUSY: str += "1";break;
-      case SS_FREE:   
-      case SS_NAN_FREE: str += "1";break;  
-      default: str += "-1";
-   }   
-   str += "&uptime=";
-   str += String(millis()/1000);
-   str += "&key=";
-   str += (int)crc;
-
-//   httpClient.begin(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>(), jsonConfig["CRM_MOSCOW"]["PORT"].as<int>(),str);
-   Serial.println(str);
-   httpClient.begin(str);
-   int httpCode = httpClient.GET();
-   httpClient.end();
-   Serial.print(F("!!! HTTP send "));
-   Serial.println(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>());
-   
-   if( httpCode == HTTP_CODE_OK ){
-        String payload = httpClient.getString();
-        Serial.print(" success: ");
-        Serial.println(payload);
-        ret = true;
-   }
-   else {
-        Serial.print(" error: ");
-        Serial.println(httpCode);
-   }
-//   sprintf(sbuf,"GET http://%s:%d%s?id=%s&temp=%d&hum=%d&dist=%d&tm=%ld&btn=%d&uptime=%ld&key=%d HTTP/1.0\r\n\r\n",
-//      EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID,_temp,_hum,
-//      _dist,_time,(int)_btn,_uptime,(int)KeyGen());
-   return ret;    
-}
-
-/**
- * Генерация контрольной суммы 
- */
- 
-uint16_t KeyGen(char *str){
-//   char s[64];
-//   sprintf(s,"%s;%ld;%d;%d;%d",strID,Time,Distance,Time,Hum);
-   uint16_t crc = 0;
-   for( int i=0; i< strlen(str); i++ ){
-       crc += (int)str[i];
-   }    
-   crc = ( ~ crc )&0xfff;   
-   return crc;
-  
-}
 
 
 void setVolumeMP3(){
    EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
 }
 
-/*
-
-void playMP3_1(int _dir, int _num, bool isWait, uint32_t delay){
-   EventMP3->start(_dir, _num, 0, delay, isWait);
-//    cmdMP3    = CMP3_PLAY;
-//    arg1MP3   = _dir;
-//    arg2MP3   = _num;
-//    isPlayMP3 = true;
-//    if( isWait )Serial.println(F("!!! MP3 end wait ..."));
-//    else xSemaphoreGive(soundSemaphore);
-   Serial.printf("!!! MP3 play %d %d %d %ld\n", _dir, _num, (int)isWait, delay);
-   if( isWait )waitMP3(delay);
-    
-}
-void stopMP3_1(){
-//    cmdMP3  = CMP3_STOP;
-//    isPlayMP3 = false;
-   EventMP3->stop();
-}
-
-void waitMP3(uint32_t _delay){
-  
-    uint32_t _ms = millis() + _delay;
-    Serial.println(F("!!! MP3 start wait ..."));
-    while( isPlayMP3 ){
-       if( _delay > 0 && _ms < millis() )break;
-       vTaskDelay(1000);   
-    }
-    Serial.println(F("!!! MP3 stop wait ..."));
-
-
-}
-
-
-
-bool checkPlayMP3_1(  char *check, int num, bool isWait, uint32_t delay ){
-    if( jsonConfig["MP3"][check]["ENABLE"].as<bool>() ){
-       playMP3(jsonConfig["MP3"]["ADD"]["DIR"].as<int>(),num, isWait, delay);
-       return true;
-    }
-    return false;
-}
-*/
-/*
-* Установка проигрывния звуковой дорожки
-*/
-/*
-
-void setEventMP3( bool _enable, uint32_t _delayOn, int _dir, int _sound, bool _loop, uint32_t _color, uint32_t _tm){
-    if(_enable ){
-       EventMP3->Color = _color;
-       EventMP3->stop();
-       EventMP3->start(_dir, _sound, _delayOn, 30000, true);
-    }
-}
-*/
-/*
-* Установка проигрывния звуковой дорожки из JSON Объекта
-*/
-/*
-void setEventMP3( JsonObject _config, bool is_delay){
-    uint32_t _delay = 0;
-    if( is_delay )_delay = _config["DELAY"].as<uint32_t>()*1000;
-    colorMP3 = _config["COLOR"];
-    setEventMP3(_config["ENABLE"].as<bool>(),_delay,_config["DIR"].as<int>(),_config["NUM"].as<int>(),_config["LOOP"].as<bool>(),_config["COLOR"].as<uint32_t>(),_config["COLOR_TM"].as<uint32_t>()*1000 );
-}
-*/
 
 void baseMP3( JsonObject _config, bool is_delay ){
     bool _enable         = _config["ENABLE"].as<bool>();

@@ -5,7 +5,7 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.16"
+#define SOFTWARE_V           "10.0.17"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.9"
 
@@ -51,6 +51,7 @@ enum SENSOR_STAT_t {
 #define PIN_LORA_RST         2
 #define PIN_LORA_DIO1        4
 #define PIN_LORA_DIO2        14
+#define PIN_LORA_BUSY        -1
 
 #define PIN_I2C_SDA          21
 #define PIN_I2C_SCL          22
@@ -122,8 +123,17 @@ enum SENSOR_STAT_t {
 
 #define HTTP_PATH              "/api/1/sensor/99/"
 
-#define MP3_BASE_DIR           1
-#define MP3_ADD_DIR            2
+#define MP3_BASE_DIR           2
+#define MP3_SYSTEM_FULL_DIR    3
+#define MP3_SYSTEM_SHORT_DIR   4
+
+#define TB_HOST                "192.168.1.2"
+#define TB_PORT                8080
+
+#define TB_TOKEN               "w6fJ9TIL4LFh7ZmJLOww"
+
+#define TB_PROVISION_KEY       "gtjm4dqi5zrvf7qoj12j"
+#define TB_PROVISION_SECRET    "6nn8cd85g3qlos8us6kj"
 
 
 #endif

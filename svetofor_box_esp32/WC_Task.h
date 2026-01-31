@@ -8,10 +8,13 @@
 //#include "WC_Led.h"
 #include "WC_HTTP.h"
 #include "WC_Event.h"
+#include "WC_Net.h"
 //#include "src/Slib/SButton.h"
 #include "src/Slib/SBTN.h"
 //#include <WiFi.h>
-#include <HTTPClient.h>
+#include <esp_efuse.h>
+#include <esp_efuse_table.h>
+#include <soc/efuse_reg.h>
 
 #define DEPTH_DIST_ARRAY 5
 #define SAMPLE_LEN       10
@@ -49,12 +52,18 @@ extern TEventRGB *EventRGB1, *EventRGB2;
 extern TEventMP3 *EventMP3;
 extern bool isSensorBlock;
 extern CALIBRATION_MODE_t calibrMode;
+extern uint16_t bootCount;
+extern char strID[];
+extern char serNo[];
+extern uint64_t chipID;
+extern SENSOR_STAT_t SensorOn;
+extern bool isSendNet;
+extern int MP3_ADD_DIR;
 
 void tasksStart();
 void taskEvents(void *pvParameters);
 void taskSensors(void *pvParameters);
 void taskButton(void *pvParameters);
-void taskNet(void *pvParameters);
 void taskMP3(void *pvParameters);
 void taskRGB(void *pvParameters);
 void setVolumeMP3();
@@ -89,10 +98,6 @@ void setEventRGB1(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint
 void setEventRGB2(TEVENT_TYPE_t _type, uint32_t _timeOn, uint32_t _timeOff, uint32_t _color1, uint32_t _color2);
 void setNanMode();
 
-void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
-
-bool sendHttpParam();
-uint16_t KeyGen(char *str);
 
 
 void checkChangeOn();

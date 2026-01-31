@@ -380,7 +380,7 @@ void TEventMP3::start(int _dir, int _track,int _priority, uint32_t _delay, uint3
        _stop();
        State = ES_WAIT_ON;
     }    
-    Serial.printf("!!! MP3 start %d/%d.mp3 %l %l %d %d\n", Dir, Track, DelayOn, TimerOn, (int)waitPlayer, (int)isLoop);
+    Serial.printf("!!! MP3 start %02d/%03d.mp3 %ld %ld %d %d\n", Dir, Track, DelayOn, TimerOn, (int)waitPlayer, (int)isLoop);
 }
 
 void TEventMP3::stop(){

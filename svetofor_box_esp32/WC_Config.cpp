@@ -69,7 +69,7 @@ void configDefault(){
    jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"]  = "0000";            
    jsonConfig["CRM_MOSCOW"]["BOX_ID"]      = "1";                     
    jsonConfig["CRM_MOSCOW"]["SERVER"]      = "crm.moscow";             
-   jsonConfig["CRM_MOSCOW"]["PORT"]        = 8081;             
+   jsonConfig["CRM_MOSCOW"]["PORT"]        = 8001;             
    jsonConfig["CRM_MOSCOW"]["T_SEND"]      = 1000;                   //Таймаут отправки на сервер            
    jsonConfig["CRM_MOSCOW"]["T_RETRY"]     = 10;                     //Таймаут повторной отправки если статус HTTP не 200            
    
@@ -114,6 +114,7 @@ void configDefault(){
 // Настройка плеера MP3      
    jsonConfig["MP3"]["VOLUME"]            = 30;                          // Громкость 0-30
    jsonConfig["MP3"]["EQ"]                = 0;                           // Режим эквалайзера 0-5
+   jsonConfig["MP3"]["SHORT_MSG"]         = false;
 // Автомобиль заехал
    jsonConfig["MP3"]["BUSY"]["ENABLE"]    = true;
 //   jsonConfig["MP3"]["BUSY"]["DIR"]       = 1;
@@ -282,6 +283,7 @@ void saveDefault(){
    jsonSave["DISTANCE"]    = 0;
    jsonSave["STATE_ON"]    = SENSOR_GROUND_STATE;
    jsonSave["BOOT_COUNT"]  = 0;
+   jsonSave["MSG_AUTH"]    = true;
 
 
 }
@@ -308,7 +310,6 @@ uint16_t saveCount(){
    }
    else {
       _count = jsonSave["BOOT_COUNT"].as<uint16_t>();
-//      _count++;
       jsonSave["BOOT_COUNT"] = _count+1;
    }
    saveSave();
