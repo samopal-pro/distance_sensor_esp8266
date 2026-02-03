@@ -11,6 +11,7 @@
 
 extern JsonDocument jsonConfig;
 extern JsonDocument jsonSave;
+//extern JsonDocument jsonTB;
 extern bool isChangeConfig;
 
 typedef enum T_AP_START_MODE {

@@ -2,7 +2,8 @@
 
 HTTPClient httpClient;
 bool isWiFiAlways1 = true; 
-uint32_t msSendHttp = 0;
+uint32_t msSendHttp = 0, msSendTB = 0;
+bool isSendAttributeTB = false;
 
 JsonDocument jsonData;
 
@@ -69,7 +70,7 @@ void taskNet( void *pvParameters ){
       if( ms2 == 0 || ms < ms2 || (ms-ms2)>3000){
           ms2 = ms;
           wifi_mode_t curWiFi = WiFi.getMode(); 
-          if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() == true && !jsonConfig["WIFI"]["NAME"].isNull() )isSTA = true;
+          if( !jsonConfig["WIFI"]["NAME"].isNull() )isSTA = true;
           else isSTA = false;
 // Стартуем точку доступа          
           if( isAP && ( curWiFi != WIFI_AP && curWiFi != WIFI_AP_STA) ){
@@ -128,19 +129,26 @@ void taskNet( void *pvParameters ){
       }
       if( (ms3 == 0 || ms < ms3 || (ms-ms3)>2000) &&  WiFi.status() == WL_CONNECTED){
           ms3 = ms;
-          if( msSendHttp < ms  || isSendNet ){
+
+          if(  isSendNet ){
              isSendNet  = false;
              msSendHttp = 0;
-             uint32_t ms_tmp = 0;
-             if( sendHttpParam() )ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_SEND"].as<uint32_t>()*1000;
-             else ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_RETRY"].as<uint32_t>()*1000;
-             if( msSendHttp == 0)msSendHttp = ms_tmp;
+             msSendTB   = 0;
+          } 
+          if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() && ( msSendHttp == 0 || msSendHttp < ms ) ){
+             if( sendHttpParam() )msSendHttp = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+             else msSendHttp = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+          }
+          if( jsonConfig["TB"]["ENABLE"].as<bool>() && ( msSendTB == 0 || msSendTB < ms ) ){
+             if( sendParamTB() )msSendTB = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+             else msSendTB = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+          }
+          
 /*             
              if( sendHttpParam() )ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_SEND"].as<uint32_t>()*1000;
              else ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_RETRY"].as<uint32_t>()*1000;
              if( msSendHttp == 0)msSendHttp = ms_tmp;
 */
-          }
       }
       HTTP_loop();
 
@@ -210,9 +218,9 @@ bool sendHttpParam(){
    str += jsonConfig["CRM_MOSCOW"]["PORT"].as<int>();
    str += HTTP_PATH;
    str += "?id=";
-   str += jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"].as<String>();
+   str += jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
    str += "_";
-   str += jsonConfig["CRM_MOSCOW"]["BOX_ID"].as<String>();
+   str += jsonConfig["NET"]["BOX_ID"].as<String>();
 //   str += strID;
    str += "&temp=0&hum=0&dist=";
    str += String(Distance,0);
@@ -273,12 +281,14 @@ uint16_t KeyGen(char *str){
 
 bool sendParamTB(){
     bool ret = false;
+    if( jsonConfig["TB"]["TOKEN"].isNull() || jsonConfig["TB"]["TOKEN"] == "" )if(!authTB(TB_PROVISION_KEY,TB_PROVISION_SECRET))return false;
+
     String _url = "http://";
-    _url += TB_HOST;
+    _url += jsonConfig["TB"]["SERVER"].as<String>();
     _url += ":";
-    _url += TB_PORT;
+    _url += jsonConfig["TB"]["PORT"].as<int>();
     _url += "/api/v1/";
-    _url += TB_TOKEN;
+    _url += jsonConfig["TB"]["TOKEN"].as<String>();
     _url += "/telemetry";
 
     int _state = -1;
@@ -289,16 +299,100 @@ bool sendParamTB(){
        case SS_NAN_FREE: _state = 0;break;  
     }   
     jsonData.clear();
-    jsonData["Dist"]   = (int)Distance;
-    jsonData["State"]  = _state;
-    jsonData["Uptime"] = millis()/1000;
+    jsonData["Distance"] = (int)Distance;
+    jsonData["State"]    = _state;
+    jsonData["Uptime"]   = esp_timer_get_time()/1000000;
     String _data;
     serializeJson(jsonData, _data); 
 
     httpClient.begin(_url);
     httpClient.addHeader("Content-Type", "application/json");     
     int httpCode = httpClient.POST(_data);
-    Serial.print(F("!!! TB send "));
+    Serial.print(F("!!! TB auth send "));
+    Serial.print(_url);
+    Serial.print(" ");
+    Serial.println(_data);
+   
+   if( httpCode == HTTP_CODE_OK ){
+        String _payload = httpClient.getString();
+        Serial.print(" success");
+        Serial.println(_payload);
+        ret = true;
+   }
+   else {
+        Serial.print(" error: ");
+        Serial.println(httpCode);
+   }
+   httpClient.end();
+   if( !isSendAttributeTB && ret )isSendAttributeTB = sendAttributeTB();
+   return ret;    
+
+
+}
+
+// Работа с TB
+// Получаеи JWT_TOKEN
+bool authTB(const char *_key, const char *_secret){
+    bool ret = false;
+    String _url = "http://";
+    _url += jsonConfig["TB"]["SERVER"].as<String>();
+    _url += ":";
+    _url += jsonConfig["TB"]["PORT"].as<int>();
+    _url += "/api/v1/provision";
+
+    jsonData.clear();
+    jsonData["deviceName"]            = strID;
+    jsonData["provisionDeviceKey"]    = _key;
+    jsonData["provisionDeviceSecret"] = _secret;
+    String _data;
+    serializeJson(jsonData, _data); 
+
+    httpClient.begin(_url);
+    httpClient.addHeader("Content-Type", "application/json");     
+    int httpCode = httpClient.POST(_data);
+    Serial.print(F("!!! TB auth send "));
+    Serial.print(_url);
+    Serial.print(" ");
+    Serial.println(_data);
+
+   if( httpCode == HTTP_CODE_OK ){
+      String _payload = httpClient.getString();
+      jsonData.clear();
+      deserializeJson(jsonData,_payload);
+      Serial.println(_payload);
+      if( jsonData["status"].as<String>() == "SUCCESS" ){
+         jsonConfig["TB"]["TOKEN"] =  jsonData["credentialsValue"].as<String>();
+         configSave();
+         ret = true;  
+      }
+   }
+   return ret;
+}
+
+
+bool sendAttributeTB(){
+    bool ret = false;
+
+    String _url = "http://";
+    _url += jsonConfig["TB"]["SERVER"].as<String>();
+    _url += ":";
+    _url += jsonConfig["TB"]["PORT"].as<int>();
+    _url += "/api/v1/";
+    _url += jsonConfig["TB"]["TOKEN"].as<String>();
+    _url += "/attributes?clientKeys";
+    jsonData.clear();
+    jsonData["SerialNo"]    = serNo;
+    jsonData["DogovorNo"]   = jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
+    jsonData["BoxNo"]       = jsonConfig["NET"]["BOX_ID"].as<String>();
+    String _data;
+    serializeJson(jsonData, _data); 
+
+    httpClient.begin(_url);
+    httpClient.addHeader("Content-Type", "application/json");     
+    int httpCode = httpClient.POST(_data);
+    Serial.print(F("!!! TB send token="));
+    Serial.print(jsonConfig["TB"]["TOKEN"].as<String>());
+    Serial.print(" Data=");
     Serial.println(_data);
    
    if( httpCode == HTTP_CODE_OK ){
@@ -314,10 +408,5 @@ bool sendParamTB(){
    httpClient.end();
 
    return ret;    
-
-
 }
 
-// Работа с TB
-// Получаеи JWT_TOKEN
-bool authTB(const char *_name, const char *_pass);

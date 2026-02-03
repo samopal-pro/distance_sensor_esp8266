@@ -21,6 +21,8 @@ void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
 bool sendHttpParam();
 
 bool sendParamTB();
+bool sendAttributeTB();
+bool authTB(const char *_key, const char *_secret);
 
 uint16_t KeyGen(char *str);
 

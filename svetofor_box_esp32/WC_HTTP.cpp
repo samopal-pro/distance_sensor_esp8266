@@ -764,28 +764,42 @@ void HTTP_printConfigNet(String &out){
 
 // Блок №7
   out += "<fieldset>\n";
-  out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
-  out += "<labelВвключить онлайн отправку данных</label>\n";
-  
-  HTTP_print_input_checkbox(out,"SEND_HTTP","send",jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>());
-  
-  out += "<p class='t1'>Для активации онлайн мониторинга поставьте галочку которая находится над этой строкой. Введите все поля с ** и сохраните. Нужно прописать: ID мойки, номер бокса, пароль сети интернет и выбрать сеть WI-FI. После этого сохраните и в первой вкладке выключите бесконечный режим раздачи WiFi активировав режим с бирюзовой иконкой.";
-  out += "После сохраните и перезагрузите устройство нажав желтую кнопку внизу натроек.</p>";
-
+  out += "<legend>Подключение к внешним сервисам по WiFi</legend>\n";
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",jsonConfig["WIFI"]["PASS"].as<const char *>(),20,32,HT_PASSWORD);
- 
-  HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"].as<const char *>(),20,16,HT_TEXT);
-  HTTP_printInput1(out,"**Номер бокса:","Box",jsonConfig["CRM_MOSCOW"]["BOX_ID"].as<const char *>(),20,16,HT_TEXT);
-  out += "<p class='t1'>Ниже идут дополнительные настройки. Обратитесь в техническую поддержку прежде чем их менять.</p>";
-  HTTP_printInput1(out,"Сервер:","Server",jsonConfig["CRM_MOSCOW"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
-  sprintf(s,"%d",jsonConfig["CRM_MOSCOW"]["PORT"].as<int>());
-  HTTP_printInput1(out,"Порт:","Port",s,20,32,HT_NUMBER);
-  sprintf(s,"%d",jsonConfig["CRM_MOSCOW"]["T_SEND"].as<int>());
-  HTTP_printInput1(out,"Связь с сервером каждые, сек:","TM_HTTP_SEND",s,20,32,HT_NUMBER);
-  sprintf(s,"%d",jsonConfig["CRM_MOSCOW"]["T_RETRY"].as<int>());
-  HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,20,32,HT_NUMBER);
 
+  HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",jsonConfig["NET"]["DOGOVOR_ID"].as<const char *>(),20,16,HT_TEXT);
+  HTTP_printInput1(out,"**Номер бокса:","Box",jsonConfig["NET"]["BOX_ID"].as<const char *>(),20,16,HT_TEXT);
+  sprintf(s,"%d",jsonConfig["NET"]["T_SEND"].as<int>());
+  HTTP_printInput1(out,"Связь с сервером каждые, сек:","TM_HTTP_SEND",s,20,32,HT_NUMBER);
+  sprintf(s,"%d",jsonConfig["NET"]["T_RETRY"].as<int>());
+  HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,20,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+
+
+  out += "<fieldset>\n";
+  out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
+  out += "<labelВвключить онлайн отправку данных</label>\n";
+  HTTP_print_input_checkbox(out,"CRM_ENABLE","send",jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>());
+  out += "<p class='t1'>Для активации онлайн мониторинга поставьте галочку которая находится над этой строкой. Введите все поля с ** и сохраните. Нужно прописать: ID мойки, номер бокса, пароль сети интернет и выбрать сеть WI-FI. После этого сохраните и в первой вкладке выключите бесконечный режим раздачи WiFi активировав режим с бирюзовой иконкой.";
+  out += "После сохраните и перезагрузите устройство нажав желтую кнопку внизу натроек.</p>";
+  out += "<p class='t1'>Ниже идут дополнительные настройки. Обратитесь в техническую поддержку прежде чем их менять.</p>";
+  HTTP_printInput1(out,"Сервер:","CRM_SERVER",jsonConfig["CRM_MOSCOW"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
+  sprintf(s,"%d",jsonConfig["CRM_MOSCOW"]["PORT"].as<int>());
+  HTTP_printInput1(out,"Порт:","CRM_PORT",s,20,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+
+  out += "<fieldset>\n";
+  out += "<legend>Подключение к онлайн мониторингу TB.SVETOFORBOX.RU</legend>\n";
+  out += "<labelВвключить онлайн отправку данных</label>\n";
+  HTTP_print_input_checkbox(out,"TB_ENABLE","send",jsonConfig["TB"]["ENABLE"].as<bool>());
+  out += "<p class='t1'>Ниже идут дополнительные настройки. Обратитесь в техническую поддержку прежде чем их менять.</p>";
+  HTTP_printInput1(out,"Сервер:","TB_SERVER",jsonConfig["TB"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
+  sprintf(s,"%d",jsonConfig["TB"]["PORT"].as<int>());
+  HTTP_printInput1(out,"Порт:","TB_PORT",s,20,32,HT_NUMBER);
+  HTTP_printInput1(out,"Токен доступа:","TB_TOKEN",jsonConfig["TB"]["TOKEN"].as<const char *>(),20,32,HT_TEXT);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 // Блок №8
@@ -1118,24 +1132,27 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("ColorBusy")   )jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy").c_str());
       if(server.hasArg("ColorBlink")  )jsonConfig["RGB1"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink").c_str());
 
-      if(server.hasArg("FLAG_ROOT")  ){
-         jsonConfig["RGB1"]["IS_FREE_BLINK"] = false;   
-         jsonConfig["RGB1"]["IS_NAN_MODE"] = false;   
+
+      if( server.hasArg("isFreeBlink_H")){
+         if( server.hasArg("isFreeBlink"))jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
+         else jsonConfig["RGB1"]["IS_FREE_BLINK"] = false;
       }
-      if( server.hasArg("isFreeBlink"))jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
-      if( server.hasArg("isColorNan") )jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
+      if( server.hasArg("isColorNan-H")){
+         if( server.hasArg("isColorNan") )jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
+         else jsonConfig["RGB1"]["IS_NAN_MODE"] = false;
+      }
+     
       if(server.hasArg("Brightness")  ){jsonConfig["RGB1"]["BRIGHTNESS"] = server.arg("Brightness").toInt();isChangeConfig = true;}
 
 /// RGB2
-      if(server.hasArg("FLAG_CONFIG3")  ){
-         jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;   
-//         jsonConfig["RGB2"]["IS_NAN_MODE"] = false;   
-      }
       if(server.hasArg("ColorFree2")  )jsonConfig["RGB2"]["FREE"] = HTMLtoInt(server.arg("ColorFree2").c_str());
       if(server.hasArg("ColorBusy2")  )jsonConfig["RGB2"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy2").c_str());
       if(server.hasArg("ColorBlink2") )jsonConfig["RGB2"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink2").c_str());
 //      if(server.hasArg("ColorMP3")    )jsonConfig["RGB2"]["MP3"] = HTMLtoInt(server.arg("ColorMP3").c_str());
-      if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
+      if( server.hasArg("isFreeBlink2_H")){
+         if( server.hasArg("isFreeBlink2"))jsonConfig["RGB2"]["IS_FREE_BLINK"] = true;
+         else jsonConfig["RGB2"]["IS_FREE_BLINK"] = false;
+      }
 //      if( server.hasArg("isColorNan2") )jsonConfig["RGB2"]["IS_NAN_MODE"] = true;
       if(server.hasArg("Brightness2")  ){jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();isChangeConfig = true;}
 
@@ -1151,10 +1168,6 @@ bool HTTP_checkArgs(int current){
       }
 
 /// NET
-      if(server.hasArg("FLAG_CONFIG2")  ){
-         jsonConfig["WIFI"]["DHCP"] = true;
-         jsonConfig["CRM_MOSCOW"]["ENABLE"] = false;
-      }
       if(server.hasArg("GroundLevel"))jsonConfig["SENSOR"]["DIST_GROUND"] = server.arg("GroundLevel").toInt();
       if(server.hasArg("WiFiMode"))
          switch(server.arg("WiFiMode").toInt()){
@@ -1175,6 +1188,11 @@ bool HTTP_checkArgs(int current){
          }
       if(server.hasArg("SensorType")){jsonConfig["SENSOR"]["TYPE"]      = server.arg("SensorType").toInt();_reboot = true;}
       
+//      if(server.hasArg("FLAG_CONFIG2")  ){
+//         jsonConfig["WIFI"]["DHCP"] = true;
+//         jsonConfig["CRM_MOSCOW"]["ENABLE"] = false;
+//         jsonConfig["TB"]["ENABLE"]         = false;
+//      }
 
       if(server.hasArg("LimitDistance") )jsonConfig["SENSOR"]["DIST_LIMIT"]     = server.arg("LimitDistance").toInt();
       if(server.hasArg("MinDistance1")  )jsonConfig["SENSOR"]["DIST_MIN1"]      = server.arg("MinDistance1").toInt();
@@ -1190,70 +1208,98 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("NameESP")      && UID >= 1 )jsonConfig["SYSTEM"]["NAME"]   = server.arg("NameESP").c_str();
       if(server.hasArg("WiFiName")     )jsonConfig["WIFI"]["NAME"]              = server.arg("WiFiName").c_str();
       if(server.hasArg("WiFiPassword") )jsonConfig["WIFI"]["PASS"]              = server.arg("WiFiPassword").c_str();
-      if( server.hasArg("SEND_HTTP"))jsonConfig["CRM_MOSCOW"]["ENABLE"]         = true;
 
-      if(server.hasArg("Dogovor")      )jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"]  = server.arg("Dogovor").c_str();
-      if(server.hasArg("Box")          )jsonConfig["CRM_MOSCOW"]["BOX_ID"]      = server.arg("Box").c_str();
-      if(server.hasArg("Server")       )jsonConfig["CRM_MOSCOW"]["SERVER"]      = server.arg("Server").c_str();
-      if(server.hasArg("Port")         )jsonConfig["CRM_MOSCOW"]["PORT"]        = server.arg("Port").toInt();
-      if(server.hasArg("TM_HTTP_SEND") )jsonConfig["CRM_MOSCOW"]["T_SEND"]      = server.arg("TM_HTTP_SEND").toInt();
-      if(server.hasArg("TM_HTTP_RETRY_ERROR"))jsonConfig["CRM_MOSCOW"]["T_RETRY"] = server.arg("TM_HTTP_RETRY_ERROR").toInt();
+      if(server.hasArg("Dogovor")      )jsonConfig["NET"]["DOGOVOR_ID"]  = server.arg("Dogovor").c_str();
+      if(server.hasArg("Box")          )jsonConfig["NET"]["BOX_ID"]      = server.arg("Box").c_str();
+      if(server.hasArg("TM_HTTP_SEND") )jsonConfig["NET"]["T_SEND"]      = server.arg("TM_HTTP_SEND").toInt();
+      if(server.hasArg("TM_HTTP_RETRY_ERROR"))jsonConfig["NET"]["T_RETRY"] = server.arg("TM_HTTP_RETRY_ERROR").toInt();
+
+      if( server.hasArg("CRM_ENABLE_H")){ 
+         if( server.hasArg("CRM_ENABLE"))jsonConfig["CRM_MOSCOW"]["ENABLE"] = true;
+         else jsonConfig["CRM_MOSCOW"]["ENABLE"] = false;
+      }
+      if(server.hasArg("CRM_SERVER")    )jsonConfig["CRM_MOSCOW"]["SERVER"]      = server.arg("CRM_SERVER").c_str();
+      if(server.hasArg("CRN_PORT")      )jsonConfig["CRM_MOSCOW"]["PORT"]        = server.arg("CRM_PORT").toInt();
+
+      if( server.hasArg("TB_ENABLE_H")){
+          if( server.hasArg("TB_ENABLE"))jsonConfig["TB"]["ENABLE"] = true;  
+          else jsonConfig["TB"]["ENABLE"] = false;    
+      }
+      if(server.hasArg("TB_SERVER")     )jsonConfig["TB"]["SERVER"]              = server.arg("TB_SERVER").c_str();
+      if(server.hasArg("TB_PORT")       )jsonConfig["TB"]["PORT"]                = server.arg("TB_PORT").toInt();
+      if(server.hasArg("TB_TOKEN")      )jsonConfig["TB"]["TOKEN"]               = server.arg("TB_TOKEN").c_str();
 
 
+      if( server.hasArg("STATIC_IP_H")){
+         if( server.hasArg("STATIC_IP"))jsonConfig["WIFI"]["DHCP"] = false;
+         else jsonConfig["WIFI"]["DHCP"] = true;
+      }
 
-      if( server.hasArg("STATIC_IP"))jsonConfig["WIFI"]["DHCP"] = false;
-//      if( server.hasArg("SEND_HTTP"))jsonConfig["CRM_MOSCOW"]["ENABLE"] = true;
-      
-
-//      if(server.hasArg("StaticIP"))
-//         switch(server.arg("StaticIP").toInt()){
-//             case 0: EA_Config.isDHCP  = false; break;
-//             case 1: EA_Config.isDHCP  = true;  break;
-//         }
       if(server.hasArg("IPAddr"))jsonConfig["WIFI"]["IP"]["ADDR"]           = server.arg("IPAddr").c_str();
       if(server.hasArg("IPMask"))jsonConfig["WIFI"]["IP"]["MASK"]           = server.arg("IPMask").c_str();
       if(server.hasArg("IPGate"))jsonConfig["WIFI"]["IP"]["GW"]             = server.arg("IPGate").c_str();
       if(server.hasArg("IPDns") )jsonConfig["WIFI"]["IP"]["DNS"]            = server.arg("IPDns").c_str();
 
 
-      if(server.hasArg("FLAG_CONFIG1")  ){
-         jsonConfig["RELAY1"]["INVERSE"] = false;
-         jsonConfig["RELAY2"]["INVERSE"] = false;
-      }
+//      if(server.hasArg("FLAG_CONFIG1")  ){
+//         jsonConfig["RELAY1"]["INVERSE"] = false;
+//         jsonConfig["RELAY2"]["INVERSE"] = false;
+//      }
       if(server.hasArg("TMOn1")         )jsonConfig["RELAY1"]["DELAY_ON"]   = server.arg("TMOn1").toInt();
       if(server.hasArg("TMOff1")        )jsonConfig["RELAY1"]["DELAY_OFF"]  = server.arg("TMOff1").toInt();
       if(server.hasArg("ModeRelay1")    )jsonConfig["RELAY1"]["MODE"]       = (T_RELAY_MODE)server.arg("ModeRelay1").toInt();
       if(server.hasArg("TM_PulseRelay1"))jsonConfig["RELAY1"]["T_PULSE"]    = server.arg("TM_PulseRelay1").toInt();   
-      if(server.hasArg("TM_PauseRelay1"))jsonConfig["RELAY1"]["T_PAUSE"]    = server.arg("TM_PauseRelay1").toInt();    
-      if(server.hasArg("isInverseRelay1"))jsonConfig["RELAY1"]["INVERSE"]   = true;
-
+      if(server.hasArg("TM_PauseRelay1"))jsonConfig["RELAY1"]["T_PAUSE"]    = server.arg("TM_PauseRelay1").toInt();   
+      if(server.hasArg("isInverseRelay1_H")){ 
+         if(server.hasArg("isInverseRelay1"))jsonConfig["RELAY1"]["INVERSE"]   = true;
+         else jsonConfig["RELAY1"]["INVERSE"]   = false;
+      }
       if(server.hasArg("TMOn2")         )jsonConfig["RELAY2"]["DELAY_ON"]   = server.arg("TMOn2").toInt();
       if(server.hasArg("TMOff2")        )jsonConfig["RELAY2"]["DELAY_OFF"]  = server.arg("TMOff2").toInt();
       if(server.hasArg("ModeRelay2")    )jsonConfig["RELAY2"]["MODE"]       = (T_RELAY_MODE)server.arg("ModeRelay2").toInt();
       if(server.hasArg("TM_PulseRelay2"))jsonConfig["RELAY2"]["T_PULSE"]    = server.arg("TM_PulseRelay2").toInt();   
       if(server.hasArg("TM_PauseRelay2"))jsonConfig["RELAY2"]["T_PAUSE"]    = server.arg("TM_PauseRelay2").toInt();   
-      if(server.hasArg("isInverseRelay2"))jsonConfig["RELAY2"]["INVERSE"]   = true;
-
+      if(server.hasArg("isInverseRelay2_H")){
+         if(server.hasArg("isInverseRelay2"))jsonConfig["RELAY2"]["INVERSE"]   = true;
+         else jsonConfig["RELAY2"]["INVERSE"]   = false;
+      }
 
       if(server.hasArg("FLAG_CONFIG4")  ){
-         if( server.hasArg("MP3_99_COLOR_TM"))jsonConfig["MP3"]["99"]["COLOR_TM"] = server.arg("MP3_99_COLOR_TM").toInt();
-         if(server.hasArg("MP3_100_ENABLE"))jsonConfig["MP3"]["100"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["100"]["ENABLE"] = false;
-         if(server.hasArg("MP3_99_ENABLE"))jsonConfig["MP3"]["99"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["99"]["ENABLE"] = false;
-         if(server.hasArg("MP3_98_ENABLE"))jsonConfig["MP3"]["98"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["98"]["ENABLE"] = false;
-         if(server.hasArg("MP3_97_ENABLE"))jsonConfig["MP3"]["97"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["97"]["ENABLE"] = false;
-         if(server.hasArg("MP3_92_ENABLE"))jsonConfig["MP3"]["92"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["92"]["ENABLE"] = false;
-         if(server.hasArg("MP3_89_ENABLE"))jsonConfig["MP3"]["89"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["89"]["ENABLE"] = false;
-         if(server.hasArg("MP3_70_ENABLE"))jsonConfig["MP3"]["70"]["ENABLE"] = true;
-         else jsonConfig["MP3"]["70"]["ENABLE"] = false;
 
-         if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
-         else jsonConfig["MP3"]["SHORT_MSG"] = false;
+
+         if( server.hasArg("MP3_99_COLOR_TM"))jsonConfig["MP3"]["99"]["COLOR_TM"] = server.arg("MP3_99_COLOR_TM").toInt();
+         if(server.hasArg("MP3_100_ENABLE_H")){
+            if(server.hasArg("MP3_100_ENABLE"))jsonConfig["MP3"]["100"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["100"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_99_ENABLE_H")){
+            if(server.hasArg("MP3_99_ENABLE"))jsonConfig["MP3"]["99"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["99"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_98_ENABLE_H")){
+            if(server.hasArg("MP3_98_ENABLE"))jsonConfig["MP3"]["98"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["98"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_97_ENABLE_H")){
+            if(server.hasArg("MP3_97_ENABLE"))jsonConfig["MP3"]["97"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["97"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_92_ENABLE-H")){
+            if(server.hasArg("MP3_92_ENABLE"))jsonConfig["MP3"]["92"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["92"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_89_ENABLE_H")){
+            if(server.hasArg("MP3_89_ENABLE"))jsonConfig["MP3"]["89"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["89"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_70_ENABLE_H")){
+            if(server.hasArg("MP3_70_ENABLE"))jsonConfig["MP3"]["70"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["70"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_SHORT_MSG_H")){
+            if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
+            else jsonConfig["MP3"]["SHORT_MSG"] = false;
+         }
          isChangeConfig = true;
 
      }
@@ -1757,6 +1803,9 @@ void HTTP_print_input_radio(String &out,char *name, char *value,bool checked){
 }
 
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked){
+  out += "<input type='hidden' name='";
+  out += name;
+  out += "_H' valye='1'>";
   out += "<input type='checkbox' name='";
   out += name;
   out += "' value='";

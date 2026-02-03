@@ -5,9 +5,9 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-#define SOFTWARE_V           "10.0.17"
+#define SOFTWARE_V           "10.0.18"
 #define HARDWARE_V           "10.0.1"
-#define CONFIG_V             "10.0.9"
+#define CONFIG_V             "10.0.18"
 
 /*
 #define SENSOR_TYPE_NONE     0
@@ -127,13 +127,13 @@ enum SENSOR_STAT_t {
 #define MP3_SYSTEM_FULL_DIR    3
 #define MP3_SYSTEM_SHORT_DIR   4
 
-#define TB_HOST                "192.168.1.2"
-#define TB_PORT                8080
+#define TB_HOST                "109.172.115.70"
+#define TB_PORT                8088
 
-#define TB_TOKEN               "w6fJ9TIL4LFh7ZmJLOww"
+#define TB_TOKEN               ""
 
-#define TB_PROVISION_KEY       "gtjm4dqi5zrvf7qoj12j"
-#define TB_PROVISION_SECRET    "6nn8cd85g3qlos8us6kj"
+#define TB_PROVISION_KEY       "_Svetofor10box_key"
+#define TB_PROVISION_SECRET    "_Svetofor10box_secret"
 
 
 #endif

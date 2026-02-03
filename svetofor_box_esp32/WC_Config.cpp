@@ -2,6 +2,7 @@
 
 JsonDocument jsonConfig;
 JsonDocument jsonSave;
+//JsonDocument jsonTB;
 
 bool isChangeConfig = true;
 
@@ -65,13 +66,25 @@ void configDefault(){
    jsonConfig["WIFI"]["IP"]["GW"]          = "192.168.1.1";              //IP адрес шлюза при стаическом режиме
    jsonConfig["WIFI"]["IP"]["DNS"]         = "8.8.8.8";                  //IP адрес DNS при стаическом режиме
 // Параметры подключения к CRM.MOSCOW
+//   jsonConfig["NET"]["ENABLE"]            = false;                      //Коннектится по WiFi
+
+   jsonConfig["NET"]["DOGOVOR_ID"]  = "0000";            
+   jsonConfig["NET"]["BOX_ID"]      = "1";                     
+   jsonConfig["NET"]["T_SEND"]      = 1000;                   //Таймаут отправки на сервер            
+   jsonConfig["NET"]["T_RETRY"]     = 10;                     //Таймаут повторной отправки если статус HTTP не 200            
+
+
    jsonConfig["CRM_MOSCOW"]["ENABLE"]      = false;                      //посылать информацию на CRM-MOSCOW
-   jsonConfig["CRM_MOSCOW"]["DOGOVOR_ID"]  = "0000";            
-   jsonConfig["CRM_MOSCOW"]["BOX_ID"]      = "1";                     
    jsonConfig["CRM_MOSCOW"]["SERVER"]      = "crm.moscow";             
-   jsonConfig["CRM_MOSCOW"]["PORT"]        = 8001;             
-   jsonConfig["CRM_MOSCOW"]["T_SEND"]      = 1000;                   //Таймаут отправки на сервер            
-   jsonConfig["CRM_MOSCOW"]["T_RETRY"]     = 10;                     //Таймаут повторной отправки если статус HTTP не 200            
+   jsonConfig["CRM_MOSCOW"]["PORT"]        = 8001;
+
+   jsonConfig["TB"]["ENABLE"]              = false;                      //Посылать информацию в ThingsBoard
+   jsonConfig["TB"]["SERVER"]              = "109.172.115.70";             
+   jsonConfig["TB"]["PORT"]                = 8088;
+   jsonConfig["TB"]["TOKEN"]               = "";
+
+
+
    
    jsonConfig["SENSOR"]["TYPE"]        = DEFAULT_SENSOR_TYPE; //Тип установки/срабатывания датчика
    jsonConfig["SENSOR"]["INSTALL"]     = DEFAULT_SENSOR_INSTALL_TYPE; //Тип установки/срабатывания датчика
