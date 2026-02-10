@@ -802,6 +802,16 @@ void HTTP_printConfigNet(String &out){
   HTTP_printInput1(out,"Токен доступа:","TB_TOKEN",jsonConfig["TB"]["TOKEN"].as<const char *>(),20,32,HT_TEXT);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
+
+  if( isLora ){ 
+     out += "<fieldset>\n";
+     out += "<legend>Подключение по LoRa 868МГц</legend>\n";
+     out += "<labelВвключить онлайн отправку данных</label>\n";
+     HTTP_print_input_checkbox(out,"LORA_ENABLE","send",jsonConfig["LORA"]["ENABLE"].as<bool>());
+     out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+     out += "</fieldset>\n"; 
+  } 
+
 // Блок №8
   out += "<fieldset>\n";
   out += "<legend>Параметры DHCP</legend>\n";
@@ -1228,6 +1238,11 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("TB_SERVER")     )jsonConfig["TB"]["SERVER"]              = server.arg("TB_SERVER").c_str();
       if(server.hasArg("TB_PORT")       )jsonConfig["TB"]["PORT"]                = server.arg("TB_PORT").toInt();
       if(server.hasArg("TB_TOKEN")      )jsonConfig["TB"]["TOKEN"]               = server.arg("TB_TOKEN").c_str();
+
+      if( server.hasArg("LORA_ENABLE_H")){
+          if( server.hasArg("LORA_ENABLE"))jsonConfig["LORA"]["ENABLE"] = true;  
+          else jsonConfig["LORA"]["ENABLE"] = false;    
+      }
 
 
       if( server.hasArg("STATIC_IP_H")){

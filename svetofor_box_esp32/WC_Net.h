@@ -1,8 +1,10 @@
 #ifndef WC_NET_h
 #define WC_NET_h
 #include <WiFi.h>
-//#include <RadioLib.h>
-
+#if defined(IS_LORA)
+#include <RadioLib.h>
+#include "src/MyLoRa/MyLoRaBase.h"
+#endif
 #include <HTTPClient.h>
 
 
@@ -13,9 +15,14 @@
 
 extern char SensorID[];
 extern bool isAP, isSTA;
+extern bool isLora;
 
+void taskLora(void *pvParameters);
+void initLora();
+void readLora();
+bool sendLora();
 
-//void taskLora(void *pvParameters);
+ void IRAM_ATTR onLoraIrq();
 void taskNet(void *pvParameters);
 void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
 bool sendHttpParam();

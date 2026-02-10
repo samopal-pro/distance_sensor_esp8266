@@ -29,6 +29,7 @@ extern unsigned long Time;
 extern uint32_t msAP, msSTA, msLoad;
 extern bool isChangeConfig;
 extern SENSOR_STAT_t lastSensorOn;
+extern bool isLora;
 
 enum ES_WIFI_STAT {
   EWS_OFF,

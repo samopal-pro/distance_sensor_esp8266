@@ -104,7 +104,7 @@ public:
     TEventRGB( uint8_t _pin, int _num, int _first );
     void set(uint32_t _color1, uint32_t _color2, uint32_t _color11=COLOR_NONE, uint32_t _color12=COLOR_NONE, uint32_t _timer_on=0, uint32_t _timer_off=0 );
     void setColor( uint32_t _color1, uint32_t _color2 );
-    void setColor0( uint32_t _color );
+    void setColor0( uint32_t _color, bool _blink=false );
     void setColor1( uint32_t _color );
     void setMP3( uint32_t _color );
     void setRainbow( bool _flag );
@@ -115,6 +115,8 @@ public:
     TEVENT_STATUS_t State;
     bool isRainbow;
     bool isMP3;
+    bool isBlink0;
+    uint32_t Color0;
     uint32_t Color1;
     uint32_t Color2; 
     uint32_t ColorBlink1;
@@ -123,6 +125,7 @@ public:
     uint32_t TimerOn;
     uint32_t TimerOff;
 private:
+    uint8_t  BlinkCount;
     Adafruit_NeoPixel *Strip;
     int      Num;
     int      First;

@@ -4,20 +4,101 @@ HTTPClient httpClient;
 bool isWiFiAlways1 = true; 
 uint32_t msSendHttp = 0, msSendTB = 0;
 bool isSendAttributeTB = false;
+bool isLora            = false;
+
+
 
 JsonDocument jsonData;
-
+volatile bool loraIrq = false;
+TaskHandle_t loraTaskHandle = NULL;
+#if defined(IS_LORA)
+SPIClass LoraSPI(HSPI);
+SX1262    radio = new Module(PIN_LORA_CS, PIN_LORA_DIO1, PIN_LORA_RST, PIN_LORA_BUSY, LoraSPI);
+MyLoRaBaseClass myLora(chipID);
+#endif
 /**
  * Задача работы с MP3
  * @param pvParameters
  */
- /*
+
+
+ void IRAM_ATTR onLoraIrq() {
+   loraIrq = true;
+   detachInterrupt(PIN_LORA_DIO1);
+//  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+//  vTaskNotifyGiveFromISR(loraTaskHandle, &xHigherPriorityTaskWoken);
+//  if (xHigherPriorityTaskWoken) {
+//    portYIELD_FROM_ISR();
+//  }
+}
+
+void initLora(){
+#if defined(IS_LORA) 
+   pinMode(PIN_LORA_DIO1, INPUT);
+
+   Serial.print(F("!!! LoRa init "));   
+   LoraSPI.begin(PIN_LORA_SCK, PIN_LORA_MISO, PIN_LORA_MOSI);
+   int state = radio.begin();
+   if (state == RADIOLIB_ERR_NONE) {
+      Serial.println(F("success!"));
+      isLora = true;
+      radio.setFrequency(868.0);
+      radio.setSpreadingFactor(7);
+      radio.setBandwidth(125.0);
+      radio.setCodingRate(5);
+      attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
+      radio.startReceive();
+    }
+   else {
+      isLora = false;
+      Serial.print(F("failed, code "));
+      Serial.println(state);
+   }
+
+#endif
+}
+
+void readLora(){
+#if defined(IS_LORA)   
+   if( !isLora )return;
+
+   String s;   
+   int state = radio.readData(s);
+
+   if (state == RADIOLIB_ERR_NONE) {
+      Serial.print("RX: ");
+      Serial.println(s);
+   } 
+   else {
+      Serial.print("RX error: ");
+      Serial.println(state);
+   }
+  
+       // снова в приём
+   attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
+   radio.startReceive();   
+#endif
+}
+
+bool sendLora(){
+#if defined(IS_LORA)
+#endif
+   return true;
+}
+
+/*
 void taskLora(void *pvParameters) {
 #if defined(DEBUG_SERIAL)
    Serial.println(F("!!! LoRa task start"));
 #endif
    
-   SPIClass LoraSPI(HSPI);
+
+   
+
+
+// прерывание от DIO1
+   pinMode(PIN_LORA_DIO1, INPUT);
+
    SX1262 radio = new Module(PIN_LORA_CS, PIN_LORA_DIO1, PIN_LORA_RST, PIN_LORA_BUSY, LoraSPI);
    
    LoraSPI.begin(PIN_LORA_SCK, PIN_LORA_MISO, PIN_LORA_MOSI);
@@ -34,12 +115,27 @@ void taskLora(void *pvParameters) {
    radio.setBandwidth(125.0);
    radio.setCodingRate(5);
 
-
-
+   attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
+   radio.startReceive();
+   String packet;
    while (true) {
-//     if( EventMP3->loop() == ES_NONE )isPlayMP3 = false;
-//      else isPlayMP3 = true;
-      vTaskDelay(1000);
+      Serial.println(F("!!! LoRa wait ..."));
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+      int state = radio.readData(packet);
+
+      if (state == RADIOLIB_ERR_NONE) {
+         Serial.print("RX: ");
+         Serial.println(packet);
+      } 
+      else {
+         Serial.print("RX error: ");
+         Serial.println(state);
+       }
+  
+       // снова в приём
+       radio.startReceive();
+//      vTaskDelay(1000);
    }
 }
 */
@@ -59,6 +155,7 @@ void taskNet( void *pvParameters ){
    Network.onEvent(handleEventWiFi);
    if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() ||  bootCount<1 )isAP = true;
    else isAP = false;
+   initLora();
 //   HTTP_begin();
    while(true){
       if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
@@ -127,21 +224,28 @@ void taskNet( void *pvParameters ){
 */
 
       }
-      if( (ms3 == 0 || ms < ms3 || (ms-ms3)>2000) &&  WiFi.status() == WL_CONNECTED){
+      if( (ms3 == 0 || ms < ms3 || (ms-ms3)>2000) ){
           ms3 = ms;
-
-          if(  isSendNet ){
-             isSendNet  = false;
-             msSendHttp = 0;
-             msSendTB   = 0;
-          } 
-          if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() && ( msSendHttp == 0 || msSendHttp < ms ) ){
-             if( sendHttpParam() )msSendHttp = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
-             else msSendHttp = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+          if(WiFi.status() == WL_CONNECTED){
+             if(  isSendNet ){
+                isSendNet  = false;
+                msSendHttp = 0;
+                msSendTB   = 0;
+             } 
+             if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() && ( msSendHttp == 0 || msSendHttp < ms ) ){
+                if( sendHttpParam() )msSendHttp = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                else msSendHttp = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+             }
+             if( jsonConfig["TB"]["ENABLE"].as<bool>() && ( msSendTB == 0 || msSendTB < ms ) ){
+                if( sendParamTB() )msSendTB = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                else msSendTB = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+             }
           }
-          if( jsonConfig["TB"]["ENABLE"].as<bool>() && ( msSendTB == 0 || msSendTB < ms ) ){
-             if( sendParamTB() )msSendTB = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
-             else msSendTB = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+          if( isLora ){
+             if( jsonConfig["LORA"]["ENABLE"].as<bool>()  ){
+                if( sendLora() )msSendTB = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                else msSendTB = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+             }
           }
           
 /*             
@@ -150,8 +254,12 @@ void taskNet( void *pvParameters ){
              if( msSendHttp == 0)msSendHttp = ms_tmp;
 */
       }
+      if( loraIrq ){
+         loraIrq = false;
+         readLora();
+      }
       HTTP_loop();
-
+      
       vTaskDelay(50);      
    }
 
@@ -187,8 +295,14 @@ void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
       Serial.println("AP Started");
       Serial.println(WiFi.AP);
       break;
-    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    Serial.println("AP STA Connected"); break;
-    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("AP STA Disconnected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    
+      Serial.println("AP STA Connected");
+      EventRGB1->setColor0(COLOR_WIFI_ON,true); 
+      break;
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+     Serial.println("AP STA Disconnected"); 
+     EventRGB1->setColor0(COLOR_WIFI_AP1);
+     break;
     case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
       Serial.print("AP STA IP Assigned: ");
       Serial.println(IPAddress(info.wifi_ap_staipassigned.ip.addr));

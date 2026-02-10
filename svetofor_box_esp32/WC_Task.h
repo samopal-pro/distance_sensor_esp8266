@@ -15,6 +15,7 @@
 #include <esp_efuse.h>
 #include <esp_efuse_table.h>
 #include <soc/efuse_reg.h>
+#include <esp_heap_caps.h>
 
 #define DEPTH_DIST_ARRAY 5
 #define SAMPLE_LEN       10

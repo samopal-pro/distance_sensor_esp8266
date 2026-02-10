@@ -83,7 +83,7 @@ void configDefault(){
    jsonConfig["TB"]["PORT"]                = 8088;
    jsonConfig["TB"]["TOKEN"]               = "";
 
-
+   jsonConfig["LORA"]["ENABLE"]            = false;                      //Посылать информацию по Лоре
 
    
    jsonConfig["SENSOR"]["TYPE"]        = DEFAULT_SENSOR_TYPE; //Тип установки/срабатывания датчика

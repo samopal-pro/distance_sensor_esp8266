@@ -194,6 +194,8 @@ TEventRGB::TEventRGB( uint8_t _pin, int _num, int _first ){
    isMP3        = false;
    HueRainbow   = 0;
    IncRainbow   = 65536/Num*2;
+   isBlink0     = false;
+   BlinkCount   = 0;
 }
 
 
@@ -209,7 +211,9 @@ void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
    Strip->show();
 }
 
-void TEventRGB::setColor0(uint32_t _color){
+void TEventRGB::setColor0(uint32_t _color, bool _blink){
+   Color0   = _color;
+   isBlink0 = _blink;
    Strip->setPixelColor(0,_color);
    Strip->show();
 }
@@ -270,6 +274,14 @@ TEVENT_RGB_TYPE_t  TEventRGB::loop(){
       HueRainbow += IncRainbow;
       return ERT_RAINBOW;
    }
+// Мигаем первым светодиодом с частотой Loop()
+   if( isBlink0 ){
+       if( BlinkCount%2 )Strip->setPixelColor(0,Color0);
+       else Strip->setPixelColor(0,COLOR_BLACK);
+       Strip->show();
+       BlinkCount++;
+   }
+
 // Мигаем ColorMP3 с частотой TIMER_MP3
    if( isMP3 && ColorMP3 != COLOR_NONE){
       if( msOn > 0 && (msOn > _ms || _ms - msOn > TIMER_MP3 )){
@@ -341,14 +353,18 @@ TEventMP3::TEventMP3(Stream &_stream, void (*_handle)(bool) ){
 
 void TEventMP3::init(){
     if( !isPlayer ){
-      isPlayer = Player->begin(*SerialPlayer, /*isACK = */true, /*doReset = */true);
-      if(isPlayer)Player->setTimeOut(500);
-      if(isPlayer)Player->outputDevice(DFPLAYER_DEVICE_SD);       
+      Player->begin(*SerialPlayer, /*isACK = */true, /*doReset = */true);
+      if( Player->readVolume() >= 0 ){
+         isPlayer = true;
+         if(isPlayer)Player->setTimeOut(500);
+         if(isPlayer)Player->outputDevice(DFPLAYER_DEVICE_SD); 
+      }      
     }
+    Serial.printf("!!! MP3 init %d\n",(int)isPlayer);
 }
 
 void TEventMP3::setVolume(int _volume){
-    Player->volume(_volume);
+    if(isPlayer)Player->volume(_volume);
 }
 
 void TEventMP3::setColor(uint32_t _color, uint32_t _timer){
@@ -362,6 +378,7 @@ void TEventMP3::start(int _dir, int _track,int _priority, uint32_t _delay, uint3
     Serial.printf("!!! MP3 check %d %d %d\n", _priority, Priority, State);
 
     if( _priority < Priority && (State == ES_WAIT_ON || State == ES_ON) )return;
+    if(!isPlayer)return;
 
 //    if( State != ES_NONE && _priority >= Priority  )return;
     msOn       = millis();
@@ -440,9 +457,15 @@ TEVENT_STATUS_t TEventMP3::loop(){
           }
           if( isOn && waitPlayer && ( ms1 == 0 || ms1 > _ms || _ms-ms1 > 2000 )){
              ms1 = _ms;
-             Player->readState();
-             _state = Player->readState();
-             Serial.printf("!!! MP3 state %d\n",_state);
+             if(isPlayer){
+                Player->readState();
+                _state = Player->readState();
+                Serial.printf("!!! MP3 state %d\n",_state);
+             }
+             else {
+                _state = 0;
+                Serial.printf("!!! MP3 not init\n");
+             }
              if( _state == 0 ){
                 
                 if( isLoop )_replay(2000);

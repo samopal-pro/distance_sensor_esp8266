@@ -124,8 +124,8 @@ void tasksStart() {
    xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 4, NULL,CORE);
    vTaskDelay(500);
    xTaskCreateUniversal(taskNet, "net", 10000, NULL, 3, NULL, CORE);
-//   vTaskDelay(500);
-//   xTaskCreateUniversal(taskLora, "lora", 10000, NULL, 3, NULL, CORE);
+//  vTaskDelay(500);
+//   xTaskCreateUniversal(taskLora, "lora", 10000, NULL, 2, NULL, CORE);
 }
 
 /**
@@ -183,8 +183,8 @@ void taskRGB(void *pvParameters) {
       uint32_t _ms = millis();
       TEVENT_RGB_TYPE_t t = EventRGB1->loop();
       EventRGB2->loop();
-      if( t == ERT_RAINBOW )vTaskDelay(250);
-      else vTaskDelay(10);
+      if( t != ERT_RAINBOW )vTaskDelay(250);
+      else vTaskDelay(25);
 //      if( ms1 == 0 || ms1 > _ms || _ms-ms1 > 1000){
 //          ms1 = _ms;
 //      Serial.printf("!!! Rgb status %d %d\n", t, (int)EventRGB1->isRainbow);
@@ -642,7 +642,9 @@ void printStat(char *msg){
    Serial.print(F(" Stat: "));
    Serial.print(SensorOn);
    Serial.print(F(" Event: "));
-   Serial.println(msg);
+   Serial.print(msg);
+   Serial.print(F(" Free mem: "));
+   Serial.println(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
 #endif
 }
 
