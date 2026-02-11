@@ -47,12 +47,18 @@ void configRead(){
    }
 }
 
+String deviceNmae( char *_name){
+    String s = _name;
+    if( strlen(serNo) >0 )s.replace("2025",serNo);
+    return s;
+}
+
 void configDefault(){
    jsonConfig.clear();
    int n = 0;
 // Системные параметры
    jsonConfig["CONFIG_V"]              = CONFIG_V;                //Имя точки доступа устройства  
-   jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;                //Имя точки доступа устройства  
+   jsonConfig["SYSTEM"]["NAME"]        = deviceNmae(DEVICE_NAME);                //Имя точки доступа устройства  
    jsonConfig["SYSTEM"]["AP_START"]    = AP_ALWAYS;  
    jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора

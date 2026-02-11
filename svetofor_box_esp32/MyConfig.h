@@ -7,7 +7,7 @@
 
 //#define IS_LORA
 
-#define SOFTWARE_V           "10.0.19"
+#define SOFTWARE_V           "10.0.20"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.18"
 

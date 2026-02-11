@@ -2,7 +2,7 @@
 
 HTTPClient httpClient;
 bool isWiFiAlways1 = true; 
-uint32_t msSendHttp = 0, msSendTB = 0;
+uint32_t msSendHttp = 0, msSendTB = 0, msSendLora = 0;
 bool isSendAttributeTB = false;
 bool isLora            = false;
 
@@ -10,8 +10,8 @@ bool isLora            = false;
 
 JsonDocument jsonData;
 volatile bool loraIrq = false;
-TaskHandle_t loraTaskHandle = NULL;
-#if defined(IS_LORA)
+//TaskHandle_t loraTaskHandle = NULL;
+#ifdef IS_LORA
 SPIClass LoraSPI(HSPI);
 SX1262    radio = new Module(PIN_LORA_CS, PIN_LORA_DIO1, PIN_LORA_RST, PIN_LORA_BUSY, LoraSPI);
 MyLoRaBaseClass myLora(chipID);
@@ -33,7 +33,7 @@ MyLoRaBaseClass myLora(chipID);
 }
 
 void initLora(){
-#if defined(IS_LORA) 
+#ifdef IS_LORA 
    pinMode(PIN_LORA_DIO1, INPUT);
 
    Serial.print(F("!!! LoRa init "));   
@@ -48,6 +48,8 @@ void initLora(){
       radio.setCodingRate(5);
       attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
       radio.startReceive();
+      MyLoRaAddress::Set(myLora.AddrRX,0,0,0,0,0,0);
+
     }
    else {
       isLora = false;
@@ -59,7 +61,7 @@ void initLora(){
 }
 
 void readLora(){
-#if defined(IS_LORA)   
+#ifdef IS_LORA   
    if( !isLora )return;
 
    String s;   
@@ -81,7 +83,35 @@ void readLora(){
 }
 
 bool sendLora(){
-#if defined(IS_LORA)
+#ifdef IS_LORA
+
+    int _state = -1;
+    switch(SensorOn){
+       case SS_BUSY:
+       case SS_NAN_BUSY: _state = 1;break;
+       case SS_FREE:   
+       case SS_NAN_FREE: _state = 0;break;  
+    }   
+
+    myLora.SetHeaderTX(PACKET_V3_TYPE_JSON_TELEMETRY, myLora.AddrRX, true);
+    myLora.Json["Distance"] = (int)Distance;
+    myLora.Json["State"]    = _state;
+    myLora.Json["Uptime"]   = esp_timer_get_time()/1000000;
+    if (myLora.SetJsonBodyTX()) {
+       for( int i=0; i<3; i++ ){
+          int state = radio.transmit(myLora.BufferTX,myLora.LengthTX);
+
+          if (state == RADIOLIB_ERR_NONE) {
+             Serial.println("!!! LORA TX OK");
+          }
+          else {
+             Serial.print("??? LORA TX error: ");
+             Serial.println(state);
+          }         
+       } 
+   }
+   radio.startReceive();  
+
 #endif
    return true;
 }
@@ -231,6 +261,7 @@ void taskNet( void *pvParameters ){
                 isSendNet  = false;
                 msSendHttp = 0;
                 msSendTB   = 0;
+                msSendLora = 0;
              } 
              if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() && ( msSendHttp == 0 || msSendHttp < ms ) ){
                 if( sendHttpParam() )msSendHttp = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
@@ -242,9 +273,9 @@ void taskNet( void *pvParameters ){
              }
           }
           if( isLora ){
-             if( jsonConfig["LORA"]["ENABLE"].as<bool>()  ){
-                if( sendLora() )msSendTB = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
-                else msSendTB = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+             if( jsonConfig["LORA"]["ENABLE"].as<bool>() && ( msSendLora == 0 || msSendLora < ms )  ){
+                if( sendLora() )msSendLora = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                else msSendLora = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
              }
           }
           

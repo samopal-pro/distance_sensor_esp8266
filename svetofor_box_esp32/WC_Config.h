@@ -13,6 +13,7 @@ extern JsonDocument jsonConfig;
 extern JsonDocument jsonSave;
 //extern JsonDocument jsonTB;
 extern bool isChangeConfig;
+extern char serNo[];
 
 typedef enum T_AP_START_MODE {
   AP_NONE           = 0, //Не стартовать AP при загрузке
@@ -47,7 +48,7 @@ void configRead();
 void configSave();
 void configDefault();
 void configPrint(char *label);
-
+String deviceNmae( char *_name);
 void saveRead();
 void saveSave();
 void saveDefault();

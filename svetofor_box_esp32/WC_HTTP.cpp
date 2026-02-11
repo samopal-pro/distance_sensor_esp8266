@@ -854,6 +854,11 @@ void HTTP_printConfig2(String &out){
   out += "<fieldset>\n";
   out += "<legend>Настройка дополнительной подсветки. Подсветка оповещений</legend>\n";
 //  out += "<table width=100%>";
+  out += "<p class='t1'>";
+  HTTP_print_input_checkbox(out,"MP3_SHORT_MSG","1",jsonConfig["MP3"]["SHORT_MSG"].as<bool>());
+  out += "Включить короткие звуковые оповещения";
+
+
   HTTP_InputInt(out,"Яркость 0-10","Brightness2",jsonConfig["RGB2"]["BRIGHTNESS"].as<int>(),0,10,32);
 
 //  out += "</table>\n";
@@ -928,9 +933,6 @@ void HTTP_printConfig4(String &out){
   HTTP_print_MP3(out,"Запуск датчика, приветствие. Дорожка 100.mp3",Dir,100);
   out += "</table>\n";
 
-  out += "<p class='t1'>";
-  HTTP_print_input_checkbox(out,"MP3_SHORT_MSG","1",jsonConfig["MP3"]["SHORT_MSG"].as<bool>());
-  out += "Включить короткие звуковые оповещения";
 
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
@@ -1175,6 +1177,12 @@ bool HTTP_checkArgs(int current){
          HTTP_checkArgsMP3("FREE_NAN");
          HTTP_checkArgsMP3("FREE");
          if(server.hasArg("MP3_VOLUME")){jsonConfig["MP3"]["VOLUME"] = server.arg("MP3_VOLUME").toInt();isChangeConfig = true;}
+         if(server.hasArg("MP3_SHORT_MSG_H")){
+            if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
+            else jsonConfig["MP3"]["SHORT_MSG"] = false;
+         }
+
+
       }
 
 /// NET
@@ -1310,10 +1318,6 @@ bool HTTP_checkArgs(int current){
          if(server.hasArg("MP3_70_ENABLE_H")){
             if(server.hasArg("MP3_70_ENABLE"))jsonConfig["MP3"]["70"]["ENABLE"] = true;
             else jsonConfig["MP3"]["70"]["ENABLE"] = false;
-         }
-         if(server.hasArg("MP3_SHORT_MSG_H")){
-            if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
-            else jsonConfig["MP3"]["SHORT_MSG"] = false;
          }
          isChangeConfig = true;
 

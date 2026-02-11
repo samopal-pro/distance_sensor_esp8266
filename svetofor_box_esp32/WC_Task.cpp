@@ -69,16 +69,13 @@ bool isSendNet = false; // Флаг отсылки парамтров на се�
  * Старт всех параллельных задач
  */
 void tasksStart() {
-
-  configInit();
-//  configDefault();
-//  configSave();
-  ;
-  configRead();
-  saveRead();
-  bootCount = saveCount(); 
+  Serial.print(F("!!! Free mem: "));
+  Serial.println(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
   chipID = ESP.getEfuseMac();
   sprintf(strID,"%012llX",chipID);
+  Serial.print(F("!!! Free mem: "));
+  Serial.println(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+
 // Считываем серийник с efuse
 // Прошивать SAV00001 espefuse  -c auto -p COM3 burn_efuse BLOCK3 0x5341563030303031000000000000000000000000000000000000000000000000  
   uint32_to_uint8 dd;
@@ -89,6 +86,13 @@ void tasksStart() {
   serNo[32] = '\0';
   Serial.printf("!!! ID=%s SER=%s ID1=",strID,serNo);
   Serial.println(chipID,HEX);
+
+  configInit();
+//  configDefault();
+//  configSave();
+  configRead();
+  saveRead();
+  bootCount = saveCount(); 
   
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
   sensorSemaphore = xSemaphoreCreateMutex();
@@ -115,15 +119,18 @@ void tasksStart() {
    EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
    if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
    else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
+   Serial.print(F("!!! Free mem: "));
+   Serial.println(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
 
-   xTaskCreateUniversal(taskEvents, "events", 10000, NULL, 3, NULL, CORE);
-   xTaskCreateUniversal(taskRGB, "rgb", 10000, NULL, 3, NULL, CORE);
-   xTaskCreateUniversal(taskMP3, "mp3", 10000, NULL, 1, NULL, CORE);
-   xTaskCreateUniversal(taskSensors, "sensors", 30000, NULL, 4, NULL, CORE);
+
+   xTaskCreateUniversal(taskEvents, "events", 4096, NULL, 3, NULL, CORE);
+   xTaskCreateUniversal(taskRGB, "rgb", 2048, NULL, 3, NULL, CORE);
+   xTaskCreateUniversal(taskMP3, "mp3", 2048, NULL, 1, NULL, CORE);
+   xTaskCreateUniversal(taskSensors, "sensors", 10000, NULL, 4, NULL, CORE);
    vTaskDelay(500);
-   xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 4, NULL,CORE);
+   xTaskCreateUniversal(taskButton, "btn", 2048, NULL, 4, NULL,CORE);
    vTaskDelay(500);
-   xTaskCreateUniversal(taskNet, "net", 10000, NULL, 3, NULL, CORE);
+   xTaskCreateUniversal(taskNet, "net", 4096, NULL, 3, NULL, CORE);
 //  vTaskDelay(500);
 //   xTaskCreateUniversal(taskLora, "lora", 10000, NULL, 2, NULL, CORE);
 }
@@ -686,7 +693,7 @@ void taskButton(void *pvParameters){
                 EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
                 EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
                 btn_count = 0;
-                jsonConfig["SYSTEM"]["NAME"]        = DEVICE_NAME;
+                jsonConfig["SYSTEM"]["NAME"]        = deviceNmae(DEVICE_NAME);
                 configSave();  
                 waitMP3andReboot();
    
