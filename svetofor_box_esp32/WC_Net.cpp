@@ -2,10 +2,10 @@
 
 HTTPClient httpClient;
 bool isWiFiAlways1 = true; 
-uint32_t msSendHttp = 0, msSendTB = 0, msSendLora = 0;
+uint32_t msSendHttp = 0, msSendTB = 0, msSendLora = 0,msSendLoraAttr = 0;
 bool isSendAttributeTB = false;
 bool isLora            = false;
-
+bool isLoraACK         = false;
 
 
 JsonDocument jsonData;
@@ -15,6 +15,7 @@ volatile bool loraIrq = false;
 SPIClass LoraSPI(HSPI);
 SX1262    radio = new Module(PIN_LORA_CS, PIN_LORA_DIO1, PIN_LORA_RST, PIN_LORA_BUSY, LoraSPI);
 MyLoRaBaseClass myLora(chipID);
+uint8_t loraGate[6];
 #endif
 /**
  * Задача работы с MP3
@@ -25,11 +26,7 @@ MyLoRaBaseClass myLora(chipID);
  void IRAM_ATTR onLoraIrq() {
    loraIrq = true;
    detachInterrupt(PIN_LORA_DIO1);
-//  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-//  vTaskNotifyGiveFromISR(loraTaskHandle, &xHigherPriorityTaskWoken);
-//  if (xHigherPriorityTaskWoken) {
-//    portYIELD_FROM_ISR();
-//  }
+
 }
 
 void initLora(){
@@ -46,9 +43,12 @@ void initLora(){
       radio.setSpreadingFactor(7);
       radio.setBandwidth(125.0);
       radio.setCodingRate(5);
-      attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
-      radio.startReceive();
-      MyLoRaAddress::Set(myLora.AddrRX,0,0,0,0,0,0);
+//      radio.invertIQ(true);
+//      radio.
+      MyLoRaAddress::Set(myLora.Addr,chipID);
+//      MyLoRaAddress::Set(myLora.AddrRX,0,0,0,0,0,0);
+      MyLoRaAddress::SetBroadcast(loraGate);
+      setLoraReceive(true);
 
     }
    else {
@@ -63,22 +63,57 @@ void initLora(){
 void readLora(){
 #ifdef IS_LORA   
    if( !isLora )return;
+   String s;
+   uint8_t _buf[MAX_LEN_PAYLOAD];
+   int n = radio.getPacketLength();
+   if( n > MAX_LEN_PAYLOAD )n= MAX_LEN_PAYLOAD;
+   int state = radio.readData(_buf,n);
+   if (state == RADIOLIB_ERR_NONE && n>0 ) {
+      myLora.RX(_buf, n, radio.getRSSI());
 
-   String s;   
-   int state = radio.readData(s);
-
-   if (state == RADIOLIB_ERR_NONE) {
-      Serial.print("RX: ");
-      Serial.println(s);
-   } 
-   else {
-      Serial.print("RX error: ");
-      Serial.println(state);
-   }
-  
-       // снова в приём
-   attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
-   radio.startReceive();   
+//      myLora.PrintRX_V3();
+      if( myLora.StateRX == NSRX_OK && ((myLora.HeaderRX_V3.Type&B000111) ==  PACKET_V3_TYPE_ACK ) ){
+         myLora.PrintRX_V3();
+         Serial.println(F("!!! LORA RX ACK "));
+         isLoraACK = true; 
+      }           
+      if( (myLora.StateRX == NSRX_OK || myLora.StateRX == NSRX_BROADCAST) && ((myLora.HeaderRX_V3.Type&B000111) ==  PACKET_V3_TYPE_JSON_RPC )){
+         myLora.PrintRX_V3();
+         myLora.GetJson();
+         serializeJson(myLora.Json,s);
+//            Serial.print(myLora.StateRX);
+//            Serial.print(" ");
+            
+         Serial.println(s);
+         if( myLora.Json["RPC"] == "test" ){
+            Serial.println(F("!!! LORA RX RPC=test "));
+            EventRGB1->setRainbow(true,1000);
+            EventRGB2->setRainbow(true,1000);
+            if( myLora.StateRX == NSRX_OK ){
+               msSendLora     = 0;
+               msSendLoraAttr = 0;
+               systemMP3("100", 100, PRIORITY_MP3_MINIMAL );
+            }
+            else {
+               msSendLora     = millis()+random(0,30)*1000;
+               msSendLoraAttr = msSendLora;
+            }
+            lastSensorOn = SS_RESTORE;                
+         }
+         else if( myLora.Json["RPC"] == "reboot" ){
+            systemMP3("89",86,PRIORITY_MP3_MAXIMAL);
+            waitMP3andReboot();
+         }
+         else if( myLora.Json["RPC"] == "calibrate" ){
+            systemMP3("89",85,PRIORITY_MP3_HIGH);
+            startCalibrate(0,"97",97);
+         }
+      }
+//      else {
+//         myLora.GetJson();
+//      }
+   }  
+   setLoraReceive(true);
 #endif
 }
 
@@ -93,82 +128,82 @@ bool sendLora(){
        case SS_NAN_FREE: _state = 0;break;  
     }   
 
-    myLora.SetHeaderTX(PACKET_V3_TYPE_JSON_TELEMETRY, myLora.AddrRX, true);
+    myLora.SetHeaderTX(PACKET_V3_TYPE_JSON_TELEMETRY, loraGate, true);
     myLora.Json["Distance"] = (int)Distance;
     myLora.Json["State"]    = _state;
     myLora.Json["Uptime"]   = esp_timer_get_time()/1000000;
+    if( serNo[0] != '\0' )myLora.Json["SN"] = serNo;
     if (myLora.SetJsonBodyTX()) {
-       for( int i=0; i<3; i++ ){
-          int state = radio.transmit(myLora.BufferTX,myLora.LengthTX);
-
-          if (state == RADIOLIB_ERR_NONE) {
-             Serial.println("!!! LORA TX OK");
-          }
-          else {
-             Serial.print("??? LORA TX error: ");
-             Serial.println(state);
-          }         
-       } 
+       setLoraReceive(false);
+       int state = radio.transmit(myLora.BufferTX,myLora.LengthTX);
+       isLoraACK = false;
+       setLoraReceive(true);
+       if (state == RADIOLIB_ERR_NONE) {
+          Serial.println("!!! LORA TX OK");
+          myLora.PrintTX_V3();
+       }
+       else {
+          Serial.print("??? LORA TX error: ");
+          Serial.println(state);
+       }         
    }
-   radio.startReceive();  
-
+   setLoraReceive(true);
 #endif
    return true;
 }
 
-/*
-void taskLora(void *pvParameters) {
-#if defined(DEBUG_SERIAL)
-   Serial.println(F("!!! LoRa task start"));
-#endif
-   
-
-   
-
-
-// прерывание от DIO1
-   pinMode(PIN_LORA_DIO1, INPUT);
-
-   SX1262 radio = new Module(PIN_LORA_CS, PIN_LORA_DIO1, PIN_LORA_RST, PIN_LORA_BUSY, LoraSPI);
-   
-   LoraSPI.begin(PIN_LORA_SCK, PIN_LORA_MISO, PIN_LORA_MOSI);
-   int state = radio.begin();
-   if (state == RADIOLIB_ERR_NONE) {
-      Serial.println(F("success!"));
-   }
-   else {
-      Serial.print(F("failed, code "));
-      Serial.println(state);
-   }
-   radio.setFrequency(868.0);
-   radio.setSpreadingFactor(7);
-   radio.setBandwidth(125.0);
-   radio.setCodingRate(5);
-
-   attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
-   radio.startReceive();
-   String packet;
-   while (true) {
-      Serial.println(F("!!! LoRa wait ..."));
-      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-      int state = radio.readData(packet);
-
-      if (state == RADIOLIB_ERR_NONE) {
-         Serial.print("RX: ");
-         Serial.println(packet);
-      } 
-      else {
-         Serial.print("RX error: ");
-         Serial.println(state);
+bool sendLoraAttr(){
+#ifdef IS_LORA
+    myLora.SetHeaderTX(PACKET_V3_TYPE_JSON_ATTRIBUTE, myLora.AddrRX, true);
+    myLora.Json["SerialNo"]    = serNo;
+    myLora.Json["DogovorNo"]   = jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
+    myLora.Json["BoxNo"]       = jsonConfig["NET"]["BOX_ID"].as<String>();
+    if (myLora.SetJsonBodyTX()) {
+       setLoraReceive(false);
+       int state = radio.transmit(myLora.BufferTX,myLora.LengthTX);
+       isLoraACK = false;
+       setLoraReceive(true);
+       if (state == RADIOLIB_ERR_NONE) {
+          Serial.println("!!! LORA TX OK");
+          myLora.PrintTX_V3();
        }
-  
-       // снова в приём
-       radio.startReceive();
-//      vTaskDelay(1000);
+       else {
+          Serial.print("??? LORA TX error: ");
+          Serial.println(state);
+       }         
    }
+   setLoraReceive(true);
+#endif
+   return true;
 }
-*/
+
+
+
+bool waitLoraRead(uint32_t _tm){
+   for( uint32_t i=0; i<_tm; i+=10 ){
+      if( loraIrq ){
+         loraIrq = false;
+         Serial.printf("!!! LORA wait %d\n",i);
+         readLora();
+         return true;
+      }
+      vTaskDelay(10);
+   }
+   return false;
+}
+
+void setLoraReceive(bool _flag){
+ //   loraIrq = false;
+    if( _flag ){
+       attachInterrupt(PIN_LORA_DIO1, onLoraIrq, RISING);
+       radio.startReceive();          
+    }
+    else {
+       radio.standby();
+       detachInterrupt(PIN_LORA_DIO1);
+     }
+}
+
 
 /**
  * Задача передача данных через WiFi
@@ -186,6 +221,9 @@ void taskNet( void *pvParameters ){
    if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() ||  bootCount<1 )isAP = true;
    else isAP = false;
    initLora();
+   bool isSendT = false;
+   bool isSendA = false;
+   bool isSendCurT = false;
 //   HTTP_begin();
    while(true){
       if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
@@ -272,18 +310,61 @@ void taskNet( void *pvParameters ){
                 else msSendTB = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
              }
           }
-          if( isLora ){
-             if( jsonConfig["LORA"]["ENABLE"].as<bool>() && ( msSendLora == 0 || msSendLora < ms )  ){
-                if( sendLora() )msSendLora = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
-                else msSendLora = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+          if( isLora && jsonConfig["LORA"]["ENABLE"].as<bool>() ){
+             isSendT = ( msSendLora == 0 || msSendLora < ms );
+//             isSendA = ( msSendLoraAttr == 0 || msSendLoraAttr < ms );
+             isSendA = false;
+// Требуется отправка только телеметрии
+             if( isSendT && !isSendA ){
+                if( isLoraACK && msSendLora != 0 ){
+                   isLoraACK = false;
+                   msSendLora = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;   
+                }
+                else {
+                   sendLora();
+                   msSendLora = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+                }
              }
-          }
-          
-/*             
-             if( sendHttpParam() )ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_SEND"].as<uint32_t>()*1000;
-             else ms_tmp = ms + jsonConfig["CRM_MOSCOW"]["T_RETRY"].as<uint32_t>()*1000;
-             if( msSendHttp == 0)msSendHttp = ms_tmp;
-*/
+/*
+// Требуется отправка только атрибутов
+             if( isSendT && !isSendA ){
+                if( isLoraACK && msSendLoraAttr != 0 ){
+                   isLoraACK = false;
+                   msSendLoraAttr = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;   
+                }
+                else {
+                   sendLoraAttr();
+                   msSendLoraAttr = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+                }
+             }
+// Требуется отпрвлять и телеметрию и атрибуты. Текущая отпрпвка телеметрия
+             else if( isSendT && isSendA && isSendCurT ){
+                if( isLoraACK && msSendLora != 0 ){
+                   isLoraACK = false;
+                   msSendLora = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                }
+                else {
+                   msSendLora = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+                }
+                sendLoraAttr();
+                msSendLoraAttr = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+                isSendCurT = false;   
+             }
+// Требуется отпрвлять и телеметрию и атрибуты. Текущая отпрпвка атрибуты
+             else if( isSendT && isSendA && !isSendCurT ){
+                if( isLoraACK && msSendLoraAttr != 0 ){
+                   isLoraACK = false;
+                   msSendLoraAttr = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                }
+                else {
+                   msSendLoraAttr = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+                }
+                sendLora();
+                msSendLora = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+                isSendCurT = true;   
+             }
+*/             
+          }          
       }
       if( loraIrq ){
          loraIrq = false;
@@ -426,14 +507,21 @@ uint16_t KeyGen(char *str){
 
 bool sendParamTB(){
     bool ret = false;
-    if( jsonConfig["TB"]["TOKEN"].isNull() || jsonConfig["TB"]["TOKEN"] == "" )if(!authTB(TB_PROVISION_KEY,TB_PROVISION_SECRET))return false;
-
+    bool is_over_gate = jsonConfig["TB"]["GATEWAY"].as<bool>();
+    if( !is_over_gate){
+       if( jsonConfig["TB"]["TOKEN"].isNull() || jsonConfig["TB"]["TOKEN"] == "" )if(!authTB(TB_PROVISION_KEY,TB_PROVISION_SECRET))return false;
+    }
     String _url = "http://";
     _url += jsonConfig["TB"]["SERVER"].as<String>();
     _url += ":";
     _url += jsonConfig["TB"]["PORT"].as<int>();
     _url += "/api/v1/";
-    _url += jsonConfig["TB"]["TOKEN"].as<String>();
+    if( is_over_gate ){
+       _url += strID;
+    }
+    else {
+       _url += jsonConfig["TB"]["TOKEN"].as<String>();
+    }
     _url += "/telemetry";
 
     int _state = -1;
@@ -447,6 +535,7 @@ bool sendParamTB(){
     jsonData["Distance"] = (int)Distance;
     jsonData["State"]    = _state;
     jsonData["Uptime"]   = esp_timer_get_time()/1000000;
+    if( serNo[0] != '\0' )jsonData["SN"] = serNo;
     String _data;
     serializeJson(jsonData, _data); 
 
@@ -518,12 +607,23 @@ bool authTB(const char *_key, const char *_secret){
 bool sendAttributeTB(){
     bool ret = false;
 
+    bool is_over_gate = jsonConfig["TB"]["GATEWAY"].as<bool>();
+    if( !is_over_gate){
+       if( jsonConfig["TB"]["TOKEN"].isNull() || jsonConfig["TB"]["TOKEN"] == "" )if(!authTB(TB_PROVISION_KEY,TB_PROVISION_SECRET))return false;
+    }
+
+
     String _url = "http://";
     _url += jsonConfig["TB"]["SERVER"].as<String>();
     _url += ":";
     _url += jsonConfig["TB"]["PORT"].as<int>();
     _url += "/api/v1/";
-    _url += jsonConfig["TB"]["TOKEN"].as<String>();
+    if( is_over_gate ){
+       _url += strID;
+    }
+    else {
+       _url += jsonConfig["TB"]["TOKEN"].as<String>();
+    }
     _url += "/attributes?clientKeys";
     jsonData.clear();
     jsonData["SerialNo"]    = serNo;

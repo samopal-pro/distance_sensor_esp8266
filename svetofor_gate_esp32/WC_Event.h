@@ -107,7 +107,7 @@ public:
     void setColor0( uint32_t _color, bool _blink=false );
     void setColor1( uint32_t _color );
     void setMP3( uint32_t _color );
-    void setRainbow( bool _flag, uint32_t _timer=0 );
+    void setRainbow( bool _flag );
     void setBrightness( int br);
     void copyTo(TEventRGB *dist);
     void set(TEventRGB *src);
@@ -124,7 +124,6 @@ public:
     uint32_t ColorMP3;
     uint32_t TimerOn;
     uint32_t TimerOff;
-    uint32_t TimerRainbow;
 private:
     uint8_t  BlinkCount;
     Adafruit_NeoPixel *Strip;
@@ -132,7 +131,6 @@ private:
     int      First;
     uint32_t msOn;
     uint32_t msOff;
-    uint32_t msRainbowOn;
 
     int      IncRainbow;
     int      HueRainbow;

@@ -10,12 +10,12 @@
 
 #include <WiFi.h>
 #include <HTTPClient.h>
-
-
+#include <IRremoteESP8266.h>
+#include <IRsend.h>
 
 #include "WC_Config.h"
 #include "WC_Task.h"
-
+#include "WC_MQTT.h"
 
 extern char SensorID[];
 extern bool isAP, isSTA;
@@ -25,9 +25,17 @@ void taskLora(void *pvParameters);
 void initLora();
 void readLora();
 bool sendLora();
-bool sendLoraAttr();
+bool sendLoraAck();
+bool sendLoraCmd(const char *_node, const char *_cmd);
+bool sendLoraToMQTT();
+bool sendLoraAttrToMQTT();
 void setLoraReceive(bool _flag);
-bool waitLoraRead(uint32_t _tm);
+void setCurNode();
+void countNodes();
+
+void InitIR();
+bool SendIR(uint16_t _num);
+void SetSemaphoreIR(bool flag);
 
 void IRAM_ATTR onLoraIrq();
 void taskNet(void *pvParameters);

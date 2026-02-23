@@ -4,7 +4,6 @@
 
 #include "MyConfig.h"
 #include "WC_Config.h"
-#include "WC_Sensors.h"
 //#include "WC_Led.h"
 #include "WC_HTTP.h"
 #include "WC_Event.h"
@@ -61,6 +60,7 @@ extern uint64_t chipID;
 extern SENSOR_STAT_t SensorOn;
 extern bool isSendNet;
 extern int MP3_ADD_DIR;
+extern SemaphoreHandle_t SemaphoreIR;
 
 void tasksStart();
 void taskEvents(void *pvParameters);

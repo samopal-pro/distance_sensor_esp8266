@@ -58,12 +58,30 @@ bool isSendNet = false; // Флаг отсылки парамтров на се�
 //    };
 //} uint32_to_uint8;
 
+
+void readID(){
     union uint32_to_uint8 {
        uint32_t data32;
        char  data8[4];
     };
+   uint8_t mac[6];
+  
+   esp_efuse_mac_get_default(mac);
+   sprintf(strID, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+   chipID = 0;
+   for (int i = 0; i < 6; i++) {
+      chipID <<= 8;
+      chipID |= mac[i];
+  }
+  uint32_to_uint8 dd;
+  for( int i=0; i<8; i++){
+     dd.data32 = esp_efuse_read_reg(EFUSE_BLK3, 7-i);
+     for( int j=0; j<4; j++)serNo[i*4+j] = dd.data8[3-j];
+  }
+  serNo[32] = '\0';
+  Serial.printf("!!! ESP ID=%012llX strID=%s serNO=%s\n",chipID,strID,serNo);
 
-
+}
 
 /**
  * Старт всех параллельных задач
@@ -71,21 +89,7 @@ bool isSendNet = false; // Флаг отсылки парамтров на се�
 void tasksStart() {
   Serial.print(F("!!! Free mem: "));
   Serial.println(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-  chipID = ESP.getEfuseMac();
-  sprintf(strID,"%012llX",chipID);
-  Serial.print(F("!!! Free mem: "));
-  Serial.println(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-
-// Считываем серийник с efuse
-// Прошивать SAV00001 espefuse  -c auto -p COM3 burn_efuse BLOCK3 0x5341563030303031000000000000000000000000000000000000000000000000  
-  uint32_to_uint8 dd;
-  for( int i=0; i<8; i++){
-     dd.data32 = esp_efuse_read_reg(EFUSE_BLK3, 7-i);
-     for( int j=0; j<4; j++)serNo[i*4+j] = dd.data8[3-j];
-  }
-  serNo[32] = '\0';
-  Serial.printf("!!! ID=%s SER=%s ID1=",strID,serNo);
-  Serial.println(chipID,HEX);
+  readID();
 
   configInit();
 //  configDefault();
@@ -124,7 +128,7 @@ void tasksStart() {
 
 
    xTaskCreateUniversal(taskEvents, "events", 4096, NULL, 3, NULL, CORE);
-   xTaskCreateUniversal(taskRGB, "rgb", 2048, NULL, 3, NULL, CORE);
+   xTaskCreateUniversal(taskRGB, "rgb", 2048, NULL, 2, NULL, CORE);
    xTaskCreateUniversal(taskMP3, "mp3", 2048, NULL, 1, NULL, CORE);
    xTaskCreateUniversal(taskSensors, "sensors", 10000, NULL, 4, NULL, CORE);
    vTaskDelay(500);

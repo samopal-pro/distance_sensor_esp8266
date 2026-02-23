@@ -6,33 +6,11 @@
 #define DEBUG_SERIAL
 
 #define IS_LORA
+//#define IS_NTP
 
-#define SOFTWARE_V           "10.0.21"
+#define SOFTWARE_V           "10.0.1"
 #define HARDWARE_V           "10.0.1"
-#define CONFIG_V             "10.0.18"
-
-/*
-#define SENSOR_TYPE_NONE     0
-#define SENSOR_SR04T         1 //Типовой сенсор TGIG/ECHO
-#define SENSOR_SR04TM2       2 //Типовой сенсор TGIG/ECHO
-//#define SENSOR_A21_I2C       20 //A21 I2C сенсор подключен к основному разъему (SCL = TRIG, SDA = ECHO )
-#define SENSOR_TFLUNA_I2C    10 //TFLina I2C сенсор подключен к основному разъему (SCL = TRIG, SDA = ECHO )
-#define SENSOR_TFMINI_I2C    11 //TFMiniPlus I2C сенсор подключен к основному разъему (SCL = TRIG, SDA = ECHO )
-
-#define SENSOR_A21_I2C       20 //A21 I2C сенсор подключен к I2C разъему
-*/
-
-enum T_SENSOR_TYPE {
-//  SONAR_SERIAL  = 0, // Все платы работающие по протоколу UART
-  SENSOR_SR04T   = 1, // Все платы работающие по протоколу Trig/Echo
-//  SONAR_SR04TV2  = 3, // Глючные платы  SR04TV2 у которых плывет значение расстояния
-  SENSOR_SR04TM2 = 2, // Последние платы SR04M2 у которых увелмчено время импуься с 10 до 500мс и установлено ограничение на дистанцию 5000
-  SENSOR_SR04_75 = 3, // Одинареый сенсор на 7.5м
-  SENSOR_TFLUNA_I2C  = 10, // LiDAR TF Mini Plus по I2C
-  SENSOR_TFMINI_I2C  = 11, // LiDAR TF Luna по I2C
-  SENSOR_LD2413_UART = 20  // Радар LD-2413 подключенный ро UART
-//  SENSOR_A21_I2C     = 23  //A21 I2C сенсор подключен к I2C разъему
-};
+#define CONFIG_V             "10.0.3"
 
 enum SENSOR_STAT_t {
   SS_NONE      = 0,
@@ -43,8 +21,6 @@ enum SENSOR_STAT_t {
   SS_NAN_BUSY  = -3,
   SS_RESTORE   = 100
 };
-
-#define DEFAULT_SENSOR_TYPE SENSOR_SR04T 
 
 #define PIN_LORA_MOSI        23
 #define PIN_LORA_MISO        19
@@ -63,6 +39,8 @@ enum SENSOR_STAT_t {
 
 #define PIN_RGB1             13
 #define PIN_RGB2             15
+
+#define PIN_IR               PIN_RGB2
 
 #define PIN_TX1              25
 #define PIN_RX1              26
@@ -113,9 +91,6 @@ enum SENSOR_STAT_t {
 #define COLOR_WIFI_AP          0x00FF7F    //Цвет "Режим точки доступа"
 #define COLOR_WIFI_AP1         0xFFFFFF    //Цвет "Точка доступа всегда включена"
 
-#define LED_STAT_AP            14
-#define LED_STAT_WIFI          15
-
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
 #define DEVICE_NAME            "2025_SVETOFORBOX.RU_192.168.4.1"
@@ -137,8 +112,12 @@ enum SENSOR_STAT_t {
 
 #define TB_TOKEN               ""
 
-#define TB_PROVISION_KEY       "_Svetofor10box_key"
-#define TB_PROVISION_SECRET    "_Svetofor10box_secret"
+#define TB_PROVISION_KEY       "_Svetofor10boxGate_key"
+#define TB_PROVISION_SECRET    "_Svetofor10boxGate_secret"
 
+#define TB_PROVISION_USER      "provision"
 
+#define MQTT_WAIT_TM           20000
+
+#define MAX_NUM_PARKING_SPACE  87
 #endif

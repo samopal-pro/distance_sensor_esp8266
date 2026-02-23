@@ -196,13 +196,11 @@ TEventRGB::TEventRGB( uint8_t _pin, int _num, int _first ){
    IncRainbow   = 65536/Num*2;
    isBlink0     = false;
    BlinkCount   = 0;
-   TimerRainbow = 0;
 }
 
 
 void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
-   for( int i=0; i<Num; i++){
-       if( First>0 && (i == LED_STAT_AP || i == LED_STAT_WIFI) )continue;
+   for( int i=First; i<Num; i++){
        if( i%2 ){
           if( _color1 != COLOR_NONE )Strip->setPixelColor(i,_color1);
        } 
@@ -216,12 +214,12 @@ void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
 void TEventRGB::setColor0(uint32_t _color, bool _blink){
    Color0   = _color;
    isBlink0 = _blink;
-   Strip->setPixelColor(LED_STAT_AP,_color);
+   Strip->setPixelColor(0,_color);
    Strip->show();
 }
 
 void TEventRGB::setColor1(uint32_t _color){
-   Strip->setPixelColor(LED_STAT_WIFI,_color);
+   Strip->setPixelColor(1,_color);
    Strip->show();
 }
 
@@ -235,7 +233,6 @@ void TEventRGB::set(uint32_t _color1, uint32_t _color2, uint32_t _color11, uint3
    ColorBlink2  = _color12;
 //   Status       = ES_ON;
    setColor(Color1, Color2);
-   msRainbowOn  = 0;
    msOn         = millis();
    msOff        = 0;
 }
@@ -250,13 +247,11 @@ void TEventRGB::setMP3( uint32_t _color ){
     else isMP3 = true;
 }
 
-void TEventRGB::setRainbow( bool _flag, uint32_t _timer ){
+void TEventRGB::setRainbow( bool _flag ){
    Serial.printf("!!! SetRGB Rainbow %d\n",_flag);
    isRainbow = _flag;
    if( isRainbow ){
-      TimerRainbow = _timer;
-      msRainbowOn  = millis();
-      HueRainbow   = 0;   
+      HueRainbow = 0;   
    }
 }
 
@@ -270,19 +265,8 @@ TEVENT_RGB_TYPE_t  TEventRGB::loop(){
    uint32_t _ms = millis();
 // Эффект радуги
    if( isRainbow ){
-//      Serial.printf("!!! Rainbow !!! %d %d\n",(int)TimerRainbow,(int)(_ms-msRainbowOn));
-      if( TimerRainbow >0 && _ms-msRainbowOn > TimerRainbow ){
-          setRainbow(false);
-          setColor(Color1, Color2);
-          msOff       = 0;
-          msOn        = _ms;
-          msRainbowOn = 0;
-          return ERT_RAINBOW;
-//          msOn = millis();
-      }
       uint16_t h =  HueRainbow;
-      for( int i=0; i<Num; i++){
-          if( First>0 && (i == LED_STAT_AP || i == LED_STAT_WIFI) )continue;
+      for( int i=First; i<Num; i++){
           h += IncRainbow;
           Strip->setPixelColor(i, Strip->ColorHSV(h, 255, 100)); 
       }
@@ -482,7 +466,7 @@ TEVENT_STATUS_t TEventMP3::loop(){
                 _state = 0;
                 Serial.printf("!!! MP3 not init\n");
              }
-             if( _state <= 0 ){
+             if( _state == 0 ){
                 
                 if( isLoop )_replay(2000);
                 else _stop(); 

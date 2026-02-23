@@ -793,8 +793,10 @@ void HTTP_printConfigNet(String &out){
 
   out += "<fieldset>\n";
   out += "<legend>Подключение к онлайн мониторингу TB.SVETOFORBOX.RU</legend>\n";
-  out += "<labelВвключить онлайн отправку данных</label>\n";
+  out += "<p><label>Ввключить онлайн отправку данных</label>\n";
   HTTP_print_input_checkbox(out,"TB_ENABLE","send",jsonConfig["TB"]["ENABLE"].as<bool>());
+  out += "<p><label>Отправка через шлюз</label>\n";
+  HTTP_print_input_checkbox(out,"TB_GATEWAY","send",jsonConfig["TB"]["GATEWAY"].as<bool>());
   out += "<p class='t1'>Ниже идут дополнительные настройки. Обратитесь в техническую поддержку прежде чем их менять.</p>";
   HTTP_printInput1(out,"Сервер:","TB_SERVER",jsonConfig["TB"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
   sprintf(s,"%d",jsonConfig["TB"]["PORT"].as<int>());
@@ -806,8 +808,10 @@ void HTTP_printConfigNet(String &out){
   if( isLora ){ 
      out += "<fieldset>\n";
      out += "<legend>Подключение по LoRa 868МГц</legend>\n";
-     out += "<labelВвключить онлайн отправку данных</label>\n";
+     out += "<labelВвключить отправку данных через LoRa</label>\n";
      HTTP_print_input_checkbox(out,"LORA_ENABLE","send",jsonConfig["LORA"]["ENABLE"].as<bool>());
+     sprintf(s,"%012llX",jsonConfig["LORA"]["GATEWAY"].as<uint64_t>());
+     HTTP_printInput1(out,"Адрес шлюза: 0x","LORA_GATEWAY",s,20,32,HT_TEXT);
      out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
      out += "</fieldset>\n"; 
   } 
@@ -1243,6 +1247,10 @@ bool HTTP_checkArgs(int current){
           if( server.hasArg("TB_ENABLE"))jsonConfig["TB"]["ENABLE"] = true;  
           else jsonConfig["TB"]["ENABLE"] = false;    
       }
+      if( server.hasArg("TB_GATEWAY_H")){
+          if( server.hasArg("TB_GATEWAY"))jsonConfig["TB"]["GATEWAY"] = true;  
+          else jsonConfig["TB"]["GATEWAY"] = false;    
+      }
       if(server.hasArg("TB_SERVER")     )jsonConfig["TB"]["SERVER"]              = server.arg("TB_SERVER").c_str();
       if(server.hasArg("TB_PORT")       )jsonConfig["TB"]["PORT"]                = server.arg("TB_PORT").toInt();
       if(server.hasArg("TB_TOKEN")      )jsonConfig["TB"]["TOKEN"]               = server.arg("TB_TOKEN").c_str();
@@ -1251,6 +1259,7 @@ bool HTTP_checkArgs(int current){
           if( server.hasArg("LORA_ENABLE"))jsonConfig["LORA"]["ENABLE"] = true;  
           else jsonConfig["LORA"]["ENABLE"] = false;    
       }
+      if(server.hasArg("LORA_GATEWAY")      )jsonConfig["LORA"]["GATEWAY"]       = strtoull(server.arg("LORA_GATEWAY").c_str(), nullptr, 16); 
 
 
       if( server.hasArg("STATIC_IP_H")){
@@ -1824,7 +1833,7 @@ void HTTP_print_input_radio(String &out,char *name, char *value,bool checked){
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked){
   out += "<input type='hidden' name='";
   out += name;
-  out += "_H' valye='1'>";
+  out += "_H' value='1'>";
   out += "<input type='checkbox' name='";
   out += name;
   out += "' value='";
