@@ -120,6 +120,7 @@ void HTTP_InputHidden(String &out, char *name, char *value = "1");
 void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1 = NULL, bool check = false);
 void HTTP_print_color(String &out, uint32_t color, char *name);
 void HTTP_print_MP3_7(String &out, char *text, char *name);
+void HTTP_print_MP3_3(String &out, char *text, char *name);
 void HTTP_print_MP3(String &out, char *text,int dir, int num, int _delay = -1);
 void HTTP_checkArgsMP3(char *name);
 

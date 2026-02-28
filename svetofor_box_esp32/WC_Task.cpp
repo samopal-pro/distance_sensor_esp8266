@@ -672,85 +672,84 @@ void taskButton(void *pvParameters){
    btn.setTimer(2000);
    btn.setTimer2(10000);
    btn.setTimerEventCount(4000);
+#if defined(IS_TOUCH)
+   SBTN_touch btn_t(PIN_TOUCH, TOUCH_THRESHOLD);
+   btn_t.setTimer(2000);
+   btn_t.setTimer2(10000);
+   btn_t.setTimerEventCount(4000);
+   Serial.printf("!!! Touch emable pin=%d threshold=%d\n", PIN_TOUCH, TOUCH_THRESHOLD);
+#endif
+#if defined(IS_BTN_ADD)
+   pinMode(PIN_BTN_ADD,INPUT);
+   SBTN btn_add(PIN_BTN_ADD,250,false);
+   btn_add.setTimer(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
+   btn_add.setTimer2(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
+   Serial.printf("!!! Add Btn pin=%d \n", PIN_BTN_ADD);
+#endif
+
+
    bool white_flag = false;
    bool is_early = false;
    uint32_t tm;
    int btn_count;
+
+
    while(true){
       if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
          vTaskDelay(1000);    
          continue;
       }
-
+#if defined(IS_BTN_ADD)
+      switch(btn_add.loop()){
+          case SB_PRESS:
+             Serial.println(F("!!! press add btn"));
+             break;
+          case SB_RELEASE:
+             Serial.println(F("!!! release add btn"));
+             break;
+          case SB_TIMER:
+             Serial.println(F("!!! timer add btn"));
+             baseMP3(jsonConfig["MP3"]["BTN_ADD1"]["NUM"]);
+             break;
+          case SB_TIMER2:
+             Serial.println(F("!!! timer2 add btn"));
+             baseMP3(jsonConfig["MP3"]["BTN_ADD2"]["NUM"]);
+             break;
+      }
+#endif
+#if defined(IS_TOUCH)
+      switch(btn_t.loop()){
+          case SB_PRESS:
+             btnPress(btn_t.getCountEvent(), PIN_TOUCH);
+             break;
+          case SB_RELEASE:
+             is_early = btnRelease(btn_t.getPressTime(), PIN_TOUCH);
+             break;
+          case SB_TIMER:
+             btnTimer(btn_t.getPressTime(), PIN_TOUCH);
+             break;
+          case SB_TIMER2:
+             is_early = false;
+             btnTimer2(btn_t.getPressTime(), PIN_TOUCH);
+             break;
+      }
+ 
+#endif
 
       switch(btn.loop()){
           case SB_PRESS:
              is_early = false;
-             btn_count = (int)btn.getCountEvent();
-             Serial.printf("!!! BTN Press %d\n",btn_count);
-//             EventRGB1->copyTo(SaveRGB1);
-//             EventRGB2->copyTo(SaveRGB2);
-             EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
-             EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
-             if( btn_count == 5 ){
-                systemMP3("92",92,PRIORITY_MP3_HIGH);
-                EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
-                EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
-                btn_count = 0;
-                jsonConfig["SYSTEM"]["NAME"]        = deviceNmae(DEVICE_NAME);
-                configSave();  
-                waitMP3andReboot();
-   
-//                waitMP3(10000);    
-//                ESP.restart();  
-             }
+             btnPress(btn.getCountEvent(), PIN_BTN);
              break;
           case SB_RELEASE:
-             tm = btn.getPressTime();
-             if( tm >= 2000 && tm < 10000 ){
-                 is_early = false;
-                 systemMP3("97",97,PRIORITY_MP3_HIGH);
-                 startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
-                 if( bootCount>=1 ){
-                    if( isAP )isAP = false;
-                    else isAP = true; 
- //                   Serial.printf("!!! WiFi is %d\n",(int)isAP);
-                 }
-             }
-             else {
-                lastSensorOn = SS_RESTORE;
-                is_early = true;
-             }
-//             else if( tm < 2000 && btn_cont )
-             Serial.printf("!!! BTN Release %d\n",(int)tm);
-             break;
-          case SB_TIMER_COUNT:
-             if( is_early){
-               EventMP3->stop();             
-               systemMP3("97",96,PRIORITY_MP3_HIGH);
-             }
-             is_early = false;
+             is_early = btnRelease(btn.getPressTime(), PIN_BTN);
              break;   
           case SB_TIMER:
-             Serial.printf("!!! BTN Timer %d\n",(int)btn.getPressTime());
-             EventRGB1->set(COLOR_GROUND,COLOR_GROUND);               
-             EventRGB2->set(COLOR_GROUND,COLOR_GROUND);               
+             btnTimer(btn.getPressTime(), PIN_BTN);
              break;
           case SB_TIMER2:
              is_early = false;
-             EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
-             EventRGB2->set(COLOR_SAVE,COLOR_SAVE);  
-             systemMP3("98",98,PRIORITY_MP3_HIGH);
-//             jsonSave["BOOT_COUNT"]  = 0;
-//             saveSave();
-             jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
-             jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
-             jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль администратора
-             configSave();
-             waitMP3andReboot();
-
-//             waitMP3(10000);    
-//             ESP.restart();  
+             btnTimer2(btn.getPressTime(), PIN_BTN);
              break;
       }
        vTaskDelay(200);
@@ -760,7 +759,58 @@ void taskButton(void *pvParameters){
 }
 
 
+void btnPress(uint16_t _count, int _num){
+   Serial.printf("!!! BTN Press %d %d\n",_num,(int)_count);
+   EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
+   EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
+   if( _count == 5 ){
+      systemMP3("92",92,PRIORITY_MP3_HIGH);
+      EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
+      EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
+      jsonConfig["SYSTEM"]["NAME"]        = deviceNmae(DEVICE_NAME);
+      configSave();  
+      waitMP3andReboot();
+   }   
+}
 
+bool btnRelease(uint32_t _tm, int _num){
+   bool _ret = false;
+   if( _tm >= 2000 && _tm < 10000 ){
+      _ret = false;
+      systemMP3("97",97,PRIORITY_MP3_HIGH);
+      startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
+      if( bootCount>=1 ){
+         if( isAP )isAP = false;
+         else isAP = true; 
+         }
+      }
+   else {
+      lastSensorOn = SS_RESTORE;
+      _ret = true;
+   }
+   Serial.printf("!!! BTN Release %d %d\n",_num,(int)_tm);
+   return _ret;
+}
+
+void btnTimer(uint32_t _tm, int _num){
+   Serial.printf("!!! BTN Timer %d %d\n",_num,(int)_tm);
+   EventRGB1->set(COLOR_GROUND,COLOR_GROUND);               
+   EventRGB2->set(COLOR_GROUND,COLOR_GROUND);               
+}
+
+void btnTimer2(uint32_t _tm, int _num){
+   Serial.printf("!!! BTN Timer2 %d %d\n",_num,(int)_tm);
+   EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
+   EventRGB2->set(COLOR_SAVE,COLOR_SAVE);  
+   systemMP3("98",98,PRIORITY_MP3_HIGH);
+//             jsonSave["BOOT_COUNT"]  = 0;
+//             saveSave();
+   jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
+   jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
+   jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль администратора
+   configSave();
+   waitMP3andReboot();
+}
 
 void setVolumeMP3(){
    EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());

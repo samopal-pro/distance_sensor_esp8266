@@ -3,8 +3,28 @@
 uint16_t _count_btn = 0; // Общий счетчик кнопок
 
 //***********************************************************************************************************************
-// Методы класса для  кнопки упоавляемой setBtnState()
+// Методы класса для аппаратной кнопки подключенной использующей ESP32 Touch Controller
 //***********************************************************************************************************************
+/**
+* Конструктор класса SBTN
+* @param pin - пин дискреиного входа
+* @param _bounce - таймаут на подавление дребезга контактов (мс). По умолчанию 250
+* @param _threshold - порог срабатывания
+*/
+SBTN_touch::SBTN_touch(uint8_t _pin, uint16_t _threshold, uint32_t _bounce ): SBTN_base( NULL, _bounce ){
+   Pin       = _pin;
+   Threshold = _threshold;
+}
+
+/**
+* Метод определения нажатой кнопки
+* @return true если кнопка нажата
+*/
+bool SBTN_touch::isPress(void){ 
+   uint16_t touchValue = touchRead(Pin);
+   if( touchValue < Threshold )return true;
+   else return false;
+}
 
 
 //***********************************************************************************************************************
@@ -17,10 +37,13 @@ uint16_t _count_btn = 0; // Общий счетчик кнопок
 * @param _bounce - таймаут на подавление дребезга контактов (мс). По умолчанию 250
 * @param _press_state - состояние входа при нажатой кнопке. LOW - низкий уровень (по умолчанию), HIGH - высокий
 */
-SBTN::SBTN(uint8_t pin, uint32_t _bounce, bool _press_state): SBTN_base( NULL, _bounce ){
-   Pin = pin;
+SBTN::SBTN(uint8_t _pin, uint32_t _bounce, bool _pullup_state, bool _press_state ): SBTN_base( NULL, _bounce ){
+   Pin = _pin;
    PressState = _press_state;
-   if( PressState == LOW )pinMode(Pin, INPUT_PULLUP);
+   if( PressState == LOW ){
+      if(_pullup_state)pinMode(Pin, INPUT_PULLUP);
+      else pinMode(Pin, INPUT);
+   }
    else pinMode(Pin, INPUT);
 }
 

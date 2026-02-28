@@ -17,6 +17,7 @@
 #include <soc/efuse_reg.h>
 #include <esp_heap_caps.h>
 #include <esp_mac.h>
+#include <esp32-hal-touch.h>
 
 #define DEPTH_DIST_ARRAY 5
 #define SAMPLE_LEN       10
@@ -94,6 +95,11 @@ void handleMP3(    bool _flag  );
 void handleBusy1(  bool _flag  );
 void handleBusy2(  bool _flag  );
 void handleCalibrate(bool _flag);
+
+void btnPress(uint16_t _count, int _num);
+bool btnRelease(uint32_t _tm, int _num);
+void btnTimer(uint32_t _tm, int _num);
+void btnTimer2(uint32_t _tm, int _num);
 
 void startCalibrate(uint32_t _delay, char *_check=NULL, int _num=-1, CALIBRATION_MODE_t _mode=CM_WAIT_MP3 );
 

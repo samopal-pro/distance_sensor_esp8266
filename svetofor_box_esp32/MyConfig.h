@@ -6,8 +6,11 @@
 #define DEBUG_SERIAL
 
 #define IS_LORA
+#define IS_TOUCH
+#define IS_BTN_ADD
+#define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.21"
+#define SOFTWARE_V           "10.0.22"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.18"
 
@@ -70,9 +73,11 @@ enum SENSOR_STAT_t {
 #define PIN_OUT1             32
 #define PIN_OUT2             33
 
-#define PIN_BTN              0
-
 #define PIN_GPIO             27
+
+#define PIN_BTN              0
+#define PIN_TOUCH            PIN_GPIO
+#define PIN_BTN_ADD          35
 
 
 #define CORE                 1

@@ -185,6 +185,15 @@ void configDefault(){
    jsonConfig["MP3"]["FREE"]["COLOR"]        = COLOR_MP3_1;
    jsonConfig["MP3"]["FREE"]["COLOR_TM"]     = 4;
 
+#if defined(IS_BTN_ADD)
+   jsonConfig["MP3"]["BTN_ADD"]["ENABLE"]    = false;
+   jsonConfig["MP3"]["BTN_ADD1"]["NUM"]      = 7;
+   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"]    = 10;
+   jsonConfig["MP3"]["BTN_ADD2"]["NUM"]      = 8;
+   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"]    = 300;
+#endif
+
+
 //   jsonConfig["MP3"]["SYSTEM"]["DIR"] = 1;                           // Номер папки с системными звуками
 
 

@@ -1,6 +1,7 @@
 #ifndef SBTN_h
 #define SBTN_h
-#include "Arduino.h"
+#include <Arduino.h>
+#include <esp32-hal-touch.h>
 
 typedef enum {
    SB_NONE        = 0,
@@ -61,9 +62,22 @@ class SBTN: public SBTN_base {
       uint8_t Pin;
       bool    PressState;
    public:
-      SBTN(uint8_t _pin, uint32_t _bounce=250, bool _press_state=LOW );
+      SBTN(uint8_t _pin, uint32_t _bounce=250, bool _pullup_state=true, bool _press_state=LOW );
       bool isPress(void);
 };
+
+/**
+* Класс для аппаратной кнопки подключенной использующей ESP32 Touch Controller
+*/
+class SBTN_touch: public SBTN_base {
+   private:
+      uint8_t Pin;
+      uint16_t Threshold;
+   public:
+      SBTN_touch(uint8_t _pin, uint16_t _threshold, uint32_t _bounce=250 );
+      bool isPress(void);
+};
+
 
 
 

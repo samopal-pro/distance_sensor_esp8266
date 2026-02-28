@@ -888,7 +888,7 @@ void HTTP_printConfig2(String &out){
   HTTP_InputInt(out,"Громкость звука 0-30","MP3_VOLUME",jsonConfig["MP3"]["VOLUME"].as<int>(),0,30,32);
 
 
-  out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
+  out += "<table width=\"100%\" border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
 //  out += "<table class='tab1'>\n";
   out += "<tr><td width='320'>Оповещение</td><td width='50'>Вкл.</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><td width='50'>Цвет</td><td width='50'>Длит.</td><tr>\n";
 
@@ -901,6 +901,23 @@ void HTTP_printConfig2(String &out){
   out += "</table>\n";
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
+
+#if defined(IS_BTN_ADD)
+  out += "<fieldset>\n";
+  out += "<legend>Настройка дополнительного входа</legend>\n";
+  out += "<p class='t1'>";  
+  HTTP_print_input_checkbox(out,"MP3_BTN_ADD_ENABLE","1",jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>());
+  out += "Включить звуковые оповещения для дополнительного входа";
+  out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
+  out += "<tr><td width='500'>Оповещение</td><td width='100'>Задержка</td><td width='50'>Тест</td><tr>\n";
+
+  HTTP_print_MP3_3(out,"Первое срабатывание на замыкание входа. Файл 007.mp3", "BTN_ADD1" );
+  HTTP_print_MP3_3(out,"Второе срабатывание на замыкание входа. Файл 007.mp3", "BTN_ADD2" );
+  out += "</table>\n";
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+#endif
 
 }
 
@@ -1060,6 +1077,26 @@ void HTTP_print_MP3_7(String &out, char *text, char *name){
     
 }
 
+void HTTP_print_MP3_3(String &out, char *text, char *name){
+   char s[32];
+   out += "<tr><td>";
+   out += text;
+   out += "</td><td>";
+   sprintf(s,"MP3_%s_TIMER",name);
+   HTTP_InputInt1(out,s,jsonConfig["MP3"][name]["TIMER"].as<int>(),1,3600);
+   out += "</td><td>";
+//   sprintf(s,"MP3_%s_PLAY",name);
+   out += "<input type='button' value='▶' class='btn' onClick='playMP3c(";
+   out += MP3_BASE_DIR;
+   out += ",";
+   out += jsonConfig["MP3"][name]["NUM"].as<int>();
+   out += ",";
+   out += jsonConfig["MP3"][name]["COLOR"].as<uint32_t>();
+   out += ");'>";
+   out += "</td><tr>\n";    
+}
+
+
 void HTTP_print_MP3(String &out, char *text,int dir, int num, int _delay){
    char s[32];
    out += "<tr>";
@@ -1186,9 +1223,15 @@ bool HTTP_checkArgs(int current){
             else jsonConfig["MP3"]["SHORT_MSG"] = false;
          }
 
-
+#if defined(IS_BTN_ADD)
+         if(server.hasArg("MP3_BTN_ADD1_TIMER")){jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = server.arg("MP3_BTN_ADD1_TIMER").toInt();}
+         if(server.hasArg("MP3_BTN_ADD2_TIMER")){jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = server.arg("MP3_BTN_ADD2_TIMER").toInt();}
+         if(server.hasArg("MP3_BTN_ADD_ENABLE_H")){
+            if(server.hasArg("MP3_BTN_ADD_ENABLE"))jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = false;
+         }
+#endif
       }
-
 /// NET
       if(server.hasArg("GroundLevel"))jsonConfig["SENSOR"]["DIST_GROUND"] = server.arg("GroundLevel").toInt();
       if(server.hasArg("WiFiMode"))
