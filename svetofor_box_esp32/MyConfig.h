@@ -10,7 +10,7 @@
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.22"
+#define SOFTWARE_V           "10.0.23"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.18"
 
@@ -120,6 +120,7 @@ enum SENSOR_STAT_t {
 
 #define LED_STAT_AP            14
 #define LED_STAT_WIFI          15
+#define LED_STAT_BRIGHTNESS    1           //Яркость 0-10 для двух светодиодов
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
@@ -131,7 +132,8 @@ enum SENSOR_STAT_t {
 #define COUNT_RGB1             50   //Число светодиодов
 #define COUNT_RGB2             50   //Число светодиодов
 
-#define HTTP_PATH              "/api/1/sensor/99/"
+#define CRM_MOSCOW_PATH       "/api/1/sensor/99/"
+#define HTTP_PATH             "/api/v1/sensor/telemetry"
 
 #define MP3_BASE_DIR           2
 #define MP3_SYSTEM_FULL_DIR    3

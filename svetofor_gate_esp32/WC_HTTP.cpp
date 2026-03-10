@@ -94,7 +94,8 @@ void HTTP_begin(void){
    server.on ( "/relay5.png", HTTP_handlePngRelay5 );
    server.on ( "/playMP3",    HTTP_handlePlayMP3 );
    server.on ( "/sendLoRa" ,  HTTP_handleLoRa );
-   server.onNotFound ( HTTP_handleRoot );
+   server.on ( HTTP_PATH ,    HTTP_handleApi );
+   server.onNotFound ( HTTP_handle404 );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
    size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
@@ -227,7 +228,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += "</title>\n";
   HTTP_printCSS(out);
   HTTP_printJS(out);
-
+  out += "</head>\n";
   out += "<body>\n";
   out += " <div class=\"main\" id=\"main\">\n  "; 
   out += "<h2>ШЛЮЗ</h2>";
@@ -350,9 +351,10 @@ void HTTP_handleRoot(void) {
    out += "<tr>\n";
    out += "<td>ID-сенсора</td>";
    out += "<td>Серийник</td>";
+   out += "<td>Тип</td>";
    out += "<td>RSSI</td>";
    out += "<td>Стат</td>";
-   out += "<td>Сек.&nbsp;назад</td>";
+   out += "<td>Сек&nbsp;назад</td>";
    out += "<td>Вкл.</td>";
    out += "<td>Отправить</td>";
    out += "<td>Отправить</td>";
@@ -380,6 +382,72 @@ void HTTP_handleRoot(void) {
    is_load_page = false;
 }
 
+/*
+ * Оработчик страницы 404
+ */
+void HTTP_handle404(void) {
+   String out;
+   HTTP_printHeader(out,"Страница не найдена",0);
+   HTTP_printTail(out);
+   Serial.printf("!!! HTTP 404\n");  
+   
+   server.send(404, "text/html", out);
+}
+
+/*
+ * Оработчик страницы API
+ */
+void HTTP_handleApi(void) {
+
+
+   int argsCount = server.args();
+   char *endPtr;
+   String _ip = server.client().remoteIP().toString();
+   String _id     = "";
+   String _sn     = "";
+   String _dn     = "";
+   String _bn     = "";
+   int _dist      = 0;
+   int _stat      = -2;
+   int _rssi      = -999;
+   uint16_t _key  = 0xFFFF;
+   uint32_t _tm   = 0;
+   bool _flag     = true;
+
+   Serial.print("!!! HTTP Get API from ");
+   Serial.println(_ip.c_str());
+   if( server.hasArg("id") )_id        = server.arg("id");
+   else _flag = false;
+   if( server.hasArg("sn") )_sn        = server.arg("sn");
+   if( server.hasArg("sn") )_dn        = server.arg("dn");
+   if( server.hasArg("bn") )_bn        = server.arg("bn");
+   if( server.hasArg("tm") )_tm        = strtoul(server.arg("tm").c_str(), NULL, 10);
+   else _flag = false;
+   if( server.hasArg("dist") )_dist    = server.arg("dist").toInt();
+   else _flag = false;
+   if( server.hasArg("stat") )_stat    = server.arg("stat").toInt();
+   else _flag = false;
+   if( server.hasArg("rssi") )_rssi    = server.arg("rssi").toInt();
+   if( server.hasArg("key") )_key      = strtoul(server.arg("key").c_str(), NULL, 10);
+   else _flag = false;
+   
+   if( !_flag ){
+      server.send(400, "text/plain", "ERROR PARAM");
+      return; 
+   }
+   char s[64];
+   sprintf(s,"%s;%ld;%d",_id.c_str(),_tm,_dist);
+   uint16_t _key1    = KeyGen(s);
+   if( _key != _key1 ){
+      server.send(401, "text/plain", "ERROR CRC");
+      return; 
+   }
+   Serial,printf("!!! HTTP %s %s %d %ld %d %d %u %u\n",_id.c_str(),_sn.c_str(),_rssi,_tm,_dist,_stat,_key,_key1);
+   if( sendHttpToMqtt(_id.c_str(), _sn.c_str(), _dn.c_str(), _bn.c_str(),  _dist, _stat, _tm, _rssi, _ip.c_str() ) )server.send(200, "text/plain", "OK");
+   server.send(2503, "text/plain", "ERROR MQTT");
+}
+
+
 
 void HTTP_printNode(String &out, const char *_id, JsonObject _obj){
    bool _ch = false;
@@ -394,24 +462,34 @@ void HTTP_printNode(String &out, const char *_id, JsonObject _obj){
       // Проверяем, что значение является объектом
    if ( _obj != NULL) {
       int _state = _obj["State"].as<int>(); 
+
       out += "<td>"; out += _obj["SN"].as<const char *>(); out += "</td>";
 //      out += "<td>"; out += _obj["DogovorNo"].as<const char *>(); out += "</td>";
 //      out += "<td>"; out += _obj["BoxNo"].as<const char *>(); out += "</td>";
+
+      if(_obj["Type"].isNull())out += "<td>&nbsp;</td>";
+      else {out += "<td>"; out += _obj["Type"].as<const char *>(); out += "</td>";}
+
+//      out += "<td>&nbsp;</td>";
       if(_obj["Rssi"].isNull())out += "<td>&nbsp;</td>";
-      else out += "<td>"; out += _obj["Rssi"].as<int>(); out += "</td>";
+      else {out += "<td>"; out += _obj["Rssi"].as<int>(); out += "</td>";}
+
       out += "<td>"; out += _obj["State"].as<int>(); out += "</td>";
+      
       if(_obj["Time"].isNull())out += "<td>-</td>";
-      else out += "<td>"; out += (millis()-_obj["Time"].as<uint32_t>())/1000; out += "</td>";
+      else {out += "<td>"; out += (millis()-_obj["Time"].as<uint32_t>())/1000; out += "</td>";}
+
       out += "<td>";
       HTTP_print_input_checkbox(out, (char *)_id, "1", _ch);
       out += "</td>";
+ 
       out += "<td><input type='submit' value='Опрос' class='btn10' onClick='sendLoRa(\"";
       out += _id;
       out += "\",\"test\");'></td>";
-      out += "<td><input type='submit' value='Перезагрузка' class='btn10' onClick='sendLoRa(\"";
+      out += "<td><input type='submit' value='Перез.' class='btn10' onClick='sendLoRa(\"";
       out += _id;
       out += "\",\"reboot\");'></td>";
-      out += "<td><input type='submit' value='Калибровка' class='btn10' onClick='sendLoRa(\"";
+      out += "<td><input type='submit' value='Калибр.' class='btn10' onClick='sendLoRa(\"";
       out += _id;
       out += "\",\"calibrate\");'></td>";
    }

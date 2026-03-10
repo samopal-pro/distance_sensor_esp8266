@@ -111,6 +111,7 @@ public:
     void setBrightness( int br);
     void copyTo(TEventRGB *dist);
     void set(TEventRGB *src);
+    uint32_t setBrightness(uint32_t color, uint8_t level);
     TEVENT_RGB_TYPE_t  loop();
     TEVENT_STATUS_t State;
     bool isRainbow;
@@ -199,4 +200,5 @@ class TSaveRGB {
       int Pop();
 };
 */
+
 #endif

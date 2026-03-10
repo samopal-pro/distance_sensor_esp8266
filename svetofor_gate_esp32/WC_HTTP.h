@@ -61,6 +61,9 @@ void WiFi_begin(void);
 
 void HTTP_begin(void);
 void HTTP_handleRoot(void);
+void HTTP_handle404(void);
+void HTTP_handleApi(void);
+
 void HTTP_handleDistance(void);
 void HTTP_handleConfig1(void);
 void HTTP_handleConfig2(void);

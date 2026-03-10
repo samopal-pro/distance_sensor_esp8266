@@ -30,7 +30,11 @@ bool sendLoraCmd(const char *_node, const char *_cmd);
 bool sendLoraToMQTT();
 bool sendLoraAttrToMQTT();
 void setLoraReceive(bool _flag);
+bool sendHttpToMqtt(const char *_id, const char *_sn, const char *_dn, const char *_bn, int _dist, int _stat, uint32_t _uptime, int _rssi, const char *_ip );
+void setCurNode(const char *_id, const char *_type, const char *_sn, int _state, int _rssi, const char *_ip = NULL);
 void setCurNode();
+
+
 void countNodes();
 
 void InitIR();

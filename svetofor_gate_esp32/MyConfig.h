@@ -8,7 +8,7 @@
 #define IS_LORA
 //#define IS_NTP
 
-#define SOFTWARE_V           "10.0.1"
+#define SOFTWARE_V           "10.0.2"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.3"
 
@@ -101,7 +101,9 @@ enum SENSOR_STAT_t {
 #define COUNT_RGB1             50   //Число светодиодов
 #define COUNT_RGB2             50   //Число светодиодов
 
-#define HTTP_PATH              "/api/1/sensor/99/"
+#define CRM_MOSCOW_PATH       "/api/1/sensor/99/"
+#define HTTP_PATH             "/api/v1/sensor/telemetry"
+
 
 #define MP3_BASE_DIR           2
 #define MP3_SYSTEM_FULL_DIR    3

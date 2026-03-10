@@ -133,20 +133,26 @@ bool sendLoraAck(){
 }
 
 void setCurNode(){
-   String s;
-   jsonNodes[curNode]["Rssi"]  = myLora.Rssi;
-   jsonNodes[curNode]["Time"]  = millis();
-   jsonNodes[curNode]["SN"]    = myLora.Json["SN"];
-   jsonNodes[curNode]["State"] = myLora.Json["State"];
-   if(!jsonNodeList[curNode].isNull()){
-      if( jsonNodeList[curNode]["State"] != myLora.Json["State"] ){
-         jsonNodeList[curNode]["State"] = myLora.Json["State"];
+   setCurNode(curNode,"LoRa", myLora.Json["SN"].as<const char *>(),myLora.Json["State"].as<int>(),myLora.Rssi);
+}
+
+void setCurNode(const char *_id, const char *_type, const char *_sn, int _state, int _rssi, const char *_ip){
+    String s;
+   jsonNodes[_id]["Type"]  = _type;
+   jsonNodes[_id]["Rssi"]  = _rssi;
+   jsonNodes[_id]["Time"]  = millis();
+   jsonNodes[_id]["SN"]    = _sn;
+   jsonNodes[_id]["State"] = _state;
+   if( strcmp(_type,"HTTP") == 0 )jsonNodes[_id]["IP"] = _ip;
+   if(!jsonNodeList[_id].isNull()){
+      if( jsonNodeList[_id]["State"] != myLora.Json["State"] ){
+         jsonNodeList[_id]["State"] = myLora.Json["State"];
          nodeListSave();
       }  
    }
    serializeJson(jsonNodes,s);
    Serial.println(s);
-   countNodes();
+   countNodes();        
 }
 
 void countNodes(){
@@ -162,6 +168,30 @@ void countNodes(){
    Serial.printf("!!! Count free %d %d\n", countFree, countFreeSave);
 
 }
+
+bool sendHttpToMqtt(const char *_id, const char *_sn, const char *_dn, const char *_bn, int _dist, int _stat, uint32_t _uptime, int _rssi, const char *_ip ){
+   setCurNode(_id, "HTTP", _sn, _stat, _rssi, _ip);
+   String s;
+   if( mqttState == MS_CONNECT ){
+      jsonData.clear();   
+      jsonData[_id][0]["Distance"] = _dist;
+      jsonData[_id][0]["State"]    = _stat;
+      if( _sn!=NULL && _sn[0]!='\0' )jsonData[_id][0]["SN"] = _sn;
+      jsonData[_id][0]["Uptime"]   = _uptime;
+      jsonData[_id][0]["Rssi"]     = _rssi;
+      jsonData[_id][0]["DN"]       = _dn;
+      jsonData[_id][0]["BN"]       = _bn;
+      serializeJson(jsonData,s);
+      sendLoraAck();
+      mqttSend(TOPIC_GATE_TELEMETRY,s);
+//      Serial.printf("!!! MQTT send\n");
+//      Serial.println(s);
+      return true;
+   }
+   Serial.printf("??? MQTT status %d\n",mqttState);
+   return false;
+}
+
 
 bool sendLoraToMQTT(){
    String s;
@@ -447,6 +477,7 @@ bool sendHttpParam(){
 uint16_t KeyGen(char *str){
 //   char s[64];
 //   sprintf(s,"%s;%ld;%d;%d;%d",strID,Time,Distance,Time,Hum);
+//   Serial.printf("!!! CRC %s %d\n",str,strlen(str));
    uint16_t crc = 0;
    for( int i=0; i< strlen(str); i++ ){
        crc += (int)str[i];

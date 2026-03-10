@@ -805,13 +805,24 @@ void HTTP_printConfigNet(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 
+out += "<fieldset>\n";
+  out += "<legend>Подключение шлюзу по HTTP</legend>\n";
+  out += "<labelВвключить онлайн отправку данных</label>\n";
+  HTTP_print_input_checkbox(out,"HTTP_ENABLE","send",jsonConfig["HTTP"]["ENABLE"].as<bool>());
+  HTTP_printInput1(out,"Адрес шлюза:","HTTP_SERVER",jsonConfig["HTTP"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
+  sprintf(s,"%d",jsonConfig["HTTP"]["PORT"].as<int>());
+  HTTP_printInput1(out,"Порт:","HTTP_PORT",s,20,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";  
+
+
   if( isLora ){ 
      out += "<fieldset>\n";
      out += "<legend>Подключение по LoRa 868МГц</legend>\n";
      out += "<labelВвключить отправку данных через LoRa</label>\n";
      HTTP_print_input_checkbox(out,"LORA_ENABLE","send",jsonConfig["LORA"]["ENABLE"].as<bool>());
-     sprintf(s,"%012llX",jsonConfig["LORA"]["GATEWAY"].as<uint64_t>());
-     HTTP_printInput1(out,"Адрес шлюза: 0x","LORA_GATEWAY",s,20,32,HT_TEXT);
+//     sprintf(s,"%012llX",jsonConfig["LORA"]["GATEWAY"].as<uint64_t>());
+//     HTTP_printInput1(out,"Адрес шлюза: 0x","LORA_GATEWAY",s,20,32,HT_TEXT);
      out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
      out += "</fieldset>\n"; 
   } 
@@ -1285,6 +1296,13 @@ bool HTTP_checkArgs(int current){
       }
       if(server.hasArg("CRM_SERVER")    )jsonConfig["CRM_MOSCOW"]["SERVER"]      = server.arg("CRM_SERVER").c_str();
       if(server.hasArg("CRN_PORT")      )jsonConfig["CRM_MOSCOW"]["PORT"]        = server.arg("CRM_PORT").toInt();
+
+      if( server.hasArg("HTTP_ENABLE_H")){ 
+         if( server.hasArg("HTTP_ENABLE"))jsonConfig["HTTP"]["ENABLE"] = true;
+         else jsonConfig["HTTP"]["ENABLE"] = false;
+      }
+      if(server.hasArg("HTTP_SERVER")    )jsonConfig["HTTP"]["SERVER"]      = server.arg("HTTP_SERVER").c_str();
+      if(server.hasArg("HTTP_PORT")      )jsonConfig["HTTP"]["PORT"]        = server.arg("HTTP_PORT").toInt();
 
       if( server.hasArg("TB_ENABLE_H")){
           if( server.hasArg("TB_ENABLE"))jsonConfig["TB"]["ENABLE"] = true;  

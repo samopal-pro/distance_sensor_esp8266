@@ -32,7 +32,9 @@ bool waitLoraRead(uint32_t _tm);
 void IRAM_ATTR onLoraIrq();
 void taskNet(void *pvParameters);
 void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info);
+bool sendCrmMoscowParam();
 bool sendHttpParam();
+int getStatus();
 
 bool sendParamTB();
 bool sendAttributeTB();

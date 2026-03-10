@@ -2,7 +2,7 @@
 
 HTTPClient httpClient;
 bool isWiFiAlways1 = true; 
-uint32_t msSendHttp = 0, msSendTB = 0, msSendLora = 0,msSendLoraAttr = 0;
+uint32_t msSendHttp = 0, msSendTB = 0, msSendLora = 0,msSendLoraAttr = 0, msSendCrm = 0;
 bool isSendAttributeTB = false;
 bool isLora            = false;
 bool isLoraACK         = false;
@@ -120,18 +120,15 @@ void readLora(){
 bool sendLora(){
 #ifdef IS_LORA
 
-    int _state = -1;
-    switch(SensorOn){
-       case SS_BUSY:
-       case SS_NAN_BUSY: _state = 1;break;
-       case SS_FREE:   
-       case SS_NAN_FREE: _state = 0;break;  
-    }   
+    int _state = getStatus();
 
     myLora.SetHeaderTX(PACKET_V3_TYPE_JSON_TELEMETRY, loraGate, true);
     myLora.Json["Distance"] = (int)Distance;
     myLora.Json["State"]    = _state;
     myLora.Json["Uptime"]   = esp_timer_get_time()/1000000;
+    myLora.Json["DN"]    = jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
+    myLora.Json["BN"]    = jsonConfig["NET"]["BOX_ID"].as<String>();
+
     if( serNo[0] != '\0' )myLora.Json["SN"] = serNo;
     if (myLora.SetJsonBodyTX()) {
        setLoraReceive(false);
@@ -298,10 +295,15 @@ void taskNet( void *pvParameters ){
              if(  isSendNet ){
                 isSendNet  = false;
                 msSendHttp = 0;
+                msSendCrm  = 0;
                 msSendTB   = 0;
                 msSendLora = 0;
              } 
-             if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() && ( msSendHttp == 0 || msSendHttp < ms ) ){
+             if( jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>() && ( msSendCrm == 0 || msSendCrm < ms ) ){
+                if( sendCrmMoscowParam() )msSendCrm = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
+                else msSendCrm = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
+             }
+             if( jsonConfig["HTTP"]["ENABLE"].as<bool>() && ( msSendHttp == 0 || msSendHttp < ms ) ){
                 if( sendHttpParam() )msSendHttp = ms + jsonConfig["NET"]["T_SEND"].as<uint32_t>()*1000;
                 else msSendHttp = ms + jsonConfig["NET"]["T_RETRY"].as<uint32_t>()*1000;
              }
@@ -429,12 +431,16 @@ void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
   }
 }
 
-bool sendHttpParam(){
+/**
+* Отправка на CRM.MOSCOW по протоколу HTTP GET
+*/
+bool sendCrmMoscowParam(){
    bool ret = false;
    char s[64];
    uint32_t tm = millis()/1000;
-
-   sprintf(s,"%s;%ld;%d;%d;%d",strID,tm,(int)Distance,tm,0);
+   int _dist = (int)Distance;
+   int _stat = getStatus();
+   sprintf(s,"%s;%ld;%d;%d;%d",strID,tm,_dist,tm,0);
    uint16_t crc = KeyGen(s);
 
    String str = "";
@@ -442,30 +448,23 @@ bool sendHttpParam(){
    str += jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>();
    str += ":";
    str += jsonConfig["CRM_MOSCOW"]["PORT"].as<int>();
-   str += HTTP_PATH;
+   str += CRM_MOSCOW_PATH;
    str += "?id=";
    str += jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
    str += "_";
    str += jsonConfig["NET"]["BOX_ID"].as<String>();
 //   str += strID;
    str += "&temp=0&hum=0&dist=";
-   str += String(Distance,0);
+   str += _dist;
    str += "&tm=";
    str += String(millis()/1000);
    str += "&btn=";
-   switch(SensorOn){
-      case SS_BUSY:
-      case SS_NAN_BUSY: str += "1";break;
-      case SS_FREE:   
-      case SS_NAN_FREE: str += "0";break;  
-      default: str += "-1";
-   }   
+   str += _stat;
    str += "&uptime=";
    str += String(millis()/1000);
    str += "&key=";
    str += (int)crc;
 
-//   httpClient.begin(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>(), jsonConfig["CRM_MOSCOW"]["PORT"].as<int>(),str);
    Serial.println(str);
    httpClient.begin(str);
    int httpCode = httpClient.GET();
@@ -489,6 +488,82 @@ bool sendHttpParam(){
    return ret;    
 }
 
+int getStatus(){
+   int _stat = -2;
+   switch(SensorOn){
+      case SS_BUSY:
+      case SS_NAN_BUSY: _stat = 1;break;
+      case SS_FREE:   
+      case SS_NAN_FREE: _stat = 0;break;  
+      default: _stat = -1;
+   }     
+   return _stat;
+}
+
+
+/**
+* Отправка на шлюз по протоколу HTTP GET
+*/
+bool sendHttpParam(){
+   bool ret = false;
+   char s[64];
+   uint32_t tm = millis()/1000;
+   int _dist = (int)Distance;
+   int _stat = getStatus();
+   sprintf(s,"%s;%ld;%d",strID,tm,_dist);
+   uint16_t crc = KeyGen(s);
+
+   String str = "";
+   str += "http://";
+   str += jsonConfig["HTTP"]["SERVER"].as<String>();
+   str += ":";
+   str += jsonConfig["HTTP"]["PORT"].as<int>();
+   str += HTTP_PATH;
+   str += "?id=";
+   str += strID;
+   str += "&dist=";
+   str += _dist;
+   str += "&sn=";
+   str += serNo;
+   str += "&dn=";
+   str += jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
+   str += "&bn=";
+   str += jsonConfig["NET"]["BOX_ID"].as<String>();  
+   str += "&tm=";
+   str += String(millis()/1000);
+   str += "&stat=";
+   str += _stat;
+   str += "&uptime=";
+   str += String(millis()/1000);
+   str += "&rssi=";
+   str += WiFi.RSSI();
+   str += "&key=";
+   str += (int)crc;
+
+   Serial.println(str);
+   httpClient.begin(str);
+   int httpCode = httpClient.GET();
+   Serial.print(F("!!! HTTP send "));
+   Serial.println(jsonConfig["HTTP"]["SERVER"].as<String>());
+   
+   if( httpCode == HTTP_CODE_OK ){
+        String payload = httpClient.getString();
+        Serial.print(" success: ");
+        Serial.println(payload);
+        ret = true;
+   }
+   else {
+        Serial.print(" error: ");
+        Serial.println(httpCode);
+   }
+//   sprintf(sbuf,"GET http://%s:%d%s?id=%s&temp=%d&hum=%d&dist=%d&tm=%ld&btn=%d&uptime=%ld&key=%d HTTP/1.0\r\n\r\n",
+//      EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID,_temp,_hum,
+//      _dist,_time,(int)_btn,_uptime,(int)KeyGen());
+   httpClient.end();
+   return ret;    
+}
+
+
 /**
  * Генерация контрольной суммы 
  */
@@ -496,6 +571,7 @@ bool sendHttpParam(){
 uint16_t KeyGen(char *str){
 //   char s[64];
 //   sprintf(s,"%s;%ld;%d;%d;%d",strID,Time,Distance,Time,Hum);
+//   Serial.printf("!!! CRC %s %d\n",str,strlen(str));
    uint16_t crc = 0;
    for( int i=0; i< strlen(str); i++ ){
        crc += (int)str[i];
@@ -524,13 +600,7 @@ bool sendParamTB(){
     }
     _url += "/telemetry";
 
-    int _state = -1;
-    switch(SensorOn){
-       case SS_BUSY:
-       case SS_NAN_BUSY: _state = 1;break;
-       case SS_FREE:   
-       case SS_NAN_FREE: _state = 0;break;  
-    }   
+    int _state = getStatus();
     jsonData.clear();
     jsonData["Distance"] = (int)Distance;
     jsonData["State"]    = _state;

@@ -216,12 +216,12 @@ void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
 void TEventRGB::setColor0(uint32_t _color, bool _blink){
    Color0   = _color;
    isBlink0 = _blink;
-   Strip->setPixelColor(LED_STAT_AP,_color);
+   Strip->setPixelColor(LED_STAT_AP,setBrightness(_color,LED_STAT_BRIGHTNESS));
    Strip->show();
 }
 
 void TEventRGB::setColor1(uint32_t _color){
-   Strip->setPixelColor(LED_STAT_WIFI,_color);
+   Strip->setPixelColor(LED_STAT_WIFI,setBrightness(_color,LED_STAT_BRIGHTNESS));
    Strip->show();
 }
 
@@ -291,9 +291,10 @@ TEVENT_RGB_TYPE_t  TEventRGB::loop(){
       return ERT_RAINBOW;
    }
 // Мигаем первым светодиодом с частотой Loop()
+
    if( isBlink0 ){
-       if( BlinkCount%2 )Strip->setPixelColor(0,Color0);
-       else Strip->setPixelColor(0,COLOR_BLACK);
+       if( BlinkCount%2 )Strip->setPixelColor(LED_STAT_AP,setBrightness(Color0,LED_STAT_BRIGHTNESS));
+       else Strip->setPixelColor(LED_STAT_AP,setBrightness(COLOR_BLACK,LED_STAT_BRIGHTNESS));
        Strip->show();
        BlinkCount++;
    }
@@ -345,6 +346,22 @@ void TEventRGB::set( TEventRGB *src ){
    set(src->Color1, src->Color2, src->ColorBlink1, src->ColorBlink2, src->TimerOn, src->TimerOff);
 }
 
+uint32_t TEventRGB::setBrightness(uint32_t color, uint8_t level)
+{
+    if (level > 10) level = 10;
+
+    uint8_t r = (color >> 16) & 0xFF;
+    uint8_t g = (color >> 8) & 0xFF;
+    uint8_t b = color & 0xFF;
+
+    r = (r * level) / 10;
+    g = (g * level) / 10;
+    b = (b * level) / 10;
+
+    return ((uint32_t)r << 16) |
+           ((uint32_t)g << 8)  |
+           b;
+}
 
 //***********************************************************************************************************************************************************************************
 // Класс TEventMP3
@@ -588,3 +605,4 @@ int TSaveRGB::Restore( int _id ){
     return Count;
 }
 */
+

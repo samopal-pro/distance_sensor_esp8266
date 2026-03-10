@@ -84,6 +84,10 @@ void configDefault(){
    jsonConfig["CRM_MOSCOW"]["SERVER"]      = "crm.moscow";             
    jsonConfig["CRM_MOSCOW"]["PORT"]        = 8001;
 
+   jsonConfig["HTTP"]["ENABLE"]            = false;                      //посылать информацию на GATEWAY по HTTP
+   jsonConfig["HTTP"]["SERVER"]            = "";             
+   jsonConfig["HTTP"]["PORT"]              = 80;
+
    jsonConfig["TB"]["ENABLE"]              = false;                      //Посылать информацию в ThingsBoard
    jsonConfig["TB"]["SERVER"]              = "109.172.115.70";             
    jsonConfig["TB"]["PORT"]                = 8088;
