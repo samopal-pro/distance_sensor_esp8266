@@ -16,6 +16,7 @@
 #include "WC_Config.h"
 //#include "WC_Led.h"
 #include "WC_Task.h"
+#include "src/Slib/SHTTP.h"
 
 
 #define TM_AP_MODE      120000
@@ -39,13 +40,6 @@ enum ES_WIFI_STAT {
   EWS_ON
 };
 
-typedef enum {
-  HT_TEXT     = 0,
-  HT_PASSWORD = 1,
-  HT_NUMBER   = 2,
-  HT_IP       = 3,
-  
-}HTTP_input_type_t;
 
 extern ES_WIFI_STAT w_stat2;
 extern bool is_load_page;
@@ -107,27 +101,16 @@ bool SetParamHTTP();
 int  HTTP_isAuth();
 int  HTTP_checkAuth(const char *pass);
 //int  HTTP_checkUserAndPassword( const char *pass);
-void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype=HT_TEXT, const char *style=NULL, const char *add_text=NULL);
-void HTTP_InputFloat(String &out,const char *label,const char *name,double value,double min,double max,int size=32,const char *style = NULL);
-void HTTP_InputInt(String &out,const char *label,const char *name,int value,int min,int max,int size=32,const char *style = NULL);
-void HTTP_InputRange(String &out,const char *label,const char *name,int value,int min,int max,int size=32,const char *style = NULL);
-void HTTP_InputInt1(String &out,const char *name,int value,int min,int max,int size=32);
+//void HTTP_InputFloat(String &out,const char *label,const char *name,double value,double min,double max,int size=32,const char *style = NULL);
 void HTTP_printMessage(const char *s);
 
-void HTTP_InputHidden(String &out, char *name, char *value = "1");
 
 
-void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1 = NULL, bool check = false);
-void HTTP_print_color(String &out, uint32_t color, char *name);
 void HTTP_print_MP3_7(String &out, char *text, char *name);
 void HTTP_print_MP3_3(String &out, char *text, char *name);
 void HTTP_print_MP3(String &out, char *text,int dir, int num, int _delay = -1);
 void HTTP_checkArgsMP3(char *name);
 
-void HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value, uint32_t color_set, uint8_t color_num, uint8_t proc, bool is_change = false);
-void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
-void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);
-void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table);
 void HTTP_print_menu(String &out, int current);
 void HTTP_print_menu_item(String &out, bool _isCur, int _proc, char *_label, char *_url, bool _isMP3, int _dirMP3, int _numMP3);
 char *HTTP_url( int current );
@@ -142,7 +125,7 @@ void HTTP_goto(const char *url, uint32_t tm, const char *msg);
 uint32_t HTMLtoInt(const char *s_color);
 
 bool HTTP_redirect();
-
+void setJsonArray( String str);
 
 
 #endif

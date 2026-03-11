@@ -196,6 +196,7 @@ void HTTP_printCSS(String &out){
     out += " input[type=file]::file-selector-button {border: 2px solid #000088;background:#fceade;color:#c55a11;width:30%;}\n";
     out += " input[type=file]::file-selector-button:hover {background:#000088;}\n";
     out += " input[type=submit] {font-size: 14pt;color:#000088;}\n";
+    out += " textarea {font-size: 12pt;color:#000088;}\n";
     out += " input[type=submit].btn1 {background:#8888ff;}\n";
     out += " input[type=submit].btn2 {background:#88ff88;}\n";
     out += " input[type=submit].btn3 {background:#ffff88;}\n";
@@ -809,9 +810,10 @@ out += "<fieldset>\n";
   out += "<legend>Подключение шлюзу по HTTP</legend>\n";
   out += "<labelВвключить онлайн отправку данных</label>\n";
   HTTP_print_input_checkbox(out,"HTTP_ENABLE","send",jsonConfig["HTTP"]["ENABLE"].as<bool>());
-  HTTP_printInput1(out,"Адрес шлюза:","HTTP_SERVER",jsonConfig["HTTP"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
-  sprintf(s,"%d",jsonConfig["HTTP"]["PORT"].as<int>());
-  HTTP_printInput1(out,"Порт:","HTTP_PORT",s,20,32,HT_NUMBER);
+  HTTP_printTextarea(out,"Адреса шлюзов через запятую, пробел или с новой строки:","HTTP_SERVERS",jsonConfig["HTTP"]["SERVERS"].as<JsonArray>(),20,4);
+//  HTTP_printInput1(out,"Адрес шлюза:","HTTP_SERVER",jsonConfig["HTTP"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
+//  sprintf(s,"%d",jsonConfig["HTTP"]["PORT"].as<int>());
+//  HTTP_printInput1(out,"Порт:","HTTP_PORT",s,20,32,HT_NUMBER);
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
 
@@ -1301,9 +1303,9 @@ bool HTTP_checkArgs(int current){
          if( server.hasArg("HTTP_ENABLE"))jsonConfig["HTTP"]["ENABLE"] = true;
          else jsonConfig["HTTP"]["ENABLE"] = false;
       }
-      if(server.hasArg("HTTP_SERVER")    )jsonConfig["HTTP"]["SERVER"]      = server.arg("HTTP_SERVER").c_str();
-      if(server.hasArg("HTTP_PORT")      )jsonConfig["HTTP"]["PORT"]        = server.arg("HTTP_PORT").toInt();
-
+//      if(server.hasArg("HTTP_SERVER")    )jsonConfig["HTTP"]["SERVER"]      = server.arg("HTTP_SERVER").c_str();
+//      if(server.hasArg("HTTP_PORT")      )jsonConfig["HTTP"]["PORT"]        = server.arg("HTTP_PORT").toInt();
+      if(server.hasArg("HTTP_SERVERS")    )setJsonArray(/*jsonConfig["HTTP"]["SERVERS"].as<JsonArray>(),*/ server.arg("HTTP_SERVERS"));
       if( server.hasArg("TB_ENABLE_H")){
           if( server.hasArg("TB_ENABLE"))jsonConfig["TB"]["ENABLE"] = true;  
           else jsonConfig["TB"]["ENABLE"] = false;    
@@ -1519,154 +1521,6 @@ int  HTTP_checkAuth(const char *pass){
    return UID;
 }
 
-/**
- * Формирование одного элемента INPUT в форме
- * 
- * @param out - строковый буфер
- * @param label - метка HTTP
- * @param name - имя отображаемое на форме
- * @param value - ткущее значение 
- * @param size - ширина текстового поля
- * @param len - максимальное количество символов
- * @param type - тип поля ввода: HT_TEXT,HT_PASSWORD,HT_NUMBER,HT_IP
- */
-void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype, const char *style, const char *add_text){
-   char str[10];
-   if( style == NULL )out += "<p><label>";
-   else {
-       out += "<div class=\"";
-       out += style;
-       out += "\"><label>";
-   }
-   out += label;
-   out += "</label><input name='";
-  out += name;
-   out += "' value='";
-   out += value;
-   out += "' size=";
-   sprintf(str,"%d",size);  
-   out += str;
-   out += " maxlength=";    
-   sprintf(str,"%d",len);  
-   out += str;
-   if( htype == HT_PASSWORD )out += " type='password'";
-   if( htype == HT_NUMBER )out += " type='number'";
-   if( htype == HT_IP ){
-      out += " placeholder=\"xxx.xxx.xxx.xxx\"";
-      out += " pattern=\"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$\"";
-   }
-   out += ">";
-   if( add_text != NULL )out += add_text;
-   if( style == NULL )out += "</p>\n";
-    else out += "</div>\n";
-     
-}
-
-
-
-void HTTP_InputInt(String &out,
-   const char *label, // Метка поля
-   const char *name,  // Имя поля HTTP 
-   int value,      // Текущее значение
-   int min,        // Минимальное значение
-   int max,        // Максимальное значение
-   int size,          // Дина поля
-   const char *style) //Стиль поля
-   {
-   char str[10];
-   if( style == NULL )out += "<p><label>";
-   else {
-       out += "  <div class=\"";
-       out += style;
-       out += "\"><label>";
-   }
-   out += label;
-   out += "</label><input name='";
-   out += name;
-   out += "' type='number'";
-   out += " value=";
-   out += String(value);
-//   out += " size=";
-//   out += String(size);
-//   out += " maxlength=32";
-   out += " min=";
-   out += String(min);
-   out += " max=";
-   out += String(max);
-
-   out += ">";
-   if( style == NULL )out += "</p>\n";
-   else out += "</div>\n";
-     
-}
-
-void HTTP_InputRange(String &out,
-   const char *label, // Метка поля
-   const char *name,  // Имя поля HTTP 
-   int value,      // Текущее значение
-   int min,        // Минимальное значение
-   int max,        // Максимальное значение
-   int size,          // Дина поля
-   const char *style) //Стиль поля
-   {
-   char str[10];
-   if( style == NULL )out += "<p><label>";
-   else {
-       out += "  <div class=\"";
-       out += style;
-       out += "\"><label>";
-   }
-   out += label;
-   out += "</label><input name='";
-   out += name;
-   out += "' type='range'";
-   out += " value=";
-   out += String(value);
-//   out += " size=";
-//   out += String(size);
-//   out += " maxlength=32";
-   out += " min=";
-   out += String(min);
-   out += " max=";
-   out += String(max);
-
-   out += ">";
-   if( style == NULL )out += "</p>\n";
-   else out += "</div>\n";
-     
-}
-
-void HTTP_InputInt1(String &out,
-   const char *name,  // Имя поля HTTP 
-   int value,      // Текущее значение
-   int min,        // Минимальное значение
-   int max,        // Максимальное значение
-   int size)          // Дина поля
-   {
-   char str[10];
-   out += "<input name='";
-   out += name;
-   out += "' type='number'";
-   out += " value=";
-   out += String(value);
-//   out += " size=";
-//   out += String(size);
-//   out += " maxlength=32";
-   out += " min=";
-   out += String(min);
-   out += " max=";
-   out += String(max);
-
-   out += " style=\"width: 3em\">";
-}
-
-void HTTP_InputHidden(String &out, char *name, char *value){
-   out += "<input type=\"hidden\" name=\"";
-   out += name;
-   out += "\" value=\"";
-   out += value;
-   out += "\">\n";
-}
 
 
 void WiFi_ScanNetwork(){
@@ -1784,124 +1638,6 @@ void HTTP_goto(const char *url, uint32_t tm, const char *msg){
    content += " </script>\n"; 
    HTTP_printTail(content);
    server.send(200, "text/html", content);
-}
-
-void  HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value, uint32_t color_set, uint8_t color_num, uint8_t proc, bool is_change){
-  char s[64];
-  sprintf(s,"%06lX",color);
-  out += "<td align='center' width='";
-  out += proc;
-  //else out += "%' width='25%' ";
-  out += "%' bgcolor='#"; out += s; out += "'>";
-  sprintf(s,"%d",(int)value);  
-  HTTP_print_input_radio(out,name,s,(value == color_num));
-  if( is_change ){
-     sprintf(s,"%06lX",color_set);
-     out += " Настройка: <input type='color' value='#";
-     out += s;
-     out += "' name='";
-     out += name;
-     out += "_Change'>";
-  }
-
-
-
-  out += "</td>";
-}
-
-void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1, bool check){
-   char s[64];
-   out += "<tr><td colspan=5>&nbsp;</td></tr>\n";
-
-   out += "<tr>\n";
-   if( name1 == NULL ){
-      out += "<td colspan=2>";
-      out += label, 
-      out += "</td>";
-   }
-   else {
-      out += "<td>";
-      HTTP_print_input_checkbox(out,name1,"1",check);
-      out += "</td>";
-      out += "<td>";
-      out += label, 
-      out += "</td>";
-   }
-   sprintf(s,"%06lX",color1);
-   out += "<td><button style=\"background-color: ";
-   out += s;
-   out += ";\" onclick=\"setColorVal('";
-   out += name;
-   out += "','#";
-   out += s;
-   out += "')\">&nbsp;&nbsp;&nbsp;</button></td>\n";
-   sprintf(s,"%06lX",color2);
-   out += "<td><button style=\"background-color: ";
-   out += s;
-   out += ";\" onclick=\"setColorVal('";
-   out += name;
-   out += "','#";
-   out += s;
-   out += "')\">&nbsp;&nbsp;&nbsp;</button></td>\n";
-   sprintf(s,"%06lX",color);
-   out += "<td>Настройка: <input type='color' value='#";
-   out += s;
-   out += "' id='";
-   out += name;
-   out += "' name='";
-   out += name;
-   out += "'></td>\n";
-   out += "</tr>\n"; 
-}
-
-void HTTP_print_color(String &out, uint32_t color, char *name){
-   char s[64];
-   sprintf(s,"%06lX",color);
-   out += "<input type='color' value='#";
-   out += s;
-   out += "' name='";
-   out += name;
-   out += "'>\n";
-}
-
-
-
-void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *value,bool checked, bool is_table){
-  if(is_table)out += "<table>"; 
-  out += "<tr><td><img src='";
-  out += img;
-  out += "'></td><td>";
-  HTTP_print_input_radio(out,name,value,checked);
-  out += "</td><td>";
-  out += label;
-  out += "</td></tr>";
-  if(is_table)out += "</table>"; 
-
-}
-
-
-
-void HTTP_print_input_radio(String &out,char *name, char *value,bool checked){
-  out += "<input type='radio' name='";
-  out += name;
-  out += "' value='";
-  out += value;
-  out += "'";
-  if( checked )out += " checked";
-  out += ">";   
-}
-
-void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked){
-  out += "<input type='hidden' name='";
-  out += name;
-  out += "_H' value='1'>";
-  out += "<input type='checkbox' name='";
-  out += name;
-  out += "' value='";
-  out += value;
-  out += "'";
-  if( checked )out += " checked";
-  out += ">";   
 }
 
 
@@ -2196,4 +1932,22 @@ void HTTP_handleUpload() {
   content += "</form>\n";
   HTTP_printTail(content);
   server.send(200, "text/html", content);
+}
+
+void setJsonArray(String str){
+   if(!jsonConfig["HTTP"]["SERVERS"].isNull())jsonConfig["HTTP"]["SERVERS"].clear(); 
+   int i = 0;
+   str.replace(",", " ");
+   str.replace("\n", " ");
+
+   while (str.length()){
+      int p = str.indexOf(' ');
+      String ip = (p == -1) ? str : str.substring(0, p);
+//      Serial.printf("!!! IP=%s\n",ip.c_str());
+      ip.trim();
+      if (ip.length()) {jsonConfig["HTTP"]["SERVERS"][i++]=ip;}
+      if (p == -1) break;
+      str = str.substring(p + 1);
+   }
+
 }

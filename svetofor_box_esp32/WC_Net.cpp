@@ -505,61 +505,62 @@ int getStatus(){
 * Отправка на шлюз по протоколу HTTP GET
 */
 bool sendHttpParam(){
-   bool ret = false;
+   bool ret = true;
    char s[64];
    uint32_t tm = millis()/1000;
    int _dist = (int)Distance;
    int _stat = getStatus();
    sprintf(s,"%s;%ld;%d",strID,tm,_dist);
    uint16_t crc = KeyGen(s);
+   if( jsonConfig["HTTP"]["SERVERS"].isNull() )return true;
 
-   String str = "";
-   str += "http://";
-   str += jsonConfig["HTTP"]["SERVER"].as<String>();
-   str += ":";
-   str += jsonConfig["HTTP"]["PORT"].as<int>();
-   str += HTTP_PATH;
-   str += "?id=";
-   str += strID;
-   str += "&dist=";
-   str += _dist;
-   str += "&sn=";
-   str += serNo;
-   str += "&dn=";
-   str += jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
-   str += "&bn=";
-   str += jsonConfig["NET"]["BOX_ID"].as<String>();  
-   str += "&tm=";
-   str += String(millis()/1000);
-   str += "&stat=";
-   str += _stat;
-   str += "&uptime=";
-   str += String(millis()/1000);
-   str += "&rssi=";
-   str += WiFi.RSSI();
-   str += "&key=";
-   str += (int)crc;
+   for( int i=0; i<jsonConfig["HTTP"]["SERVERS"].size(); i++){
 
-   Serial.println(str);
-   httpClient.begin(str);
-   int httpCode = httpClient.GET();
-   Serial.print(F("!!! HTTP send "));
-   Serial.println(jsonConfig["HTTP"]["SERVER"].as<String>());
+      String str = "";
+      str += "http://";
+      str += jsonConfig["HTTP"]["SERVERS"][i].as<String>();
+      str += ":80";
+      str += HTTP_PATH;
+      str += "?id=";
+      str += strID;
+      str += "&dist=";
+      str += _dist;
+      str += "&sn=";
+      str += serNo;
+      str += "&dn=";
+      str += jsonConfig["NET"]["DOGOVOR_ID"].as<String>();
+      str += "&bn=";
+      str += jsonConfig["NET"]["BOX_ID"].as<String>();  
+      str += "&tm=";
+      str += String(millis()/1000);
+      str += "&stat=";
+      str += _stat;
+      str += "&uptime=";
+      str += String(millis()/1000);
+      str += "&rssi=";
+      str += WiFi.RSSI();
+      str += "&key=";
+      str += (int)crc;
+      Serial.print(F("!!! HTTP send: "));
+      Serial.println(str);
+      httpClient.begin(str);
+      int httpCode = httpClient.GET();
    
-   if( httpCode == HTTP_CODE_OK ){
-        String payload = httpClient.getString();
-        Serial.print(" success: ");
-        Serial.println(payload);
-        ret = true;
-   }
-   else {
-        Serial.print(" error: ");
-        Serial.println(httpCode);
-   }
+      if( httpCode == HTTP_CODE_OK ){
+          String payload = httpClient.getString();
+          Serial.print(" success: ");
+          Serial.println(payload);
+      }
+      else {
+          Serial.print(" error: ");
+          Serial.println(httpCode);
+          ret = false;
+      }
 //   sprintf(sbuf,"GET http://%s:%d%s?id=%s&temp=%d&hum=%d&dist=%d&tm=%ld&btn=%d&uptime=%ld&key=%d HTTP/1.0\r\n\r\n",
 //      EA_Config.SERVER,EA_Config.PORT,HTTP_PATH,SensorID,_temp,_hum,
 //      _dist,_time,(int)_btn,_uptime,(int)KeyGen());
-   httpClient.end();
+      httpClient.end();
+   }
    return ret;    
 }
 
