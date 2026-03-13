@@ -295,3 +295,30 @@ void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked)
   if( checked )out += " checked";
   out += ">";   
 }
+
+
+void HTTP_printWiFiPower(String &out, int _power){
+  out += "<div class='lab2'><p><label>Уровень мощности WiFi:</label>\n";
+  out += "<select name='WiFiPower'>\n";
+  HTTP_printSelectOption(out, "21dBm", (int)WIFI_POWER_21dBm, _power);
+  HTTP_printSelectOption(out, "20dBm", (int)WIFI_POWER_20dBm, _power);
+  HTTP_printSelectOption(out, "19dBm", (int)WIFI_POWER_19dBm, _power);
+  HTTP_printSelectOption(out, "17dBm", (int)WIFI_POWER_17dBm, _power);
+  HTTP_printSelectOption(out, "15dBm", (int)WIFI_POWER_15dBm, _power);
+  HTTP_printSelectOption(out, "11dBm", (int)WIFI_POWER_11dBm, _power);
+  HTTP_printSelectOption(out, "7dBm",  (int)WIFI_POWER_7dBm,  _power);
+  HTTP_printSelectOption(out, "5dBm",  (int)WIFI_POWER_5dBm,  _power);
+  HTTP_printSelectOption(out, "2dBm",  (int)WIFI_POWER_2dBm,  _power);
+  out += "</select>\n";
+  out += "</div>\n";
+}
+
+void HTTP_printSelectOption(String &out, const char *_name, int _num, int _cur){
+    out += "<option value='";
+    out += _num;
+    out += "'";
+    if( _num == _cur )out += " selected";
+    out += ">";
+    out += _name;
+    out += "</option>\n";
+}

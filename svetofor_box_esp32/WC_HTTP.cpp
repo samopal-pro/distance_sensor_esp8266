@@ -259,6 +259,13 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += "\n";
   out += "<p>";
   out += HTTP_User;
+  if( WiFi.status() == WL_CONNECTED ){
+     out += "<p>WiFi: ";
+     out += jsonConfig["WIFI"]["NAME"].as<String>();
+     out += " RSSI: ";
+     out += WiFi.RSSI();
+     out += "</p>\n";
+  }
 
   char s[20]; 
   out += "<p>Дата: ";
@@ -739,6 +746,13 @@ void HTTP_printConfigNet(String &out){
   out += "<legend>Тип сенсора</legend>\n"; 
   out += "<div class='lab2'><p><label>Выберите тип сенсора:</label>\n";
   out += "<select name='SensorType'>\n";
+  int _cur_sensor = jsonConfig["SENSOR"]["TYPE"].as<int>();
+  HTTP_printSelectOption( out, "Двойной ультразвуковой 4.8м серый (SR04T)",      (int)SENSOR_SR04T,       _cur_sensor );
+  HTTP_printSelectOption( out, "Одинарный ультразвуковой 5.8м серый (SR04M2)",   (int)SENSOR_SR04TM2,     _cur_sensor );
+  HTTP_printSelectOption( out, "Одинарный ультразвуковой 7.5м черный (Dyp-A01)", (int)SENSOR_SR04_75,     _cur_sensor );
+  HTTP_printSelectOption( out, "Лазерный сенсор 9м (TF-Luna)",                   (int)SENSOR_TFLUNA_I2C,  _cur_sensor );
+  HTTP_printSelectOption( out, "Микроволновый сенсор 10м (LD-2413)",             (int)SENSOR_LD2413_UART, _cur_sensor );
+/*
   out += "<option value='";out += String(SENSOR_SR04T);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04T)out += " selected";
   out += ">Двойной ультразвуковой 4.8м серый (SR04T)</option>";  
@@ -748,14 +762,13 @@ void HTTP_printConfigNet(String &out){
   out += "<option value='";out += String(SENSOR_SR04_75);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04_75)out += " selected";
   out += ">Одинарный ультразвуковой 7.5м черный (Dyp-A01)</option>";  
-
   out += "<option value='";out += String(SENSOR_TFLUNA_I2C);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_TFLUNA_I2C)out += " selected";
   out += ">Лазерный сенсор 9м (TF-Luna)</option>";  
-
   out += "<option value='";out += String(SENSOR_LD2413_UART);out += "'";
   if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_LD2413_UART)out += " selected";
   out += ">Микроволновый сенсор 10м (LD-2413)</option>";  
+*/  
   out += "</select>\n";
   out += "</div>\n";
   out += "<p class='t1'>После смены типа сенсора нужно перезагрузить устройство.";
@@ -768,6 +781,7 @@ void HTTP_printConfigNet(String &out){
   out += "<legend>Подключение к внешним сервисам по WiFi</legend>\n";
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",jsonConfig["WIFI"]["PASS"].as<const char *>(),20,32,HT_PASSWORD);
+  HTTP_printWiFiPower(out,jsonConfig["WIFI"]["POWER"].as<int>());
 
   HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",jsonConfig["NET"]["DOGOVOR_ID"].as<const char *>(),20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",jsonConfig["NET"]["BOX_ID"].as<const char *>(),20,16,HT_TEXT);
@@ -925,7 +939,7 @@ void HTTP_printConfig2(String &out){
   out += "<tr><td width='500'>Оповещение</td><td width='100'>Задержка</td><td width='50'>Тест</td><tr>\n";
 
   HTTP_print_MP3_3(out,"Первое срабатывание на замыкание входа. Файл 007.mp3", "BTN_ADD1" );
-  HTTP_print_MP3_3(out,"Второе срабатывание на замыкание входа. Файл 007.mp3", "BTN_ADD2" );
+  HTTP_print_MP3_3(out,"Второе срабатывание на замыкание входа. Файл 008.mp3", "BTN_ADD2" );
   out += "</table>\n";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
@@ -1286,6 +1300,10 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("NameESP")      && UID >= 1 )jsonConfig["SYSTEM"]["NAME"]   = server.arg("NameESP").c_str();
       if(server.hasArg("WiFiName")     )jsonConfig["WIFI"]["NAME"]              = server.arg("WiFiName").c_str();
       if(server.hasArg("WiFiPassword") )jsonConfig["WIFI"]["PASS"]              = server.arg("WiFiPassword").c_str();
+      if(server.hasArg("WiFiPower")    ){jsonConfig["WIFI"]["POWER"]            = server.arg("WiFiPower").toInt();isChangeConfig = true;}
+   
+
+
 
       if(server.hasArg("Dogovor")      )jsonConfig["NET"]["DOGOVOR_ID"]  = server.arg("Dogovor").c_str();
       if(server.hasArg("Box")          )jsonConfig["NET"]["BOX_ID"]      = server.arg("Box").c_str();

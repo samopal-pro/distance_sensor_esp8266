@@ -221,6 +221,7 @@ void taskNet( void *pvParameters ){
    bool isSendT = false;
    bool isSendA = false;
    bool isSendCurT = false;
+   if( jsonConfig["WIFI"]["POWER"].isNull() )WiFi.setTxPower((wifi_power_t)jsonConfig["WIFI"]["POWER"].as<int>());
 //   HTTP_begin();
    while(true){
       if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания

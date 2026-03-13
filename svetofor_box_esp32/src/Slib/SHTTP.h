@@ -2,6 +2,7 @@
 #define SHTTP_h
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <WiFi.h>
 
 typedef enum {
   HT_TEXT     = 0,
@@ -27,4 +28,6 @@ void HTTP_print_img_radio(String &out,char *img, char *label, char *name, char *
 void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);
 
+void HTTP_printWiFiPower(String &out, int _power);
+void HTTP_printSelectOption(String &out, const char *_name, int _num, int _cur=-1);
 #endif

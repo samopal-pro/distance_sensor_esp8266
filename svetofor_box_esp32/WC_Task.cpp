@@ -8,6 +8,7 @@ int MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR;
 MySensor *sensor;
 TEvent *EventSensor, *EventRelay1, *EventRelay2;
 TEvent *EventBusy1, *EventBusy2;
+TEvent *EventBtnAdd1, *EventBtnAdd2;
 TEventRGB *EventRGB1, *EventRGB2, *SaveRGB1, *SaveRGB2;
 //TEventRGB  *SaveEventRGB2, *SaveEventCalibrate1, *SaveEventCalibrate2;
 //TSaveRGB *SaveRGB1, *SaveRGB2;
@@ -108,6 +109,9 @@ void tasksStart() {
    EventRelay2         = new TEvent((uint32_t)(jsonConfig["RELAY2"]["DELAY_ON"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY2"]["DELAY_OFF"].as<float>()*1000),handleRelay2);
    EventBusy1          = new TEvent(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>(),0,handleBusy1);
    EventBusy2          = new TEvent(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>(),0,handleBusy2);
+
+   EventBtnAdd1        = new TEvent(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000,0,handleBtnAdd1);
+   EventBtnAdd2        = new TEvent(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000,0,handleBtnAdd2);
    EventCalibrate      = new TEvent(0,0,handleCalibrate);
 
    EventRGB1           = new TEventRGB(PIN_RGB1, COUNT_RGB1, 2);
@@ -162,6 +166,8 @@ void taskEvents(void *pvParameters) {
       EventCalibrate->loop();
       EventBusy1->loop();
       EventBusy2->loop();
+      EventBtnAdd1->loop();
+      EventBtnAdd2->loop();
       vTaskDelay(250);
    }
 }
@@ -328,6 +334,9 @@ void taskSensors(void *pvParameters) {
           EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
           if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
           else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
+          if( !jsonConfig["WIFI"]["POWER"].isNull() )WiFi.setTxPower((wifi_power_t)jsonConfig["WIFI"]["POWER"].as<int>());
+
+
       }
       
       xSemaphoreGive(sensorSemaphore);
@@ -420,7 +429,31 @@ void handleBusy2(bool _flag){
    }
 }
 
+/**
+* Обработчик события таймера нажатия на GPIO35
+*/
+void handleBtnAdd1(bool _flag){
+#if defined(DEBUG_SERIAL)
+   Serial.print(F("!!! EventsBTN_ADD1 "));
+   Serial.println((int)_flag);
+#endif
+   if( _flag ){
+      if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+   }
+}
 
+/**
+* Обработчик события таймера2 нажатия на GPIO35
+*/
+void handleBtnAdd2(bool _flag){
+#if defined(DEBUG_SERIAL)
+   Serial.print(F("!!! EventsBTN_ADD2 "));
+   Serial.println((int)_flag);
+#endif
+   if( _flag ){
+      if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+   }
+}
 
 /**
 * Начало калибровки через событие
@@ -682,8 +715,8 @@ void taskButton(void *pvParameters){
 #if defined(IS_BTN_ADD)
    pinMode(PIN_BTN_ADD,INPUT);
    SBTN btn_add(PIN_BTN_ADD,250,false);
-   btn_add.setTimer(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
-   btn_add.setTimer2(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
+//   btn_add.setTimer(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
+//   btn_add.setTimer2(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
    Serial.printf("!!! Add Btn pin=%d \n", PIN_BTN_ADD);
 #endif
 
@@ -703,17 +736,25 @@ void taskButton(void *pvParameters){
       switch(btn_add.loop()){
           case SB_PRESS:
              Serial.println(F("!!! press add btn"));
+             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>()){
+                EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
+                EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
+             }
              break;
           case SB_RELEASE:
              Serial.println(F("!!! release add btn"));
+             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>()){
+                EventBtnAdd1->reset();
+                EventBtnAdd2->reset();
+             }
              break;
           case SB_TIMER:
              Serial.println(F("!!! timer add btn"));
-             baseMP3(jsonConfig["MP3"]["BTN_ADD1"]["NUM"]);
+             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
              break;
           case SB_TIMER2:
              Serial.println(F("!!! timer2 add btn"));
-             baseMP3(jsonConfig["MP3"]["BTN_ADD2"]["NUM"]);
+             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
              break;
       }
 #endif
@@ -733,8 +774,7 @@ void taskButton(void *pvParameters){
              btnTimer2(btn_t.getPressTime(), PIN_TOUCH);
              break;
       }
- 
-#endif
+ #endif
 
       switch(btn.loop()){
           case SB_PRESS:

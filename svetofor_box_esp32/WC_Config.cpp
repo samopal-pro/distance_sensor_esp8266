@@ -1,4 +1,5 @@
- #include "WC_Config.h"
+#include "WC_Config.h"
+#include <WiFi.h>
 
 JsonDocument jsonConfig;
 JsonDocument jsonSave;
@@ -66,6 +67,7 @@ void configDefault(){
 // Параметры моединения WiFi
    jsonConfig["WIFI"]["NAME"]              = "";                         //Имя сети WiFi
    jsonConfig["WIFI"]["PASS"]              = "";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["POWER"]             = WIFI_POWER_21dBm;           //Уровень сигнала WiFi
    jsonConfig["WIFI"]["DHCP"]              = true;                       //Брать парметры сети по DHCP
    jsonConfig["WIFI"]["IP"]["ADDR"]        = "192.168.1.10";             //IP адрес при стаическом режиме
    jsonConfig["WIFI"]["IP"]["MASK"]        = "255.255.255.0";            //IP маска при стаическом режиме

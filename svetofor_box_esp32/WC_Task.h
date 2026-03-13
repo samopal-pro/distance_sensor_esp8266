@@ -94,6 +94,8 @@ void handleRGB2(   bool _flag  );
 void handleMP3(    bool _flag  );
 void handleBusy1(  bool _flag  );
 void handleBusy2(  bool _flag  );
+void handleBtnAdd1(  bool _flag  );
+void handleBtnAdd2(  bool _flag  );
 void handleCalibrate(bool _flag);
 
 void btnPress(uint16_t _count, int _num);
