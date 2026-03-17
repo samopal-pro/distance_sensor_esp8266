@@ -196,6 +196,7 @@ void loop() {
 
 //   uint32_t it1 = LoopInterval;
 //   if( w_stat2 == EWS_AP_MODE )it1 = LoopIntervalAP;
+#if !defined(NOT_SENSOR)
    if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click && msLoad == 0 && is_load_page == false  ){
       ms1 = cur_ms;
 // Проверяем дистанцию, устанавливаем значение реле и ленты      
@@ -219,6 +220,7 @@ void loop() {
       if( !isnan(Distance) )EA_save_last(Time,cur_ms/1000, Button, Distance, SAVE_DISTANCE_DELTA);
       
    }
+#endif   
 // Цикл проверки WiFi   
    if( ( cur_ms < ms2 || (cur_ms - ms2) > 5000 ) && is_load_page == false ){
       ms2 = cur_ms;

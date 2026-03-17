@@ -394,6 +394,7 @@ void HTTP_handleRoot(void) {
 
    if( UID >= 0 ){
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_ROOT");
       HTTP_printConfigColor(out);
       HTTP_printConfig(out);
       out += "</form>\n";
@@ -441,6 +442,7 @@ void HTTP_handleConfig1(void) {
   if( UID >= 0 ){
       out += "<h1>Настройка конфигурации реле</h1>\n";
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_CONFIG1");
       HTTP_printConfigRelay(out);
       out += "</form>\n";
       out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
@@ -488,6 +490,7 @@ void HTTP_handleConfig2(void) {
   if( UID >= 0 ){
       out += "<h1>Настройка сетевых параметров</h1>\n";
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
+      HTTP_InputHidden(out,"FLAG_CONFIG2");
       HTTP_printConfigNet(out);
       out += "</form>\n";
       out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
@@ -897,14 +900,14 @@ bool HTTP_checkArgs(int current){
          }
          EA_Config.ColorBlinkNum = (uint8_t)server.arg("ColorBlink").toInt();
       }
-      EA_Config.isColorFreeBlink = false;   
-      if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
-      EA_Config.isColorNan = false;   
-      if( server.hasArg("isColorNan"))EA_Config.isColorNan = true;
+      if( server.hasArg("FLAG_ROOT") ){
+         EA_Config.isColorFreeBlink = false;   
+         if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
+         EA_Config.isColorNan = false;   
+         if( server.hasArg("isColorNan"))EA_Config.isColorNan = true;
+      }
       if(server.hasArg("Brightness")  )EA_Config.Brightness = server.arg("Brightness").toInt();
 
-      EA_Config.isDHCP = true;
-      EA_Config.isSendCrmMoscow = false;
       if(server.hasArg("GroundLevel"))EA_Config.GroundLevel = server.arg("GroundLevel").toInt();
       if(server.hasArg("WiFiMode"))
          switch(server.arg("WiFiMode").toInt()){
@@ -948,11 +951,12 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("TM_HTTP_SEND") )EA_Config.TM_HTTP_SEND              = server.arg("TM_HTTP_SEND").toInt();
       if(server.hasArg("TM_HTTP_RETRY_ERROR"))EA_Config.TM_HTTP_RETRY_ERROR = server.arg("TM_HTTP_RETRY_ERROR").toInt();
 
-
-
-      if( server.hasArg("STATIC_IP"))EA_Config.isDHCP = false;
-      if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
-      
+      if( server.hasArg("FLAG_CONFIG2") ){
+         EA_Config.isDHCP = true;
+         if( server.hasArg("STATIC_IP"))EA_Config.isDHCP = false;
+         EA_Config.isSendCrmMoscow = false;
+         if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
+      }
 
 //      if(server.hasArg("StaticIP"))
 //         switch(server.arg("StaticIP").toInt()){
@@ -969,17 +973,19 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("ModeRelay1")    )EA_Config.ModeRelay1               = (T_RELAY_MODE)server.arg("ModeRelay1").toInt();
       if(server.hasArg("TM_PulseRelay1"))EA_Config.TM_PulseRelay1 = server.arg("TM_PulseRelay1").toInt();   
       if(server.hasArg("TM_PauseRelay1"))EA_Config.TM_PauseRelay1 = server.arg("TM_PauseRelay1").toInt();    
-      if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
-      else EA_Config.isInverseRelay1 = false;
 
       if(server.hasArg("TMOn2")         )EA_Config.TM_DelayON2              = server.arg("TMOn2").toInt();
       if(server.hasArg("TMOff2")        )EA_Config.TM_DelayOFF2             = server.arg("TMOff2").toInt();
       if(server.hasArg("ModeRelay2")    )EA_Config.ModeRelay2               = (T_RELAY_MODE)server.arg("ModeRelay2").toInt();
       if(server.hasArg("TM_PulseRelay2"))EA_Config.TM_PulseRelay2 = server.arg("TM_PulseRelay2").toInt();   
       if(server.hasArg("TM_PauseRelay2"))EA_Config.TM_PauseRelay2 = server.arg("TM_PauseRelay2").toInt();   
-      if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
-      else EA_Config.isInverseRelay2 = false;
 
+      if( server.hasArg("FLAG_CONFIG1") ){
+         if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
+         else EA_Config.isInverseRelay2 = false;
+         if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
+         else EA_Config.isInverseRelay1 = false;
+      }
    
       _save = true;
    }
@@ -1337,4 +1343,12 @@ uint32_t HTMLtoInt(const char *s_color){
    }
    return color;
 
+}
+
+void HTTP_InputHidden(String &out, char *name, char *value){
+   out += "<input type=\"hidden\" name=\"";
+   out += name;
+   out += "\" value=\"";
+   out += value;
+   out += "\">\n";
 }

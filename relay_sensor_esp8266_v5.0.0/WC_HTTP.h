@@ -97,7 +97,7 @@ int  HTTP_checkAuth(const char *pass);
 //int  HTTP_checkUserAndPassword( const char *pass);
 void HTTP_printInput1(String &out,const char *label, const char *name, const char *value, int size, int len, HTTP_input_type_t htype=HT_TEXT, const char *style=NULL, const char *add_text=NULL);
 
-
+void HTTP_InputHidden(String &out, char *name, char *value="1");
 void HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value, uint32_t color_set, uint8_t color_num, uint8_t proc, bool is_change = false);
 void HTTP_print_input_radio(String &out,char *name, char *value,bool checked);
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked);

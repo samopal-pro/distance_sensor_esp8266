@@ -5,12 +5,13 @@
 #include <WiFiClient.h>
 //#include <WebSocketClient.h>
 
-#define FW_VERSION   "VERSION 8.16.6"
+#define FW_VERSION   "VERSION 8.16.7"
 #define DEVICE_NAME  "3139_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_ADMIN "superadmin"
 #define DEVICE_OPER  "admin"
 //#define WIFI_SAV
 #define DEBUG1
+//#define NOT_SENSOR // Отключение опроса сенсора
 /*                
 Затычка на глючащие датчики SONAR_JSN_SR04TV2
 При дистанции свыше 3000 они начинают показывать 
