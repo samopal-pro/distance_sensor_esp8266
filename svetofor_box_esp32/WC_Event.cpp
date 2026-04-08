@@ -127,9 +127,9 @@ TEVENT_STATUS_t TEvent::loop(){
           }
           break;  
        case ES_WAIT_OFF :   
-          if( _ms - msOff > DelayOff ){
+          if( _ms - msOn > DelayOff ){
              State = ES_OFF;
-             msOff  = _ms;
+             msOn  = _ms;
              setOff();
           }
           break; 
@@ -144,11 +144,18 @@ TEVENT_STATUS_t TEvent::loop(){
           }
           break;
        case ES_OFF :
-          if( ( Type == ET_PULSE_OFF || Type == ET_PULSE2  )&&!isOn  ){
+          if( ( Type == ET_PULSE_OFF  )&&!isOn  ){
              msOn = _ms;
              setOn();
           }      
-          else if( ( Type == ET_PULSE_OFF || Type == ET_PULSE2 )&&isOn&&( _ms - msOn > TimeOn)  ){
+          else if( ( Type == ET_PULSE2  )&&isOn==false&&( _ms - msOn <=TimeOff)  ){
+             setOn();
+          }      
+          else if( (Type == ET_PULSE2 )&&isOn&&( _ms - msOn > TimeOff) ){
+             setOff();
+          }
+
+          else if( ( Type == ET_PULSE_OFF  )&&isOn&&( _ms - msOn > TimeOn)  ){
              msOn = _ms;
              setOff();
           }

@@ -313,6 +313,18 @@ void HTTP_printWiFiPower(String &out, int _power){
   out += "</div>\n";
 }
 
+
+void HTTP_printSubmit(String &out,const char *name, const char *value, const char *style){
+   out += "<p><input type='submit' name='";
+   out += name;
+   out +="' value='";
+   out += value;
+   out += "'";
+   HTTP_style(out,style);  
+   out += ">";   
+}
+
+
 void HTTP_printSelectOption(String &out, const char *_name, int _num, int _cur){
     out += "<option value='";
     out += _num;
@@ -321,4 +333,37 @@ void HTTP_printSelectOption(String &out, const char *_name, int _num, int _cur){
     out += ">";
     out += _name;
     out += "</option>\n";
+}
+
+void HTTP_beginTag(String &out,const char *tag,const char *style,bool is_nl){
+   if( tag == NULL )return;
+   out += "<";
+   out += tag;
+   HTTP_style(out,style);
+   out += ">";
+   if( is_nl )out += "\n";   
+}
+
+
+void HTTP_endTag(String &out,const char *tag,bool is_nl){
+   if( tag == NULL )return;
+   out += "</";
+   out += tag;
+   out += ">";
+   if( is_nl )out += "\n";
+
+}
+
+void HTTP_style(String &out,const char *style){
+  if( style == NULL )return;
+  out += " class='";
+  out += style;
+  out += "'";
+}
+
+void HTTP_printTag(String &out,const char *tag, const char *text, const char *style){
+   if( text == NULL )return;
+   HTTP_beginTag(out,tag,style);
+   out += text;
+   HTTP_endTag(out,tag);
 }

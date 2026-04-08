@@ -59,9 +59,9 @@ class SBTN_base {
 */
 class SBTN: public SBTN_base {
    private:
+   public:
       uint8_t Pin;
       bool    PressState;
-   public:
       SBTN(uint8_t _pin, uint32_t _bounce=250, bool _pullup_state=true, bool _press_state=LOW );
       bool isPress(void);
 };

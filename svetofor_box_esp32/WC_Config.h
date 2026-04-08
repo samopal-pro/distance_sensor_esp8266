@@ -4,16 +4,29 @@
 #include <ArduinoJson.h>
 #include <SPIFFS.h>
 #include <FS.h>
+#include <WiFi.h>
 
+#define CONFIG_JSON_TEST    "/config.json"
+#define CONFIG_JSON1        "/config1.json"
+#define CONFIG_JSON2        "/config2.json"
+#define SAVE_JSON           "/save.json"
 
-#define CONFIG_JSON     "/config.json"
-#define SAVE_JSON       "/save.json"
+#define CONFIG_JSON         "/config.json"
 
 extern JsonDocument jsonConfig;
 extern JsonDocument jsonSave;
 //extern JsonDocument jsonTB;
 extern bool isChangeConfig;
 extern char serNo[];
+//extern char CONFIG_JSON[];
+
+typedef enum T_CONFIG {
+   CFG_NONE        = -1,
+   CFG_TEST        = 0,
+   CFG_CARWASH     = 1,
+   CFG_PARKING     = 2
+};
+
 
 typedef enum T_AP_START_MODE {
   AP_NONE           = 0, //Не стартовать AP при загрузке
@@ -47,6 +60,12 @@ void configInit();
 void configRead();
 void configSave();
 void configDefault();
+void configDefaultGeneral();
+void configDefault1();
+void configDefault2();
+void configDefaultTest();
+void configSet(T_CONFIG _config = CFG_NONE);
+
 void configPrint(char *label);
 String deviceNmae( char *_name);
 void saveRead();

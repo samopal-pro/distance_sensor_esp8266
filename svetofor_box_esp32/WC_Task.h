@@ -102,6 +102,7 @@ void btnPress(uint16_t _count, int _num);
 bool btnRelease(uint32_t _tm, int _num);
 void btnTimer(uint32_t _tm, int _num);
 void btnTimer2(uint32_t _tm, int _num);
+void btnTimerCount();
 
 void startCalibrate(uint32_t _delay, char *_check=NULL, int _num=-1, CALIBRATION_MODE_t _mode=CM_WAIT_MP3 );
 
@@ -118,6 +119,7 @@ void  setRelay1( bool stat);
 void  setRelay2( bool stat);
 void  setRelayPin(uint8_t pin, bool stat, bool is_inverse);
 void printStat(char *msg);
+void checkConfig();
 //bool ProcessingCalibrate(uint32_t _tm);
 //float CalibrateGround();
 #endif

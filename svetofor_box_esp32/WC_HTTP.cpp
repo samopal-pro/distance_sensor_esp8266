@@ -599,85 +599,43 @@ void HTTP_printConfigColor(String &out){
 */
 void HTTP_printConfig(String &out){
   char s[32];
+
   out += "<fieldset>\n";
-  out += "<legend>Конфигурация WI-FI</legend>\n";
-  out += "<table>";
-  out += "<tr><td align='center' width=50%><img src='/wifi1.png'></td><td width=50% align='center'><img src='/wifi2.png'></td></tr>";
-  out += "<tr><td align='center'>";
-  HTTP_print_input_radio(out,"WiFiMode","1",!jsonConfig["SYSTEM"]["AP_START"].as<bool>());
-  out += "</td><td align='center'>";
-  HTTP_print_input_radio(out,"WiFiMode","2",jsonConfig["SYSTEM"]["AP_START"].as<bool>());
-  out += "</td></tr>";
-  out += "<tr><td align='center' class='td1'>Раздает WI-FI до перезапуска. Первый светодиод бирюзовый. </label>\n</td><td align='center' class='td1'>Всегда раздает WiFi. Первый светодиод белый.</td></tr></table>";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += "</fieldset>\n";
-
-// Блок №2.5 
-  out += "<fieldset>\n";
-  out += "<legend>Автокалибровка, запоминание расстояния как свободно</legend>\n";
-  out += "<p><input type='submit' name='Calibrate' value='Активация автоматической калибровки расстояния' class='btn'>"; 
-
-// Блок №3 
-//  sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
-
-//  HTTP_InputInt(out,"Задержка начала калибровки (сек):","TMCalibr",jsonConfig["CALIBR"]["DELAY_START"].as<int>(),0,60);
-//  sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
+  HTTP_printTag(out,"legend","Автокалибровка, запоминание расстояния как свободно"); 
+  HTTP_printSubmit(out,"Calibrate","Активация автоматической калибровки расстояния","btn");
   HTTP_InputInt(out,"Количество тестовых замеров для калибровки:","NumCalibr",jsonConfig["CALIBR"]["NUMBER"].as<int>(),0,60);
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";
-//#ifdef HTTP_FRAGMETATION
-//   Serial.printf("!!! HTTP Fragment 3a %d\n", out.length());  
-//   server.sendContent(out);
- //  out = "";
-//#endif
 
-// Блок №5
   out += "<fieldset>\n";
-  out += "<legend>Если датчик не видит расстояние</legend>\n";
+  HTTP_printTag(out,"legend","Если датчик не видит расстояние");   
   out += "<table>";
   HTTP_print_img_radio(out,"/stat2.png","Для автомобильной мойки, парковки. Если не видит расстояние - не переключается. (в этот момент мигает фиолетовым)","NoneMode","1",( jsonConfig["RGB1"]["NAN_MODE"].as<int>()  == NAN_VALUE_IGNORE ),false);
   HTTP_print_img_radio(out,"/stat3.png","Для шлагбаума, ворот, блокиратора. Безопасный режим. Если не видит расстояние - переключается в &quot;занято&quot;","NoneMode","2",( jsonConfig["RGB1"]["NAN_MODE"].as<int>()  == NAN_VALUE_BUSY ),false);
   HTTP_print_img_radio(out,"/stat1.png","Для активации открытия ворот или шлагбаума с направлением луча в воздух без препятствия. Если не видит расстояние - переключается в &quot;свободно&quot;","NoneMode","3",( jsonConfig["RGB1"]["NAN_MODE"].as<int>()  == NAN_VALUE_FREE ),false);
-
   sprintf(s,"%06lX",(uint32_t)COLOR_NAN);
   out += "<tr><td bgcolor='#"; out += s; out += "' height='50pt'>&nbsp;</td><td>";
   HTTP_print_input_checkbox(out,"isColorNan","1",jsonConfig["RGB1"]["IS_NAN_MODE"].as<bool>());
   out += "</td><td>Активация малиновой подсветки если датчик ничего не видит, поможет установить датчик относительно сливной решетки или пены на полу. Если датчик установлен на потолке и не светится малиновым цветом большую часть времени, то будет работать корректно. Если светится малиновым то нужно переставить датчик, установить площадку на сливную решетку 60х60см для замера расстояния до нее или установить более мощный сенсор";
   out += "</td></tr>";
   out += "</table>\n";
-  
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["T_LOOP"].as<int>());
   HTTP_InputInt(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",jsonConfig["SENSOR"]["T_LOOP"].as<int>(),1,30);
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";
 
-// Блок №6
   out += "<fieldset>\n";
-  out += "<legend>Режимы определения препятствия</legend>\n"; 
+  HTTP_printTag(out,"legend","Режимы определения препятствия");   
   HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_NORMAL ),true);
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["DIST_GROUND"].as<int>());
   HTTP_InputInt(out,"*Расстояние от датчика до пола (мм):","GroundLevel",jsonConfig["SENSOR"]["DIST_GROUND"].as<int>(),100,10000);
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["DIST_LIMIT"].as<int>());
   HTTP_InputInt(out,"Минимальная высота на срабатывание (мм):","LimitDistance",jsonConfig["SENSOR"]["DIST_LIMIT"].as<int>(),100,10000);
-
   HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_OUTSIDE ), true);
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["DIST_MIN1"].as<int>());
   HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",jsonConfig["SENSOR"]["DIST_MIN1"].as<int>(),100,10000);
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["DIST_MAX1"].as<int>());
   HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",jsonConfig["SENSOR"]["DIST_MAX1"].as<int>(),100,10000);
- 
   HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_INSIDE ), true);
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["DIST_MIN2"].as<int>());
   HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",jsonConfig["SENSOR"]["DIST_MIN2"].as<int>(),100,10000);
-//  sprintf(s,"%d",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>());
   HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>(),100,10000);
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += " </fieldset>\n";
-
-
 }
 
 /**
@@ -686,8 +644,7 @@ void HTTP_printConfig(String &out){
 void HTTP_printConfigRelay(String &out){
   char s[32];
   out += "<fieldset>\n";
-  out += "<legend>Режим работы реле №1 Провода витой пары</legend>\n";
-
+  HTTP_printTag(out,"legend","Режим работы реле №1 Провода витой пары");
   HTTP_InputInt(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn1",jsonConfig["RELAY1"]["DELAY_ON"].as<int>(),0,30);
   HTTP_InputInt(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff1",jsonConfig["RELAY1"]["DELAY_OFF"].as<int>(),0,30);
 
@@ -697,24 +654,17 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay1","4",( jsonConfig["RELAY1"]["MODE"].as<int>()  == RELAY_PWM  ), true);
   out +="<br>";
   HTTP_print_input_checkbox(out,"isInverseRelay1","1",jsonConfig["RELAY1"]["INVERSE"].as<bool>());
-  out += "<label><b>Инверсия работы реле занято/свободно</b></label>";
+  HTTP_printTag(out,"label","<b>Инверсия работы реле занято/свободно</b>");
   out +="<br><br>";
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия или закрытия ворот в момент заезда и в момент выезда","ModeRelay1","5",( jsonConfig["RELAY1"]["MODE"].as<int>() == RELAY_PULSE2 ), true);
   HTTP_InputInt(out,"           На сколько секунд замкнуть контакты. Для управления кнопкой закрытия или открытия ворот:","TM_PulseRelay1",jsonConfig["RELAY1"]["T_PULSE"].as<int>(),1,30);
   HTTP_InputInt(out,"           На сколько секунд разамкнуть контакты. Только для импульсного режима:","TM_PauseRelay1",jsonConfig["RELAY1"]["T_PAUSE"].as<int>(),1,30);
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
-//#ifdef HTTP_FRAGMETATION
-//   Serial.printf("!!! HTTP Fragment 3b %d\n", out.length());  
-//   server.sendContent(out);
-//   out = "";
-//#endif
-// Блок №4.2
-  out += "<fieldset>\n";
-  out += "<legend>Режим работы реле №2 Трехжильный провод</legend>\n";
 
+  out += "<fieldset>\n";
+  HTTP_printTag(out,"legend","Режим работы реле №2 Трехжильный провод");
   HTTP_InputInt(out,"Задержка переключения на &quot;занято&quot; (сек):","TMOn2",jsonConfig["RELAY2"]["DELAY_ON"].as<int>(),0,30);
   HTTP_InputInt(out,"Задержка переключения на &quot;свободно&quot; (сек):","TMOff2",jsonConfig["RELAY2"]["DELAY_OFF"].as<int>(),0,30);
 
@@ -724,14 +674,12 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay2","4",( jsonConfig["RELAY2"]["MODE"].as<int>()  == RELAY_PWM  ), true);
   out +="<br>";
   HTTP_print_input_checkbox(out,"isInverseRelay2","1",jsonConfig["RELAY2"]["INVERSE"].as<bool>());
-  out += "<label><b>Инверсия работы реле занято/свободно</b></label>";
+  HTTP_printTag(out,"label","<b>Инверсия работы реле занято/свободно</b>");
   out +="<br><br>";
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия или закрытия ворот в момент заезда и в момент выезда","ModeRelay2","5",( jsonConfig["RELAY2"]["MODE"].as<int>() == RELAY_PULSE2 ), true);
   HTTP_InputInt(out,"           На сколько секунд замкнуть контакты. Для управления кнопкой закрытия или открытия ворот:","TM_PulseRelay2",jsonConfig["RELAY2"]["T_PULSE"].as<int>(),1,30);
   HTTP_InputInt(out,"           На сколько секунд разамкнуть контакты. Только для импульсного режима:","TM_PauseRelay2",jsonConfig["RELAY2"]["T_PAUSE"].as<int>(),1,30);
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";
 
 }
@@ -743,7 +691,7 @@ void HTTP_printConfigNet(String &out){
   char s[32];
 
   out += "<fieldset>\n";
-  out += "<legend>Тип сенсора</legend>\n"; 
+  HTTP_printTag(out,"legend","Тип сенсора");
   out += "<div class='lab2'><p><label>Выберите тип сенсора:</label>\n";
   out += "<select name='SensorType'>\n";
   int _cur_sensor = jsonConfig["SENSOR"]["TYPE"].as<int>();
@@ -752,49 +700,30 @@ void HTTP_printConfigNet(String &out){
   HTTP_printSelectOption( out, "Одинарный ультразвуковой 7.5м черный (Dyp-A01)", (int)SENSOR_SR04_75,     _cur_sensor );
   HTTP_printSelectOption( out, "Лазерный сенсор 9м (TF-Luna)",                   (int)SENSOR_TFLUNA_I2C,  _cur_sensor );
   HTTP_printSelectOption( out, "Микроволновый сенсор 10м (LD-2413)",             (int)SENSOR_LD2413_UART, _cur_sensor );
-/*
-  out += "<option value='";out += String(SENSOR_SR04T);out += "'";
-  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04T)out += " selected";
-  out += ">Двойной ультразвуковой 4.8м серый (SR04T)</option>";  
-  out += "<option value='";out += String(SENSOR_SR04TM2);out += "'";
-  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04TM2)out += " selected";
-  out += ">Одинарный ультразвуковой 5.8м серый (SR04M2)</option>";  
-  out += "<option value='";out += String(SENSOR_SR04_75);out += "'";
-  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_SR04_75)out += " selected";
-  out += ">Одинарный ультразвуковой 7.5м черный (Dyp-A01)</option>";  
-  out += "<option value='";out += String(SENSOR_TFLUNA_I2C);out += "'";
-  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_TFLUNA_I2C)out += " selected";
-  out += ">Лазерный сенсор 9м (TF-Luna)</option>";  
-  out += "<option value='";out += String(SENSOR_LD2413_UART);out += "'";
-  if( jsonConfig["SENSOR"]["TYPE"].as<int>() == SENSOR_LD2413_UART)out += " selected";
-  out += ">Микроволновый сенсор 10м (LD-2413)</option>";  
-*/  
   out += "</select>\n";
   out += "</div>\n";
   out += "<p class='t1'>После смены типа сенсора нужно перезагрузить устройство.";
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += " </fieldset>\n";
 
 // Блок №7
   out += "<fieldset>\n";
-  out += "<legend>Подключение к внешним сервисам по WiFi</legend>\n";
+  HTTP_printTag(out,"legend","Подключение к внешним сервисам по WiFi");
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",jsonConfig["WIFI"]["PASS"].as<const char *>(),20,32,HT_PASSWORD);
   HTTP_printWiFiPower(out,jsonConfig["WIFI"]["POWER"].as<int>());
-
   HTTP_printInput1(out,"**Номер договора, логин личного кабинета:","Dogovor",jsonConfig["NET"]["DOGOVOR_ID"].as<const char *>(),20,16,HT_TEXT);
   HTTP_printInput1(out,"**Номер бокса:","Box",jsonConfig["NET"]["BOX_ID"].as<const char *>(),20,16,HT_TEXT);
   sprintf(s,"%d",jsonConfig["NET"]["T_SEND"].as<int>());
   HTTP_printInput1(out,"Связь с сервером каждые, сек:","TM_HTTP_SEND",s,20,32,HT_NUMBER);
   sprintf(s,"%d",jsonConfig["NET"]["T_RETRY"].as<int>());
   HTTP_printInput1(out,"Повторная попытка отправки через, сек:","TM_HTTP_RETRY_ERROR",s,20,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
 
   out += "<fieldset>\n";
-  out += "<legend>Подключение к онлайн мониторингу CRM.MOSCOW</legend>\n";
+  HTTP_printTag(out,"legend","Подключение к онлайн мониторингу CRM.MOSCOW");
   out += "<labelВвключить онлайн отправку данных</label>\n";
   HTTP_print_input_checkbox(out,"CRM_ENABLE","send",jsonConfig["CRM_MOSCOW"]["ENABLE"].as<bool>());
   out += "<p class='t1'>Для активации онлайн мониторинга поставьте галочку которая находится над этой строкой. Введите все поля с ** и сохраните. Нужно прописать: ID мойки, номер бокса, пароль сети интернет и выбрать сеть WI-FI. После этого сохраните и в первой вкладке выключите бесконечный режим раздачи WiFi активировав режим с бирюзовой иконкой.";
@@ -803,11 +732,11 @@ void HTTP_printConfigNet(String &out){
   HTTP_printInput1(out,"Сервер:","CRM_SERVER",jsonConfig["CRM_MOSCOW"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
   sprintf(s,"%d",jsonConfig["CRM_MOSCOW"]["PORT"].as<int>());
   HTTP_printInput1(out,"Порт:","CRM_PORT",s,20,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Подключение к онлайн мониторингу TB.SVETOFORBOX.RU</legend>\n";
+  HTTP_printTag(out,"legend","Подключение к онлайн мониторингу TB.SVETOFORBOX.RU");
   out += "<p><label>Ввключить онлайн отправку данных</label>\n";
   HTTP_print_input_checkbox(out,"TB_ENABLE","send",jsonConfig["TB"]["ENABLE"].as<bool>());
   out += "<p><label>Отправка через шлюз</label>\n";
@@ -817,53 +746,46 @@ void HTTP_printConfigNet(String &out){
   sprintf(s,"%d",jsonConfig["TB"]["PORT"].as<int>());
   HTTP_printInput1(out,"Порт:","TB_PORT",s,20,32,HT_NUMBER);
   HTTP_printInput1(out,"Токен доступа:","TB_TOKEN",jsonConfig["TB"]["TOKEN"].as<const char *>(),20,32,HT_TEXT);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
 out += "<fieldset>\n";
-  out += "<legend>Подключение шлюзу по HTTP</legend>\n";
+  HTTP_printTag(out,"legend","Подключение шлюзу по HTTP");
   out += "<labelВвключить онлайн отправку данных</label>\n";
   HTTP_print_input_checkbox(out,"HTTP_ENABLE","send",jsonConfig["HTTP"]["ENABLE"].as<bool>());
   HTTP_printTextarea(out,"Адреса шлюзов через запятую, пробел или с новой строки:","HTTP_SERVERS",jsonConfig["HTTP"]["SERVERS"].as<JsonArray>(),20,4);
 //  HTTP_printInput1(out,"Адрес шлюза:","HTTP_SERVER",jsonConfig["HTTP"]["SERVER"].as<const char *>(),20,32,HT_TEXT);
 //  sprintf(s,"%d",jsonConfig["HTTP"]["PORT"].as<int>());
 //  HTTP_printInput1(out,"Порт:","HTTP_PORT",s,20,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
 
   if( isLora ){ 
      out += "<fieldset>\n";
-     out += "<legend>Подключение по LoRa 868МГц</legend>\n";
+     HTTP_printTag(out,"legend","Подключение по LoRa 868МГц");
      out += "<labelВвключить отправку данных через LoRa</label>\n";
      HTTP_print_input_checkbox(out,"LORA_ENABLE","send",jsonConfig["LORA"]["ENABLE"].as<bool>());
 //     sprintf(s,"%012llX",jsonConfig["LORA"]["GATEWAY"].as<uint64_t>());
 //     HTTP_printInput1(out,"Адрес шлюза: 0x","LORA_GATEWAY",s,20,32,HT_TEXT);
-     out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+     HTTP_printSubmit(out,"Save","Сохранить","btn");
      out += "</fieldset>\n"; 
   } 
 
 // Блок №8
   out += "<fieldset>\n";
-  out += "<legend>Параметры DHCP</legend>\n";
+  HTTP_printTag(out,"legend","Параметры DHCP");
   out += "<label>Статический IP:</label>\n";
   HTTP_print_input_checkbox(out,"STATIC_IP","static",!jsonConfig["WIFI"]["DHCP"].as<bool>());
-  
-//  sprintf(s,"%d.%d.%d.%d",EA_Config.IP[0],EA_Config.IP[1],EA_Config.IP[2],EA_Config.IP[3]);
   HTTP_printInput1(out,"Адрес:","IPAddr",jsonConfig["WIFI"]["IP"]["ADDR"].as<const char *>(),16,32,HT_IP);
-//  sprintf(s,"%d.%d.%d.%d",EA_Config.MASK[0],EA_Config.MASK[1],EA_Config.MASK[2],EA_Config.MASK[3]);
   HTTP_printInput1(out,"Маска:","IPMask",jsonConfig["WIFI"]["IP"]["MASK"].as<const char *>(),16,32,HT_IP);
-//  sprintf(s,"%d.%d.%d.%d",EA_Config.GW[0],EA_Config.GW[1],EA_Config.GW[2],EA_Config.GW[3]);
   HTTP_printInput1(out,"Шлюз:","IPGate",jsonConfig["WIFI"]["IP"]["GW"].as<const char *>(),16,32,HT_IP);
-//  sprintf(s,"%d.%d.%d.%d",EA_Config.DNS[0],EA_Config.DNS[1],EA_Config.DNS[2],EA_Config.DNS[3]);
   HTTP_printInput1(out,"DNS:",    "IPDns",jsonConfig["WIFI"]["IP"]["DNS"].as<const char *>(),16,32,HT_IP);
- 
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Параметры доступа к контроллеру</legend>\n";
-
+  HTTP_printTag(out,"legend","Параметры доступа к контроллеру");
   HTTP_printInput1(out,"Пароль для входа с правами опреатора:","PasswordUser",jsonConfig["SYSTEM"]["PASS1"].as<const char *>(),20,32,HT_PASSWORD);
   if( UID >= 1 ){
      HTTP_printInput1(out,"Пароль для входа с правами администратора:","PasswordAdmin",jsonConfig["SYSTEM"]["PASS0"].as<const char *>(),20,32,HT_PASSWORD);
@@ -872,7 +794,7 @@ out += "<fieldset>\n";
      HTTP_printInput1(out,"Наименование устройства","NameESP",jsonConfig["SYSTEM"]["NAME"].as<const char *>(),32,32,HT_TEXT,"lab1");
      out += "<p class='t1'>Важно! Не используйте русские буквы и специальные символы в имени сети Wi-FI. После изменения имени WiFi нажмите внизу желтую кнопку &quot;Перезагрузка&quot;</p>";
   }
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 }
 
@@ -941,6 +863,9 @@ void HTTP_printConfig2(String &out){
   HTTP_print_MP3_3(out,"Первое срабатывание на замыкание входа. Файл 007.mp3", "BTN_ADD1" );
   HTTP_print_MP3_3(out,"Второе срабатывание на замыкание входа. Файл 008.mp3", "BTN_ADD2" );
   out += "</table>\n";
+  out += "<p class='t1'>";  
+  HTTP_print_input_checkbox(out,"MP3_BTN_ADD_INVERSE","1",jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>());
+  out += "Включить инверсию дополнительного входа";
 
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";  
@@ -1257,6 +1182,13 @@ bool HTTP_checkArgs(int current){
             if(server.hasArg("MP3_BTN_ADD_ENABLE"))jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = true;
             else jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = false;
          }
+         if(server.hasArg("MP3_BTN_ADD_INVERSE_H")){
+            if(server.hasArg("MP3_BTN_ADD_INVERSE"))jsonConfig["MP3"]["BTN_ADD"]["INVERSE"] = true;
+            else jsonConfig["MP3"]["BTN_ADD"]["INVERSE"] = false;
+            isChangeConfig = true;
+         }
+
+
 #endif
       }
 /// NET

@@ -12,6 +12,9 @@ TEvent *EventBtnAdd1, *EventBtnAdd2;
 TEventRGB *EventRGB1, *EventRGB2, *SaveRGB1, *SaveRGB2;
 //TEventRGB  *SaveEventRGB2, *SaveEventCalibrate1, *SaveEventCalibrate2;
 //TSaveRGB *SaveRGB1, *SaveRGB2;
+#if defined(IS_BTN_ADD)
+   SBTN btn_add(PIN_BTN_ADD,250,false);
+#endif
 
 
 TEventMP3 *EventMP3 = NULL;
@@ -93,10 +96,11 @@ void tasksStart() {
   readID();
 
   configInit();
+  saveRead();
+
 //  configDefault();
 //  configSave();
   configRead();
-  saveRead();
   bootCount = saveCount(); 
   
   //    xTaskCreateUniversal(taskLed, "led", 2048, NULL, 2, NULL,CORE);
@@ -136,7 +140,7 @@ void tasksStart() {
    xTaskCreateUniversal(taskMP3, "mp3", 2048, NULL, 1, NULL, CORE);
    xTaskCreateUniversal(taskSensors, "sensors", 10000, NULL, 4, NULL, CORE);
    vTaskDelay(500);
-   xTaskCreateUniversal(taskButton, "btn", 2048, NULL, 4, NULL,CORE);
+   xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 4, NULL,CORE);
    vTaskDelay(500);
    xTaskCreateUniversal(taskNet, "net", 4096, NULL, 3, NULL, CORE);
 //  vTaskDelay(500);
@@ -327,17 +331,7 @@ void taskSensors(void *pvParameters) {
          printStat("TM");
       } 
 // Если поменялая яркость лент и громкость звуков
-      if( isChangeConfig ){
-          isChangeConfig = false;
-          EventRGB1->setBrightness( jsonConfig["RGB1"]["BRIGHTNESS"].as<int>() );
-          EventRGB2->setBrightness( jsonConfig["RGB2"]["BRIGHTNESS"].as<int>() );
-          EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
-          if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
-          else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
-          if( !jsonConfig["WIFI"]["POWER"].isNull() )WiFi.setTxPower((wifi_power_t)jsonConfig["WIFI"]["POWER"].as<int>());
-
-
-      }
+      checkConfig();
       
       xSemaphoreGive(sensorSemaphore);
       vTaskDelay((uint32_t)(jsonConfig["SENSOR"]["T_LOOP"].as<float>()*1000));
@@ -714,9 +708,6 @@ void taskButton(void *pvParameters){
 #endif
 #if defined(IS_BTN_ADD)
    pinMode(PIN_BTN_ADD,INPUT);
-   SBTN btn_add(PIN_BTN_ADD,250,false);
-//   btn_add.setTimer(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
-//   btn_add.setTimer2(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
    Serial.printf("!!! Add Btn pin=%d \n", PIN_BTN_ADD);
 #endif
 
@@ -773,6 +764,13 @@ void taskButton(void *pvParameters){
              is_early = false;
              btnTimer2(btn_t.getPressTime(), PIN_TOUCH);
              break;
+          case SB_TIMER_COUNT:
+             if( is_early){
+                EventMP3->stop();             
+                systemMP3("97",96,PRIORITY_MP3_HIGH);
+             }
+             is_early = false;   
+             break;   
       }
  #endif
 
@@ -791,6 +789,13 @@ void taskButton(void *pvParameters){
              is_early = false;
              btnTimer2(btn.getPressTime(), PIN_BTN);
              break;
+          case SB_TIMER_COUNT:
+             if( is_early){
+                EventMP3->stop();             
+                systemMP3("97",96,PRIORITY_MP3_HIGH);
+             }
+             is_early = false;   
+             break;   
       }
        vTaskDelay(200);
        
@@ -849,7 +854,11 @@ void btnTimer2(uint32_t _tm, int _num){
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
    jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль администратора
    configSave();
+   vTaskDelay(500);
    waitMP3andReboot();
+}
+
+void btnTimerCount(){
 }
 
 void setVolumeMP3(){
@@ -907,3 +916,18 @@ void waitMP3andReboot(){
    EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);     
    calibrMode = CM_WAIT_REBOOT;          
 }
+
+
+void checkConfig(){
+   if( isChangeConfig ){
+      isChangeConfig = false;
+      EventRGB1->setBrightness( jsonConfig["RGB1"]["BRIGHTNESS"].as<int>() );
+      EventRGB2->setBrightness( jsonConfig["RGB2"]["BRIGHTNESS"].as<int>() );
+      EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
+      if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
+      else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
+      if( !jsonConfig["WIFI"]["POWER"].isNull() )WiFi.setTxPower((wifi_power_t)jsonConfig["WIFI"]["POWER"].as<int>());
+      btn_add.PressState = !jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>();
+   }
+ }
+
