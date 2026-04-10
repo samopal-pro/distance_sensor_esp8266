@@ -11,14 +11,14 @@
 #define CONFIG_JSON2        "/config2.json"
 #define SAVE_JSON           "/save.json"
 
-#define CONFIG_JSON         "/config.json"
+//#define CONFIG_JSON         "/config.json"
 
 extern JsonDocument jsonConfig;
 extern JsonDocument jsonSave;
 //extern JsonDocument jsonTB;
 extern bool isChangeConfig;
 extern char serNo[];
-//extern char CONFIG_JSON[];
+extern char CONFIG_JSON[];
 
 typedef enum T_CONFIG {
    CFG_NONE        = -1,

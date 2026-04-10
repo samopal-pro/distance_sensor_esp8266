@@ -23,21 +23,22 @@ typedef enum {
 //#endif
 class MySensorValue {
    public:
-      MySensorValue(SensorValueType_t _type, String _label, float _min, float _max, float _error = 0, uint16_t _mult=1, uint16_t _samples = 10);
+      MySensorValue();
+      void init(String _label, float _min, float _max, uint16_t _mult, uint16_t _samples);
       void clear();
       bool set( float _val, bool flag = true);
       float getLast();
       float getAverage();
       float getDeviation();
-      SensorValueType_t Type;
+//      SensorValueType_t Type;
       String Label;
       float    Value;
       uint16_t Multiplier;   
-   private:
       float    LimitMin;
       float    LimitMax;
-      float    ValueError;
       uint16_t Samples;
+   private:
+      float    ValueError;
       bool     isFirst;
       uint8_t  Pointer;
       float    *Values;
@@ -51,9 +52,15 @@ class MySensor {
       bool get();
       uint16_t count_test;
       MySensorValue *Value;
+      SensorValueType_t Type;
    private:
       bool isInit;
-      void *Sensor;
+      SonarSR04 *SensorSR04;
+      SonarSR04 *SensorSR04M2;
+      SonarSR04 *SensorSR04_75;
+      TFLI2C    *SensorTFLuna;
+      TFMPI2C   *SensorTFMini;
+      LD2413    *SensorLD2413;
       bool checkI2C(uint8_t _addr);   
       void scanI2C();
 };

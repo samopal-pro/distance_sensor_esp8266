@@ -31,7 +31,7 @@ void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked)
 void HTTP_printWiFiPower(String &out, int _power);
 void HTTP_printSelectOption(String &out, const char *_name, int _num, int _cur=-1);
 
-void HTTP_printSubmit(String &out,const char *name, const char *value, const char *style=NULL);
+void HTTP_printSubmit(String &out,const char *name, const char *value, const char *style=NULL, const char *tag="p");
 
 void HTTP_beginTag(String &out,const char *tag,const char *style=NULL,bool is_nl=false);
 void HTTP_endTag(String &out,const char *tag,bool is_nl=true);

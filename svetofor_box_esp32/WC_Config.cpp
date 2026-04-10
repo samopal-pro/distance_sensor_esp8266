@@ -43,8 +43,18 @@ void configRead(){
       else if( strcmp(jsonConfig["CONFIG_V"].as<const char *>(),CONFIG_V)!=0 )save_flag = true;
    }
    if( save_flag ){
-       configDefault();
-       configSave();
+
+      T_CONFIG _config = (T_CONFIG)jsonSave["CONFIG"].as<int>();
+      configSet(CFG_TEST);
+      configDefault();
+      configSave();
+      configSet(CFG_CARWASH);
+      configDefault();
+      configSave();
+      configSet(CFG_PARKING);
+      configDefault();
+      configSave();
+      configSet(_config);
    }
 }
 
@@ -122,9 +132,9 @@ void saveRead(){
        saveDefault();
        saveSave();
    }
-//   strcpy(CONFIG_JSON, CONFIG_JSON_TEST); 
-//   if( !jsonSave["CONFIG"] )jsonSave["CONFIG"] = CFG_TEST;
- //  configSet();
+   strcpy(CONFIG_JSON, CONFIG_JSON_TEST); 
+   if( !jsonSave["CONFIG"] )jsonSave["CONFIG"] = CFG_TEST;
+   configSet();
 }
 
 void saveDefault(){

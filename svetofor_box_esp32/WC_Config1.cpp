@@ -1,9 +1,9 @@
 #include "WC_Config.h"
 
-//char CONFIG_JSON[20];
+char CONFIG_JSON[20];
 
 void configSet(T_CONFIG _config){
-/*   
+  
    if( _config != CFG_NONE ){
        jsonSave["CONFIG"] = _config;
        saveSave();
@@ -13,39 +13,180 @@ void configSet(T_CONFIG _config){
       case CFG_PARKING : strcpy(CONFIG_JSON, CONFIG_JSON2); break;
       default: strcpy(CONFIG_JSON, CONFIG_JSON_TEST); 
    }   
- */   
+  
 }
 
 
 void configDefault(){
    configDefault1();
-//   switch(jsonSave["CONFIG"].as<int>()){
-//      case CFG_CARWASH : configDefault1(); break;
-//      case CFG_PARKING : configDefault2(); break;
-//      default: configDefaultTest(); 
-//   }   
+   switch(jsonSave["CONFIG"].as<int>()){
+      case CFG_CARWASH : configDefault1(); break;
+      case CFG_PARKING : configDefault2(); break;
+      default: configDefaultTest(); 
+   }   
     
 }
 
-void configDefaultGeneral(){
+void configDefault1(){
+   configDefaultGeneral();
+   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04_75; //Тип датчика 
+   jsonConfig["WIFI"]["NAME"]          = "SVETOFORBOX";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS"]          = "89060725500";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["POWER"]         = WIFI_POWER_2dBm;           //Уровень сигнала WiFi
+
    
 // Параметры моединения WiFi
+   jsonConfig["RGB2"]["FREE"]          = 0xFFFFFF;
+   jsonConfig["NET"]["DOGOVOR_ID"]     = "0000";            
+   jsonConfig["CRM_MOSCOW"]["ENABLE"]  = true;                      //посылать информацию на CRM-MOSCOW
+   jsonConfig["TB"]["ENABLE"]          = true;                      //Посылать информацию в ThingsBoard
 
 
+
+   jsonConfig["RELAY1"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
+   jsonConfig["RELAY1"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
+   jsonConfig["RELAY1"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
+   jsonConfig["RELAY1"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
+   jsonConfig["RELAY1"]["DELAY_OFF"]   = 1;                          // Задержка при отключении реле
+   jsonConfig["RELAY2"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
+   jsonConfig["RELAY2"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
+   jsonConfig["RELAY2"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
+   jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
+   jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;       
+
+   jsonConfig["RGB1"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["MP3"]["VOLUME"]         = 30;                          // Громкость 0-30
+
+  
+   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 8;
+   jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
+   jsonConfig["MP3"]["NAN"]["DELAY"]      = 30;
+   jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 900;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 1800;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
+   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 5;
+   jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
+   jsonConfig["MP3"]["FREE"]["DELAY"]     = 3;
+   jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
+   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 180;
+   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 300;
 
 
 
 }
 
 void configDefault2(){
-   configDefault1(); 
+   configDefaultGeneral();
+   jsonConfig["RGB1"]["FREE"]          = COLOR_FREE2;
+   jsonConfig["RGB2"]["FREE"]          = 0xFFFFFF;
+   jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_FREE;
+   jsonConfig["SENSOR"]["INSTALL"]     = INSTALL_TYPE_NORMAL; //Тип установки/срабатывания датчика
+   jsonConfig["SENSOR"]["DIST_GROUND"] = 2700;       //Высота установки датчика (расстояние до пола)
+   jsonConfig["SENSOR"]["DIST_LIMIT"]  = 500;        //Если разница между текущим показанием и высатой установки больше этого значения, то датчик показывает занято
+   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04TM2; //Тип датчика
+   jsonConfig["WIFI"]["NAME"]          = "";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS"]          = "";                         //Пароль сети WiFi
+   jsonConfig["NET"]["DOGOVOR_ID"]     = "0000";            
+   jsonConfig["CRM_MOSCOW"]["ENABLE"]  = false;                      //посылать информацию на CRM-MOSCOW
+   jsonConfig["TB"]["ENABLE"]          = false;                      //Посылать информацию в ThingsBoard
+
+   jsonConfig["RELAY1"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
+   jsonConfig["RELAY1"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
+   jsonConfig["RELAY1"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
+   jsonConfig["RELAY1"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
+   jsonConfig["RELAY1"]["DELAY_OFF"]   = 1;                          // Задержка при отключении реле
+   jsonConfig["RELAY2"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
+   jsonConfig["RELAY2"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
+   jsonConfig["RELAY2"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
+   jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
+   jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;       
+
+   jsonConfig["MP3"]["BUSY"]["ENABLE"]     = true;
+   jsonConfig["MP3"]["NAN"]["ENABLE"]      = false;
+   jsonConfig["MP3"]["BUSY1"]["ENABLE"]    = false;
+   jsonConfig["MP3"]["BUSY2"]["ENABLE"]    = false;
+   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = false;
+   jsonConfig["MP3"]["FREE"]["ENABLE"]     = true;
+
+
+   jsonConfig["RGB1"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["MP3"]["VOLUME"]         = 23;                          // Громкость 0-30
+   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 10;
+   jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
+   jsonConfig["MP3"]["NAN"]["DELAY"]      = 5;
+   jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 50;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 25;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 2;
+   jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
+   jsonConfig["MP3"]["FREE"]["DELAY"]     = 3;
+   jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
+   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 1;
+   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 15;
+
+
 }
 
 void configDefaultTest(){
-   configDefault1(); 
+   configDefaultGeneral();
+   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04_75; //Тип датчика 
+   jsonConfig["RGB1"]["FREE"]          = COLOR_FREE1;
+   jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_IGNORE;
+   jsonConfig["SENSOR"]["INSTALL"]     = INSTALL_TYPE_NORMAL; //Тип установки/срабатывания датчика
+   jsonConfig["SENSOR"]["DIST_GROUND"] = 270;       //Высота установки датчика (расстояние до пола)
+   jsonConfig["SENSOR"]["DIST_LIMIT"]  = 270;        //Если разница между текущим показанием и высатой установки больше этого значения, то датчик показывает занято
+   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04TM2; //Тип датчика
+   jsonConfig["NET"]["DOGOVOR_ID"]     = "8888";            
+   jsonConfig["CRM_MOSCOW"]["ENABLE"]  = true;                      //посылать информацию на CRM-MOSCOW
+   jsonConfig["TB"]["ENABLE"]          = true;                      //Посылать информацию в ThingsBoard
+
+   jsonConfig["RELAY1"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
+   jsonConfig["RELAY1"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
+   jsonConfig["RELAY1"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
+   jsonConfig["RELAY1"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
+   jsonConfig["RELAY1"]["DELAY_OFF"]   = 1;                          // Задержка при отключении реле
+   jsonConfig["RELAY2"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
+   jsonConfig["RELAY2"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
+   jsonConfig["RELAY2"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
+   jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
+   jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;       
+
+   jsonConfig["MP3"]["SHORT_MSG"]      = true;
+   jsonConfig["RGB1"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
+   jsonConfig["MP3"]["VOLUME"]         = 13;                          // Громкость 0-30
+
+   jsonConfig["MP3"]["BUSY"]["ENABLE"]     = true;
+   jsonConfig["MP3"]["NAN"]["ENABLE"]      = true;
+   jsonConfig["MP3"]["BUSY1"]["ENABLE"]    = true;
+   jsonConfig["MP3"]["BUSY2"]["ENABLE"]    = true;
+   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = true;
+   jsonConfig["MP3"]["FREE"]["ENABLE"]     = true;
+
+   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 1;
+   jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
+   jsonConfig["MP3"]["NAN"]["DELAY"]      = 2;
+   jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 50;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 25;
+   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 2;
+   jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
+   jsonConfig["MP3"]["FREE"]["DELAY"]     = 1;
+   jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
+   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 1;
+   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 15;
+
 }
 
-void configDefault1(){
+void configDefaultGeneral(){
    int n = 0;
    jsonConfig.clear();
    jsonConfig["CONFIG_V"]              = CONFIG_V;                //Имя точки доступа устройства  

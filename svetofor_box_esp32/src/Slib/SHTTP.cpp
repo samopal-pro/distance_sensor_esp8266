@@ -314,14 +314,17 @@ void HTTP_printWiFiPower(String &out, int _power){
 }
 
 
-void HTTP_printSubmit(String &out,const char *name, const char *value, const char *style){
-   out += "<p><input type='submit' name='";
+void HTTP_printSubmit(String &out,const char *name, const char *value,const char *style, const char *tag){
+   HTTP_beginTag(out,tag);
+   out += "<input type='submit' name='";
    out += name;
    out +="' value='";
    out += value;
    out += "'";
    HTTP_style(out,style);  
    out += ">";   
+   HTTP_endTag(out,tag);
+
 }
 
 

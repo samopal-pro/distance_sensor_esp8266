@@ -702,7 +702,7 @@ void HTTP_printConfigNet(String &out){
   HTTP_printSelectOption( out, "Микроволновый сенсор 10м (LD-2413)",             (int)SENSOR_LD2413_UART, _cur_sensor );
   out += "</select>\n";
   out += "</div>\n";
-  out += "<p class='t1'>После смены типа сенсора нужно перезагрузить устройство.";
+//  out += "<p class='t1'>После смены типа сенсора нужно перезагрузить устройство.";
   HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += " </fieldset>\n";
 
@@ -805,7 +805,7 @@ void HTTP_printConfig2(String &out){
   char s[50];
 // Блок №1c
   out += "<fieldset>\n";
-  out += "<legend>Настройка дополнительной подсветки. Подсветка оповещений</legend>\n";
+  HTTP_printTag(out,"legend","Настройка дополнительной подсветки. Подсветка оповещений");
 //  out += "<table width=100%>";
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_SHORT_MSG","1",jsonConfig["MP3"]["SHORT_MSG"].as<bool>());
@@ -829,11 +829,11 @@ void HTTP_printConfig2(String &out){
 //  out += "</td></tr>\n";
 //  HTTP_print_color3(out, jsonConfig["RGB2"]["MP3"].as<uint32_t>(), "ColorMP3", "Мигание в режиме \"оповещение\"", COLOR_MP3_1, COLOR_MP3_2);
   out += "</table>";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Настройка оповещения</legend>\n";
+  HTTP_printTag(out,"legend","Настройка оповещения");
   HTTP_InputInt(out,"Громкость звука 0-30","MP3_VOLUME",jsonConfig["MP3"]["VOLUME"].as<int>(),0,30,32);
 
 
@@ -848,12 +848,12 @@ void HTTP_printConfig2(String &out){
   HTTP_print_MP3_7(out,"После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 005.mp3", "FREE_NAN" );
   HTTP_print_MP3_7(out,"Выезд автомобиля. Бокс свободен. (Можно загрузить рекламу) Файл 006.mp3", "FREE" );
   out += "</table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
 #if defined(IS_BTN_ADD)
   out += "<fieldset>\n";
-  out += "<legend>Настройка дополнительного входа</legend>\n";
+  HTTP_printTag(out,"legend","Настройка дополнительного входа");
   out += "<p class='t1'>";  
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_ENABLE","1",jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для дополнительного входа";
@@ -867,7 +867,7 @@ void HTTP_printConfig2(String &out){
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_INVERSE","1",jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>());
   out += "Включить инверсию дополнительного входа";
 
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 #endif
 
@@ -880,7 +880,7 @@ void HTTP_printConfig4(String &out){
   int Dir = MP3_ADD_DIR;
 
   out += "<fieldset>\n";
-  out += "<legend>Первый запуск</legend>\n";
+  HTTP_printTag(out,"legend","Первый запуск");
   out += "<table width=100%><tr>";
   out += "<td>Активировать первый запуск</td>";
   out += "<td align='right'><input type='submit' name='BOOT0' value='Активировать' class='btn'></td>"; 
@@ -912,7 +912,7 @@ void HTTP_printConfig4(String &out){
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Калибровка (Полнесение магнита на 3-5 сек)</legend>\n";
+  HTTP_printTag(out,"legend","Калибровка (Полнесение магнита на 3-5 сек)");
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_97_ENABLE","1",jsonConfig["MP3"]["97"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для калибровки";
@@ -924,11 +924,11 @@ void HTTP_printConfig4(String &out){
   HTTP_print_MP3(out,"Датчик плохо видит расстояние. Дорожка 094.mp3",Dir,94);
   HTTP_print_MP3(out,"Датчик успешно откалибровался. Дорожка 093.mp3",Dir,93);
   out += "</table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Сброс паролей (Удержание магнита свыше 10 сек)</legend>\n";
+  HTTP_printTag(out,"legend","Сброс паролей (Удержание магнита свыше 10 сек)");
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_98_ENABLE","1",jsonConfig["MP3"]["98"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для сброса паролей";
@@ -936,11 +936,11 @@ void HTTP_printConfig4(String &out){
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
   HTTP_print_MP3(out,"Сброс паролей. Дорожка 098.mp3",Dir,98);
   out += "</table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Сброс имени WiFi (Поднесение магнита 5 раз подряд)</legend>\n";
+  HTTP_printTag(out,"legend","Сброс имени WiFi (Поднесение магнита 5 раз подряд)");
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_92_ENABLE","1",jsonConfig["MP3"]["92"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для сброса имени WiFi";
@@ -948,11 +948,11 @@ void HTTP_printConfig4(String &out){
   out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
   HTTP_print_MP3(out,"Сброс имени WiFi. Дорожка 092.mp3",Dir,92);
   out += "</table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Оповещения в WEB интерфейсе</legend>\n";
+  HTTP_printTag(out,"legend","Оповещения в WEB интерфейсе");
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_89_ENABLE","1",jsonConfig["MP3"]["89"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для WEB интерфейса";
@@ -968,12 +968,15 @@ void HTTP_printConfig4(String &out){
   HTTP_print_MP3(out,"Нажатие на кнопку \"Обновить расстояние\". Дорожка 084.mp3",Dir,84);
   HTTP_print_MP3(out,"Нажатие на кнопку \"Сохранить\". Дорожка 083.mp3",Dir,83);
   HTTP_print_MP3(out,"Подсказка пароля при первом неавторизованном заходе. Дорожка 082.mp3",Dir,82);
+  HTTP_print_MP3(out,"Переключение конфигурации в тестовый режим. Дорожка 076.mp3",Dir,76);
+  HTTP_print_MP3(out,"Переключение конфигурации в режим автомойки. Дорожка 077.mp3",Dir,77);
+  HTTP_print_MP3(out,"Переключение конфигурации в режим парковки. Дорожка 078.mp3",Dir,78);
   out += "</table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n";  
 
   out += "<fieldset>\n";
-  out += "<legend>Оповещение переключения страниц</legend>\n";
+  HTTP_printTag(out,"legend","Оповещение переключения страниц");
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_70_ENABLE","1",jsonConfig["MP3"]["70"]["ENABLE"].as<bool>());
   out += "Включить оповещение кнопок переключения страниц";
@@ -986,8 +989,28 @@ void HTTP_printConfig4(String &out){
   HTTP_print_MP3(out,"Кнопка \"Стартовые настройки\". Дорожка 074.mp3",Dir,74);
   HTTP_print_MP3(out,"Кнопка \"Активация первого запуска\". Дорожка 075.mp3",Dir,75);
   out += "</table>\n";
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += "</fieldset>\n";  
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
+  out += "</fieldset>\n"; 
+
+   out += "<fieldset>\n";
+   HTTP_printTag(out,"legend","Выбор конфигурации сенсора");
+   switch(jsonSave["CONFIG"].as<int>()){
+      case CFG_CARWASH : HTTP_printTag(out,"p","Загружена конфигурация для автомоек"); break;
+      case CFG_PARKING : HTTP_printTag(out,"p","Загружена конфигурация для парковок"); break;
+      default:           HTTP_printTag(out,"p","Загружена тестовая конфигурация"); 
+   }   
+   HTTP_beginTag(out,"p");
+   out += "<table width=100%>";
+   out += "<tr>";
+   out += "<td width = 30%>";
+   HTTP_printSubmit(out,"Config0","Тестовая","btn",NULL);
+   out += "</td><td width=40%>";
+   HTTP_printSubmit(out,"Config1","Для автомоек","btn",NULL);
+   out += "</td><td width=40>";
+   HTTP_printSubmit(out,"Config2","Для парковок","btn",NULL);
+   out += "</td></tr></table>\n";
+   out += "</fieldset>\n";
+
 
 
 }
@@ -1086,7 +1109,32 @@ bool HTTP_checkArgs(int current){
    bool _save = false;
    bool _reboot = false;
 // Если нажата кнопка "Калибровка"   
-   if ( server.hasArg("Calibrate")  ){  
+   if ( server.hasArg("Config0")  ){
+      HTTP_goto("/config4", 2000, "Загрузка тестовой конфигурации..."); 
+      systemMP3("89",76,PRIORITY_MP3_MAXIMAL);
+      configSet(CFG_TEST);
+      configRead();
+      isChangeConfig = true;
+      return true;
+
+   }
+   else if ( server.hasArg("Config1")  ){
+      HTTP_goto("/config4", 2000, "Загрузка конфигурации для автомоек..."); 
+      systemMP3("89",77,PRIORITY_MP3_MAXIMAL);
+      configSet(CFG_CARWASH);
+      configRead();
+      isChangeConfig = true;
+      return true;
+   }
+   else if ( server.hasArg("Config2")  ){
+      HTTP_goto("/config4", 2000, "Загрузка конфигурации для парковок..."); 
+      systemMP3("89",78,PRIORITY_MP3_MAXIMAL);
+      configSet(CFG_CARWASH);
+      configRead();
+      isChangeConfig = true;
+      return true;
+   }
+   else if ( server.hasArg("Calibrate")  ){  
        systemMP3("89",85,PRIORITY_MP3_HIGH);
        startCalibrate(0,"97",97);
    }

@@ -5,22 +5,26 @@ QuickStats qstat;
 /**
 * Класс MySensorValue
 */
-MySensorValue::MySensorValue(SensorValueType_t _type, String _label, float _min, float _max, float _error, uint16_t _mult, uint16_t _samples){
-   Type       = _type;
-   Label      = _label;
+MySensorValue::MySensorValue(){
+   init("",0,10000,1,SIMPLE_SIZE);
+   ValueError = NAN;
+   Values     = (float *)malloc(SIMPLE_SIZE*sizeof(float));
+   clear();
+}
+
+void MySensorValue::init(String _label, float _min, float _max, uint16_t _mult, uint16_t _samples){
+   Label = _label;
    LimitMin   = _min;
    LimitMax   = _max;
-   ValueError = _error;
-   Samples    = _samples;
+   if( _samples >SIMPLE_SIZE )_samples = SIMPLE_SIZE;
+   if( _samples == 0 )_samples = 1;
+   Samples    = SIMPLE_SIZE;
    Multiplier = _mult;
-   if( Type != ST_NONE ){
-      Values     = (float *)malloc(Samples*sizeof(float));
-      clear();
-   }
+
+    
 }
 
 void MySensorValue::clear(){
-   if( Type == ST_NONE )return;
    for( int i=0; i<Samples; i++)Values[i] = NAN;
    isFirst       = true;
    Pointer       = 0;
@@ -28,10 +32,6 @@ void MySensorValue::clear(){
 }
 
 bool MySensorValue::set(float _val, bool _flag){
-   if( Type == ST_NONE ){
-      Value = NAN;
-      return true;        
-   }
    if( !isnan(_val) )_val *= Multiplier;
    if( isnan(_val) || _val < LimitMin || _val > LimitMax ){
       Value = NAN;
@@ -52,14 +52,12 @@ bool MySensorValue::set(float _val, bool _flag){
 
 
 float MySensorValue::getLast(){
-   if( Type == ST_NONE )return ValueError;
    if( isFirst )return ValueError;
    if( isnan(Value ) )return ValueError;
    return ( Value);
 }
 
 float MySensorValue::getAverage(){
-   if( Type == ST_NONE )return ValueError;
    if( isFirst )return ValueError;  
    float _val = qstat.average(Values,Samples);
    if( isnan(_val) )return ValueError;
@@ -67,7 +65,6 @@ float MySensorValue::getAverage(){
 }
 
 float MySensorValue::getDeviation(){
-   if( Type == ST_NONE )return 0;
    if( isFirst )return 0;
    float _val = qstat.stdev(Values,Samples);
    if( isnan(_val) )return 0;
@@ -82,172 +79,109 @@ float MySensorValue::getDeviation(){
 MySensor::MySensor(){
    bool isInit;
 
-   switch(jsonConfig["SENSOR"]["TYPE"].as<int>()){
-      case SENSOR_SR04T :  
-//#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )
+   SensorSR04    = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 10);
+   SensorSR04M2  = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
+   SensorSR04_75 = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
+   SensorTFLuna  = new TFLI2C();
+   SensorTFMini  = new TFMPI2C();
+   SensorLD2413  = new LD2413();
+   Value         = new MySensorValue();
 
-         Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 10);
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 5900.0, NAN, 1, SIMPLE_SIZE );
-         Name   = "Sonar SR04T";
-         Serial.println("!!! new Sonar SR04T");
-         break;
-//#elif (DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
-
-      case SENSOR_SR04TM2 :  
-         Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 4900.0, NAN, 1, SIMPLE_SIZE );
-         Name   = "Sonar SR04TM2";
-         Serial.println("!!! new Sonar SR04TM2");
-         break;
-      case SENSOR_SR04_75 :  
-         Sensor = new SonarSR04(PIN_SONAR_ECHO, PIN_SONAR_TRIG, 2, 500);
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 7400.0, NAN, 1, SIMPLE_SIZE );
-         Name   = "Sonar SR04_75";
-         Serial.println("!!! new Sonar SR04TM2_75");
-         break;
-//      case SENSOR_A21_I2C:   
-//         Sensor = new SonarA21();
-//         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 5000.0, NAN, 1, SIMPLE_SIZE );
-//         Name   = "Sonar A21 I2C";
- //        break;
-//#elif (DEFAULT_SENSOR_TYPE == SENSOR_TFLUNA_I2C )
-      case SENSOR_TFLUNA_I2C :
-         Sensor = new TFLI2C();
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 8000.0, NAN, 10, SIMPLE_SIZE );
-         Name   = "Lidar TFLuna I2C";
-         Serial.println("!!! new Lidar TFLuna");
-         break;
-      case SENSOR_TFMINI_I2C :
-         Sensor = new TFMPI2C();
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 100.0, 12000.0, NAN, 10, SIMPLE_SIZE );
-         Name   = "Lidar TFMiniPlus I2C";
-         break;
-      case SENSOR_LD2413_UART :
-         Sensor = (LD2413 *)new LD2413();
-         Value = new MySensorValue(ST_RANGE,"Дистанция, мм", 150.0, 10000.0, NAN, 1, 1);
-         Name   = "Датчик HiLINK LD2413 (UART)";
-         break;
-
-   }
-//#endif
-
-//   Serial.println("!!! ???");
+   Type          = (SensorValueType_t)jsonConfig["SENSOR"]["TYPE"].as<int>();
 
 }
 
 bool MySensor::init(){
    switch(jsonConfig["SENSOR"]["TYPE"].as<int>()){
       case SENSOR_SR04T :  
-      case SENSOR_SR04TM2 :  
-      case SENSOR_SR04_75 :  
-//#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )||(DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
-         ((SonarSR04 *)Sensor)->init();
+         Value->init("Дистанция, мм", 100.0, 5900.0, 1, SIMPLE_SIZE );
+         SensorSR04->init();
          isInit = true;
+         Name   = "Sonar SR04TM2";
          break;
-
-
-/*
-      case SENSOR_A21_I2C:   
-//   Wire.begin();
-         pinMode(PIN_I2C_SCL, OUTPUT);
-         digitalWrite(PIN_I2C_SCL,LOW);
-         pinMode(PIN_I2C_SDA, OUTPUT);
-         digitalWrite(PIN_I2C_SDA,LOW);
- 
-         Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
-//   Wire.setClock(100000);
-         vTaskDelay(200);
-         scanI2C();
-
-
-         isInit = ((SonarA21 *)Sensor)->init();
-#if (DEBUG_SENSORS>0)
-         Serial.printf("!!! Init I2C %d %d\n",PIN_I2C_SDA, PIN_I2C_SCL);
-#endif
+      case SENSOR_SR04TM2 :  
+         Value->init("Дистанция, мм", 100.0, 4900.0, 1, SIMPLE_SIZE );
+         SensorSR04M2->init();
+         isInit = true;
+         Name   = "Sonar SR04TM2";
          break;
-*/
+      case SENSOR_SR04_75 :  
+         Value->init("Дистанция, мм", 100.0, 7400.0, 1, SIMPLE_SIZE );
+         SensorSR04M2->init();
+         isInit = true;
+         Name   = "Sonar SR04_75";
+         break;
       case SENSOR_TFLUNA_I2C:
-//#elif (DEFAULT_SENSOR_TYPE == SENSOR_TFLUNA_I2C )
          Wire.begin(PIN_SONAR_ECHO, PIN_SONAR_TRIG);
          Wire.setClock(100000);
          vTaskDelay(200);
          isInit = checkI2C(TFL_DEF_ADR);
-#ifdef DEBUG_SENSORS
-         if( isInit )Serial.println(F("!!! Init TFLuna"));
-         else Serial.println(F("!!! Error TFLuna init"));
-#endif
+         Name = "Lidar TFLuna";
          break;
       case SENSOR_TFMINI_I2C:
          Wire.begin(PIN_SONAR_ECHO, PIN_SONAR_TRIG);
-   Wire.setClock(100000);
-//         vTaskDelay(200);
+         Wire.setClock(100000);
          isInit = checkI2C(TFMP_DEFAULT_ADDRESS);
-#ifdef DEBUG_SENSORS
-         if( isInit )Serial.println(F("!!! Init TFMiniPlus"));
-         else Serial.println(F("!!! Error TFMiniPlus init"));
-#endif
+         Name = "Lidar TFMiniPlus";
          break;
       case SENSOR_LD2413_UART :
          Serial2.begin(115200,SERIAL_8N1,PIN_SONAR_TRIG,PIN_SONAR_ECHO);
-         ((LD2413 *)Sensor)->begin(PIN_SONAR_TRIG,PIN_SONAR_ECHO);
-         ((LD2413 *)Sensor)->init(150, 10000, 250);
+         SensorLD2413->begin(PIN_SONAR_TRIG,PIN_SONAR_ECHO);
+         SensorLD2413->init(150, 10000, 250);
          isInit = true;
-
+         Name = "Radar LD2413";
    }
-//#endif
+   Type          = (SensorValueType_t)jsonConfig["SENSOR"]["TYPE"].as<int>();
+
 #if (DEBUG_SENSORS>0)
    if( isInit )Serial.print(F("!!! Init normal "));
    else Serial.print(F("??? Init fail "));
    Serial.println(Name);
 #endif
-
-
-
-//   isInit = true;
    return isInit;
 }
 
 
 bool MySensor::get(){
+   if( jsonConfig["SENSOR"]["TYPE"].as<int>() != Type )init();
+
    float value1 = NAN, value2 = NAN;
    bool stat = false;
    if( !isInit )init();
    if( !isInit )return false;
    static int16_t _dist16, _flux16, _temp16;
-//#if (DEFAULT_SENSOR_TYPE == SENSOR_SR04T )||(DEFAULT_SENSOR_TYPE == SENSOR_SR04TM2 )
-   switch(jsonConfig["SENSOR"]["TYPE"].as<int>()){
+   switch(Type){
       case SENSOR_SR04T:
-      case SENSOR_SR04TM2:
-      case SENSOR_SR04_75:
-         value1 = ((SonarSR04 *)Sensor)->getDistance();
+         value1 = SensorSR04->getDistance();
          stat = Value->set(value1,true);
          break;
-//      case SENSOR_A21_I2C:
-//         value1 = (float)((SonarA21 *)Sensor)->getDistance();
-//         stat = Value->set(value1);
-//         break;
+      case SENSOR_SR04TM2:
+         value1 = SensorSR04M2->getDistance();
+         stat = Value->set(value1,true);
+         break;
+      case SENSOR_SR04_75:
+         value1 = SensorSR04_75->getDistance();
+         stat = Value->set(value1,true);
+         break;
       case SENSOR_TFLUNA_I2C:    
-//#elif (DEFAULT_SENSOR_TYPE == SENSOR_TFLUNA_I2C )
-//         stat = SensorTFLuna->getData(_dist16,TFL_DEF_ADR);
-         stat = ((TFLI2C *)Sensor)->getData(_dist16, _flux16, _temp16, TFL_DEF_ADR );
+         stat = SensorTFLuna->getData(_dist16, _flux16, _temp16, TFL_DEF_ADR );
          if( stat ) value1 = (float)_dist16;
          else value1 = NAN;
          Value->set(value1, stat);
          break;
       case SENSOR_TFMINI_I2C:    
-         stat = ((TFMPI2C *)Sensor)->getData(_dist16, _flux16, _temp16, TFMP_DEFAULT_ADDRESS );
+         stat = SensorTFMini->getData(_dist16, _flux16, _temp16, TFMP_DEFAULT_ADDRESS );
          if( stat ) value1 = (float)_dist16;
          else value1 = NAN;
          Value->set(value1, stat);
          break;
       case SENSOR_LD2413_UART :
-         value1 = ((LD2413 *)Sensor)->wait_data();
+         value1 = SensorLD2413->wait_data();
          if( value1!= 0 )Value->set(value1);
-#if DEBUG_SENSORS > 1
-         Serial.print(F("!!! LD2413 value: "));
-         Serial.println(value1,1);
-#endif
          break;
+      default:
+         Value->set(NAN);
+         stat = false;   
    }
 //#endif
 #if (DEBUG_SENSORS>1)

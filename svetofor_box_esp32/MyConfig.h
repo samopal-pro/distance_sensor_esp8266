@@ -10,9 +10,9 @@
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.26"
+#define SOFTWARE_V           "10.0.27"
 #define HARDWARE_V           "10.0.1"
-#define CONFIG_V             "10.0.18"
+#define CONFIG_V             "10.0.27"
 
 /*
 #define SENSOR_TYPE_NONE     0
