@@ -626,14 +626,14 @@ void HTTP_printConfig(String &out){
   out += "<fieldset>\n";
   HTTP_printTag(out,"legend","Режимы определения препятствия");   
   HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_NORMAL ),true);
-  HTTP_InputInt(out,"*Расстояние от датчика до пола (мм):","GroundLevel",jsonConfig["SENSOR"]["DIST_GROUND"].as<int>(),100,10000);
-  HTTP_InputInt(out,"Минимальная высота на срабатывание (мм):","LimitDistance",jsonConfig["SENSOR"]["DIST_LIMIT"].as<int>(),100,10000);
+  HTTP_InputInt(out,"*Расстояние от датчика до пола (мм):","GroundLevel",jsonConfig["SENSOR"]["DIST_GROUND"].as<int>(),10,10000);
+  HTTP_InputInt(out,"Минимальная высота на срабатывание (мм):","LimitDistance",jsonConfig["SENSOR"]["DIST_LIMIT"].as<int>(),10,10000);
   HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_OUTSIDE ), true);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",jsonConfig["SENSOR"]["DIST_MIN1"].as<int>(),100,10000);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",jsonConfig["SENSOR"]["DIST_MAX1"].as<int>(),100,10000);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",jsonConfig["SENSOR"]["DIST_MIN1"].as<int>(),10,10000);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",jsonConfig["SENSOR"]["DIST_MAX1"].as<int>(),10,10000);
   HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_INSIDE ), true);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",jsonConfig["SENSOR"]["DIST_MIN2"].as<int>(),100,10000);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>(),100,10000);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",jsonConfig["SENSOR"]["DIST_MIN2"].as<int>(),10,10000);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>(),10,10000);
   HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += " </fieldset>\n";
 }

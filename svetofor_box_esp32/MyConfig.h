@@ -124,7 +124,7 @@ enum SENSOR_STAT_t {
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
-#define DEVICE_NAME            "2025_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_NAME            "2026_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_PASSS           "svetoforbox"
 #define DEVICE_PASS0           "superadmin"
 #define DEVICE_PASS1           "admin"

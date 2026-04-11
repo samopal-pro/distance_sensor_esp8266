@@ -724,10 +724,10 @@ void taskButton(void *pvParameters){
          continue;
       }
 #if defined(IS_BTN_ADD)
-      switch(btn_add.loop()){
+      switch(btn_add.loop()){  
           case SB_PRESS:
              Serial.println(F("!!! press add btn"));
-             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>()){
+             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>() && (SensorOn == SS_BUSY)){
                 EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
                 EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
              }
@@ -739,14 +739,14 @@ void taskButton(void *pvParameters){
                 EventBtnAdd2->reset();
              }
              break;
-          case SB_TIMER:
-             Serial.println(F("!!! timer add btn"));
-             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
-             break;
-          case SB_TIMER2:
-             Serial.println(F("!!! timer2 add btn"));
-             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
-             break;
+//          case SB_TIMER:
+//             Serial.println(F("!!! timer add btn"));
+//             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+//             break;
+//          case SB_TIMER2:
+//             Serial.println(F("!!! timer2 add btn"));
+//             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+//             break;
       }
 #endif
 #if defined(IS_TOUCH)
