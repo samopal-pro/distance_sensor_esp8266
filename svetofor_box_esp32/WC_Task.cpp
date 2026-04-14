@@ -431,7 +431,7 @@ void handleBtnAdd1(bool _flag){
    Serial.print(F("!!! EventsBTN_ADD1 "));
    Serial.println((int)_flag);
 #endif
-   if( _flag ){
+   if( _flag && (SensorOn == SS_BUSY)){
       if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
    }
 }
@@ -444,7 +444,7 @@ void handleBtnAdd2(bool _flag){
    Serial.print(F("!!! EventsBTN_ADD2 "));
    Serial.println((int)_flag);
 #endif
-   if( _flag ){
+   if( _flag && (SensorOn == SS_BUSY)){
       if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
    }
 }
@@ -927,7 +927,7 @@ void checkConfig(){
       if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
       else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
       if( !jsonConfig["WIFI"]["POWER"].isNull() )WiFi.setTxPower((wifi_power_t)jsonConfig["WIFI"]["POWER"].as<int>());
-      btn_add.PressState = !jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>();
+      btn_add.PressState = jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>();
    }
  }
 
