@@ -228,19 +228,6 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += "</title>\n";
   HTTP_printCSS(out);
   HTTP_printJS(out);
-  if( jsonSave["MSG_AUTH"].as<bool>() ){
-     if( UID < 0 ){  
-        if( EventMP3->State == ES_NONE ){
-           systemMP3("89",86,PRIORITY_MP3_MEDIUM);
-           jsonSave["MSG_AUTH"] = false;
-           saveSave();
-        }  
-     }
-     else {
-        jsonSave["MSG_AUTH"] = false;
-        saveSave();
-     }
-  }
 
   out += "<body>\n";
   out += " <div class=\"main\" id=\"main\">\n  "; 
@@ -380,11 +367,26 @@ void HTTP_handleRoot(void) {
   msLoad = millis();
   char str[50];
   String out = "";
-  is_load_page = true;
-  if( is_first_root ){
-     is_first_root = false;
-     systemMP3("70", 70, PRIORITY_MP3_MEDIUM);
+
+  if( jsonSave["MSG_AUTH"].as<bool>() ){
+     if( UID < 0 ){  
+        if( EventMP3->State == ES_NONE ){
+           systemMP3("89",82,PRIORITY_MP3_MEDIUM);
+           jsonSave["MSG_AUTH"] = false;
+           saveSave();
+        }  
+     }
+     else {
+        if( is_first_root ){
+           is_first_root = false;
+           systemMP3("70", 70, PRIORITY_MP3_MEDIUM);
+        }
+//       jsonSave["MSG_AUTH"] = false;
+ //       saveSave();
+     }
   }
+  is_load_page = true;
+
   HTTP_printHeader(out,"Главная",0);
   HTTP_print_menu(out, numPage);
 // Блок №1
@@ -1169,6 +1171,10 @@ bool HTTP_checkArgs(int current){
        jsonSave["BOOT_COUNT"]  = 0;
        jsonSave["MSG_AUTH"]    = true;
        saveSave();
+       
+       String header = "HTTP/1.1 301 OK\r\nSet-Cookie: ESP_PASS=\r\nLocation: /\r\nCache-Control: no-cache\r\n\r\n";
+       server.sendContent(header);
+
        HTTP_goto("/conf4", 5000, "Активирован первый запуск датчика. Сброшен счетчик загрузок");
        systemMP3("70",75,PRIORITY_MP3_75);
        EventRGB1->setRainbow(true);
@@ -1624,6 +1630,8 @@ void HTTP_goto(const char *url, uint32_t tm, const char *msg){
    String content;
    Serial.printf("!!! HTTP GOTO %s\n",msg);
    HTTP_printHeader(content,msg,0);
+
+
    content += "<h2>";
    content += msg;  
    content += "</h2>";
@@ -1673,16 +1681,21 @@ void HTTP_print_menu(String &out, int current){
   
   out += "\n<p><table width='100%'><tr>";
   HTTP_print_menu_item(out, ( current == 0 ), 40, "Основные настройки",  "/",       isMP3, MP3_ADD_DIR, 70);
-  HTTP_print_menu_item(out, ( current == 1 ), 35, "Настройки реле",      "/conf1",  isMP3, MP3_ADD_DIR, 71);
-  HTTP_print_menu_item(out, ( current == 2 ), 25, "Сеть и сенсор",       "/conf2",  isMP3, MP3_ADD_DIR, 72);
+
+  if( UID >= 0 )HTTP_print_menu_item(out, ( current == 1 ), 35, "Настройки реле",      "/conf1",  isMP3, MP3_ADD_DIR, 71);
+  else out += "<td>&nbsp;</td>"; 
+
+  if( UID >= 0 )HTTP_print_menu_item(out, ( current == 2 ), 25, "Сеть и сенсор",       "/conf2",  isMP3, MP3_ADD_DIR, 72);
+  else out += "<td>&nbsp;</td>"; 
+
   out += "</tr><tr>\n";
-  HTTP_print_menu_item(out, ( current == 3 ), 33, "Звуковые оповещения", "/conf3",  isMP3, MP3_ADD_DIR, 73);
-  if( UID >= 2 ){
-      HTTP_print_menu_item(out, ( current == 4 ), 33, "Стартовые настройки", "/conf4", isMP3, MP3_ADD_DIR, 74);
-  }
-  else {
-      out += "<td>&nbsp;</td>";
-  }
+
+  if( UID >= 0 )HTTP_print_menu_item(out, ( current == 3 ), 33, "Звуковые оповещения", "/conf3",  isMP3, MP3_ADD_DIR, 73);
+  else out += "<td>&nbsp;</td>"; 
+
+  if( UID >= 2 )HTTP_print_menu_item(out, ( current == 4 ), 33, "Стартовые настройки", "/conf4", isMP3, MP3_ADD_DIR, 74);
+  else out += "<td>&nbsp;</td>";
+
   out += "<td'>&nbsp;</td>";
 
 /*

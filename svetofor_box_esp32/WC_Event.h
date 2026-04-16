@@ -53,6 +53,12 @@ enum TEVENT_STATUS_t {
    ES_OFF      = 4
 };
 
+enum TEVENT_MP3_GPIO_t {
+   ESM_NONE    = 0,
+   ESM_ENABLE  = 1,
+   ESM_AUTO    = 2,
+};
+
 typedef struct {
    int ID;
    TEVENT_TYPE_t Type;
@@ -157,10 +163,16 @@ private:
     bool waitPlayer;
 
     bool isOn;
+
+    TEVENT_MP3_GPIO_t GPIO;
+    int PIN;    
+    bool isLowGpio;
+    bool isHighGpio;
+
     void _start();
     void _stop();
     void _replay(uint32_t _delay);
-
+    int state();
 
 public:
     uint32_t DelayOn;
@@ -170,7 +182,7 @@ public:
     uint32_t Color;
     uint32_t ColorTimer;
     TEVENT_STATUS_t State;
-    TEventMP3(Stream &_stream,  void (*_handle)(bool) = NULL );
+    TEventMP3(Stream &_stream,  TEVENT_MP3_GPIO_t _gpio=ESM_AUTO, int _pin=-1  , void (*_handle)(bool) = NULL );
     void setVolume(int _volume);
     void setColor(uint32_t _color=COLOR_NONE, uint32_t _timer=0);
 

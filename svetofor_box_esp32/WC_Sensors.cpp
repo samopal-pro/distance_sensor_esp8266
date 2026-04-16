@@ -94,13 +94,13 @@ MySensor::MySensor(){
 bool MySensor::init(){
    switch(jsonConfig["SENSOR"]["TYPE"].as<int>()){
       case SENSOR_SR04T :  
-         Value->init("Дистанция, мм", 100.0, 5900.0, 1, SIMPLE_SIZE );
+         Value->init("Дистанция, мм", 100.0, 4900.0, 1, SIMPLE_SIZE );
          SensorSR04->init();
          isInit = true;
          Name   = "Sonar SR04TM2";
          break;
       case SENSOR_SR04TM2 :  
-         Value->init("Дистанция, мм", 100.0, 4900.0, 1, SIMPLE_SIZE );
+         Value->init("Дистанция, мм", 100.0, 5900.0, 1, SIMPLE_SIZE );
          SensorSR04M2->init();
          isInit = true;
          Name   = "Sonar SR04TM2";

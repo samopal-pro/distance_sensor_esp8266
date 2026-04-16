@@ -373,7 +373,7 @@ uint32_t TEventRGB::setBrightness(uint32_t color, uint8_t level)
 //***********************************************************************************************************************************************************************************
 // Класс TEventMP3
 //***********************************************************************************************************************************************************************************
-TEventMP3::TEventMP3(Stream &_stream, void (*_handle)(bool) ){
+TEventMP3::TEventMP3(Stream &_stream, TEVENT_MP3_GPIO_t _gpio, int _pin, void (*_handle)(bool) ){
    Player = new DFRobotDFPlayerMini();   
    SerialPlayer = &_stream;
    Handle       = _handle;
@@ -388,6 +388,10 @@ TEventMP3::TEventMP3(Stream &_stream, void (*_handle)(bool) ){
    Color        = COLOR_NONE;
    ColorEvent   = new TEvent(0,0,_handle);
    Priority     = DAFAULT_PRIORITY_MP3;
+   GPIO         = _gpio;
+   PIN          = _pin;
+   isLowGpio    = false;
+   isHighGpio   = false;
    init(); 
 }
 
@@ -398,9 +402,16 @@ void TEventMP3::init(){
          isPlayer = true;
          if(isPlayer)Player->setTimeOut(500);
          if(isPlayer)Player->outputDevice(DFPLAYER_DEVICE_SD); 
+
+         if( GPIO != ESM_NONE && PIN >= 0 ){
+            pinMode(PIN,INPUT);
+            if( digitalRead(PIN) )isHighGpio = true;
+            Serial.printf("!!! MP3 GPIO %d\n",(int)digitalRead(PIN));
+         }
+         Serial.printf("!!! MP3 init %d\n",(int)isPlayer);
+
       }      
     }
-    Serial.printf("!!! MP3 init %d\n",(int)isPlayer);
 }
 
 void TEventMP3::setVolume(int _volume){
@@ -473,6 +484,35 @@ void TEventMP3::_replay(uint32_t _delay){
     }    
 }
 
+int TEventMP3::state(){
+   int _state = -1;
+   int _flag = 0;
+   if( GPIO == ESM_NONE || PIN < 0 ){
+      Player->readState();
+      _state = Player->readState();
+   }
+   else if( GPIO == ESM_ENABLE ){
+      if( digitalRead(PIN) )_state = 0;
+      else _state = 1;
+      _flag = 1;
+   }
+   else {
+      if( isLowGpio && isHighGpio ){
+         if( digitalRead(PIN) )_state = 0;
+         else _state = 1;
+         _flag = 1;
+      }
+      else {
+         Player->readState();
+         _state = Player->readState();
+         if( _state == 1 )isLowGpio = true;
+         else isHighGpio = true;
+      }
+   }
+   Serial.printf("!!! MP3 state=%d flag=%d low=%d high=%d\n",_state,_flag,(int)isLowGpio, (int)isHighGpio);
+   return _state;
+}
+
 /*
 * Метод loop()
 */
@@ -498,9 +538,13 @@ TEVENT_STATUS_t TEventMP3::loop(){
           if( isOn && waitPlayer && ( ms1 == 0 || ms1 > _ms || _ms-ms1 > 2000 )){
              ms1 = _ms;
              if(isPlayer){
-                Player->readState();
-                _state = Player->readState();
-                Serial.printf("!!! MP3 state %d\n",_state);
+//                Player->readState();
+//                _state = Player->readState();
+                _state = state();
+                Serial.printf("!!! MP3 state %d ",_state);
+                Serial.print((int)digitalRead(PIN));
+                Serial.println();
+
              }
              else {
                 _state = 0;
@@ -521,6 +565,8 @@ TEVENT_STATUS_t TEventMP3::loop(){
    return State;
  // Serial.printf("!!! Type=%d State=%d\n",(int)Type,(int)State);
 }
+
+
 
 
 

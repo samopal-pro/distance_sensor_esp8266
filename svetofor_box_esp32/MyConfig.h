@@ -10,7 +10,7 @@
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.27b"
+#define SOFTWARE_V           "10.0.28"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.27"
 
@@ -147,5 +147,9 @@ enum SENSOR_STAT_t {
 #define TB_PROVISION_KEY       "_Svetofor10box_key"
 #define TB_PROVISION_SECRET    "_Svetofor10box_secret"
 
+// ESM_NONE - перемычки BUSY-SDA нет, статус MP3 Плеера определяется через UART 
+// ESM_ENABLE - перемычка BUSY-SDA есть, статус MP3 Плеера определяется через PIN_I2C_SDA
+// ESM_AUTO - автоопределение перемычки (первый цикл параллельно UART и PIN) 
+#define DEFAULT_MP3_GPIO       ESM_AUTO
 
 #endif

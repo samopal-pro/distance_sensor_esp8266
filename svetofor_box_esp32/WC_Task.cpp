@@ -127,7 +127,7 @@ void tasksStart() {
 
    isPlayMP3 = true;
    FPSerial.begin(9600, SERIAL_8N1, PIN_RX1, PIN_TX1);
-   EventMP3 = new TEventMP3(Serial1,handleMP3);
+   EventMP3 = new TEventMP3(Serial1, DEFAULT_MP3_GPIO, PIN_I2C_SDA, handleMP3);
    EventMP3->setVolume(jsonConfig["MP3"]["VOLUME"].as<int>());
    if( jsonConfig["MP3"]["SHORT_MSG"].as<bool>() )MP3_ADD_DIR = MP3_SYSTEM_SHORT_DIR; 
    else MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR; 
@@ -138,11 +138,12 @@ void tasksStart() {
    xTaskCreateUniversal(taskEvents, "events", 4096, NULL, 3, NULL, CORE);
    xTaskCreateUniversal(taskRGB, "rgb", 2048, NULL, 2, NULL, CORE);
    xTaskCreateUniversal(taskMP3, "mp3", 2048, NULL, 1, NULL, CORE);
+   xTaskCreateUniversal(taskNet, "net", 4096, NULL, 3, NULL, CORE);
+   vTaskDelay(500);
    xTaskCreateUniversal(taskSensors, "sensors", 10000, NULL, 4, NULL, CORE);
    vTaskDelay(500);
    xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 4, NULL,CORE);
    vTaskDelay(500);
-   xTaskCreateUniversal(taskNet, "net", 4096, NULL, 3, NULL, CORE);
 //  vTaskDelay(500);
 //   xTaskCreateUniversal(taskLora, "lora", 10000, NULL, 2, NULL, CORE);
 }
