@@ -204,12 +204,14 @@ TEventRGB::TEventRGB( uint8_t _pin, int _num, int _first ){
    isBlink0     = false;
    BlinkCount   = 0;
    TimerRainbow = 0;
+   NumAp        = LED_STAT_AP1;
+   NumSta       = LED_STAT_STA1;
 }
 
 
 void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
    for( int i=0; i<Num; i++){
-       if( First>0 && (i == LED_STAT_AP || i == LED_STAT_WIFI) )continue;
+       if( First>0 && (i == NumAp || i == NumSta) )continue;
        if( i%2 ){
           if( _color1 != COLOR_NONE )Strip->setPixelColor(i,_color1);
        } 
@@ -223,12 +225,12 @@ void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
 void TEventRGB::setColor0(uint32_t _color, bool _blink){
    Color0   = _color;
    isBlink0 = _blink;
-   Strip->setPixelColor(LED_STAT_AP,setBrightness(_color,LED_STAT_BRIGHTNESS));
+   Strip->setPixelColor(NumAp,setBrightness(_color,LED_STAT_BRIGHTNESS));
    Strip->show();
 }
 
 void TEventRGB::setColor1(uint32_t _color){
-   Strip->setPixelColor(LED_STAT_WIFI,setBrightness(_color,LED_STAT_BRIGHTNESS));
+   Strip->setPixelColor(NumSta,setBrightness(_color,LED_STAT_BRIGHTNESS));
    Strip->show();
 }
 
@@ -289,7 +291,7 @@ TEVENT_RGB_TYPE_t  TEventRGB::loop(){
       }
       uint16_t h =  HueRainbow;
       for( int i=0; i<Num; i++){
-          if( First>0 && (i == LED_STAT_AP || i == LED_STAT_WIFI) )continue;
+          if( First>0 && (i == NumAp || i == NumSta) )continue;
           h += IncRainbow;
           Strip->setPixelColor(i, Strip->ColorHSV(h, 255, 100)); 
       }
@@ -300,8 +302,8 @@ TEVENT_RGB_TYPE_t  TEventRGB::loop(){
 // Мигаем первым светодиодом с частотой Loop()
 
    if( isBlink0 ){
-       if( BlinkCount%2 )Strip->setPixelColor(LED_STAT_AP,setBrightness(Color0,LED_STAT_BRIGHTNESS));
-       else Strip->setPixelColor(LED_STAT_AP,setBrightness(COLOR_BLACK,LED_STAT_BRIGHTNESS));
+       if( BlinkCount%2 )Strip->setPixelColor(NumAp,setBrightness(Color0,LED_STAT_BRIGHTNESS));
+       else Strip->setPixelColor(NumAp,setBrightness(COLOR_BLACK,LED_STAT_BRIGHTNESS));
        Strip->show();
        BlinkCount++;
    }
@@ -316,7 +318,7 @@ TEVENT_RGB_TYPE_t  TEventRGB::loop(){
       if( msOff > 0 && (msOff > _ms || _ms - msOff > TIMER_MP3 )){
          msOff  = 0;
          msOn = _ms;
-         setColor(Color1,Color1);
+         setColor(Color1,Color2);
       }
       return ERT_MP3;
    }
@@ -368,6 +370,32 @@ uint32_t TEventRGB::setBrightness(uint32_t color, uint8_t level)
     return ((uint32_t)r << 16) |
            ((uint32_t)g << 8)  |
            b;
+}
+
+
+void TEventRGB::setNumAp(int _ap ){
+   if( NumAp == _ap  )return;
+   if( _ap >= 0 && _ap < Num ){
+      uint32_t _color1 = Strip->getPixelColor(NumAp);
+      uint32_t _color2 = Strip->getPixelColor(_ap);
+      Strip->setPixelColor(NumAp, _color2 );
+      Strip->setPixelColor(_ap,   _color1 );
+      NumAp = _ap;
+   } 
+   Strip->show();   
+}
+
+void TEventRGB::setNumSta( int _sta ){
+   if(  NumSta == _sta )return;
+   if( _sta >= 0 && _sta < Num ){
+      uint32_t _color1 = Strip->getPixelColor(NumSta);
+      uint32_t _color2 = Strip->getPixelColor(_sta);
+      Strip->setPixelColor(NumSta, _color2 );
+      Strip->setPixelColor(_sta,   _color1);
+      NumSta = _sta;
+   } 
+   Strip->show();
+    
 }
 
 //***********************************************************************************************************************************************************************************

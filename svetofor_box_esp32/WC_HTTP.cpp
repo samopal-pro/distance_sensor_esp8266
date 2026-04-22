@@ -638,6 +638,15 @@ void HTTP_printConfig(String &out){
   HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>(),10,10000);
   HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += " </fieldset>\n";
+
+  out += "<fieldset>\n";
+  HTTP_printTag(out,"legend","Номера статусных светодиодов");   
+  HTTP_InputInt(out,"Номер светодиода статуса точки доступа","STAT_AP",jsonConfig["RGB1"]["STAT_AP"].as<int>(),0,COUNT_RGB1);
+  HTTP_InputInt(out,"Номер светодиода статуса подключения к WiFi","STAT_STA",jsonConfig["RGB1"]["STAT_STA"].as<int>(),0,COUNT_RGB1);
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
+  out += " </fieldset>\n";
+
+
 }
 
 /**
@@ -994,6 +1003,20 @@ void HTTP_printConfig4(String &out){
   HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n"; 
 
+out += "<fieldset>\n";
+  HTTP_printTag(out,"legend","Оповещение подключения к WiFi");
+  out += "<p class='t1'>";
+  HTTP_print_input_checkbox(out,"MP3_60_ENABLE","1",jsonConfig["MP3"]["60"]["ENABLE"].as<bool>());
+  out += "Включить оповещение подключения к WiFi";
+  out += "<table width=100%>\n";
+  out += "<tr><td width='450'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><td width='50'>&nbsp;</td><tr>\n";
+  HTTP_print_MP3(out,"Подключено к WiFi. Дорожка 060.mp3",Dir,60);
+  HTTP_print_MP3(out,"Идет подключение к WiFi. Дорожка 061.mp3",Dir,61);
+  HTTP_print_MP3(out,"Ошибка подключения к WiFi. Дорожка 062.mp3",Dir,62);
+  out += "</table>\n";
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
+  out += "</fieldset>\n"; 
+
    out += "<fieldset>\n";
    HTTP_printTag(out,"legend","Выбор конфигурации сенсора");
    switch(jsonSave["CONFIG"].as<int>()){
@@ -1187,6 +1210,11 @@ bool HTTP_checkArgs(int current){
 // Если нажата кнопка "Сохранить"   
    else if ( server.hasArg("Save") && UID >= 0){
 // RGB1
+      if(server.hasArg("STAT_AP")  ){jsonConfig["RGB1"]["STAT_AP"]  = server.arg("STAT_AP").toInt();isNumStatRGB = true;}
+      if(server.hasArg("STAT_STA") ){jsonConfig["RGB1"]["STAT_STA"] = server.arg("STAT_STA").toInt();isNumStatRGB = true;}
+
+
+
       if(server.hasArg("ColorFree")   )jsonConfig["RGB1"]["FREE"] = HTMLtoInt(server.arg("ColorFree").c_str());
       if(server.hasArg("ColorBusy")   )jsonConfig["RGB1"]["BUSY"] = HTMLtoInt(server.arg("ColorBusy").c_str());
       if(server.hasArg("ColorBlink")  )jsonConfig["RGB1"]["FREE_BLINK"] = HTMLtoInt(server.arg("ColorBlink").c_str());
@@ -1394,6 +1422,10 @@ bool HTTP_checkArgs(int current){
          if(server.hasArg("MP3_70_ENABLE_H")){
             if(server.hasArg("MP3_70_ENABLE"))jsonConfig["MP3"]["70"]["ENABLE"] = true;
             else jsonConfig["MP3"]["70"]["ENABLE"] = false;
+         }
+         if(server.hasArg("MP3_60_ENABLE_H")){
+            if(server.hasArg("MP3_60_ENABLE"))jsonConfig["MP3"]["60"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["60"]["ENABLE"] = false;
          }
          isChangeConfig = true;
 

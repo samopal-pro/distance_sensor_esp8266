@@ -67,7 +67,7 @@ void configDefaultTest();
 void configSet(T_CONFIG _config = CFG_NONE);
 
 void configPrint(char *label);
-String deviceNmae( char *_name);
+String deviceName( char *_name);
 void saveRead();
 void saveSave();
 void saveDefault();

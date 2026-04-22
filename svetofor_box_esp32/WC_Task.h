@@ -62,6 +62,7 @@ extern uint64_t chipID;
 extern SENSOR_STAT_t SensorOn;
 extern bool isSendNet;
 extern int MP3_ADD_DIR;
+extern bool isNumStatRGB;
 
 void tasksStart();
 void taskEvents(void *pvParameters);
@@ -120,6 +121,7 @@ void  setRelay2( bool stat);
 void  setRelayPin(uint8_t pin, bool stat, bool is_inverse);
 void printStat(char *msg);
 void checkConfig();
+void setStatusRGB1();
 //bool ProcessingCalibrate(uint32_t _tm);
 //float CalibrateGround();
 #endif

@@ -58,9 +58,9 @@ void configRead(){
    }
 }
 
-String deviceNmae( char *_name){
+String deviceName( char *_name){
     String s = _name;
-    if( strlen(serNo) >0 )s.replace("2025",serNo);
+    if( strlen(serNo) >0 )s.replace(DEVICE_NAME_YEAR,serNo);
     return s;
 }
 

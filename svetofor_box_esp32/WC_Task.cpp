@@ -22,6 +22,7 @@ TEvent *EventCalibrate;
 
 //bool isDFPlayer = false;
 bool isPlayMP3  = false;
+bool isNumStatRGB = true;
 //CMD_MP3_t cmdMP3 = CMP3_NONE;
 //int arg1MP3 = 0, arg2MP3 = 0;
 
@@ -124,7 +125,7 @@ void tasksStart() {
 //   SaveRGB2            = new TEventRGB(-1, 0, 0);
    EventRGB1->setBrightness( jsonConfig["RGB1"]["BRIGHTNESS"].as<int>() );
    EventRGB2->setBrightness( jsonConfig["RGB2"]["BRIGHTNESS"].as<int>() );
-
+   setStatusRGB1();
    isPlayMP3 = true;
    FPSerial.begin(9600, SERIAL_8N1, PIN_RX1, PIN_TX1);
    EventMP3 = new TEventMP3(Serial1, DEFAULT_MP3_GPIO, PIN_I2C_SDA, handleMP3);
@@ -293,8 +294,10 @@ void taskSensors(void *pvParameters) {
 // Режим калибровки
       else if( calibrMode == CM_ON){ 
          int calibrMax =  jsonConfig["CALIBR"]["NUMBER"].as<int>();
-         if( calibrCount >= calibrMax )EventCalibrate->off();
-         if( calibrCount + calibrError >= calibrMax*3 )EventCalibrate->off();
+//         if( calibrCount >= calibrMax )EventCalibrate->off();
+//         if( calibrCount + calibrError >= calibrMax*3 )EventCalibrate->off();
+// Исправление 22.04.26 
+         if( calibrCount + calibrError >= calibrMax )EventCalibrate->off();
          Serial.printf("!!! Calibrate %d %d\n",(int)Distance,calibrCount);
          if( !isnan(Distance) ){
              calibrAvg += Distance;
@@ -333,7 +336,8 @@ void taskSensors(void *pvParameters) {
       } 
 // Если поменялая яркость лент и громкость звуков
       checkConfig();
-      
+// Если поменялись номера статусных светодиодов
+      setStatusRGB1();      
       xSemaphoreGive(sensorSemaphore);
       vTaskDelay((uint32_t)(jsonConfig["SENSOR"]["T_LOOP"].as<float>()*1000));
   }
@@ -736,6 +740,7 @@ void taskButton(void *pvParameters){
           case SB_RELEASE:
              Serial.println(F("!!! release add btn"));
              if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>()){
+                EventMP3->stop();
                 EventBtnAdd1->reset();
                 EventBtnAdd2->reset();
              }
@@ -813,7 +818,7 @@ void btnPress(uint16_t _count, int _num){
       systemMP3("92",92,PRIORITY_MP3_HIGH);
       EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
       EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
-      jsonConfig["SYSTEM"]["NAME"]        = deviceNmae(DEVICE_NAME);
+      jsonConfig["SYSTEM"]["NAME"]        = deviceName(DEVICE_NAME);
       configSave();  
       waitMP3andReboot();
    }   
@@ -885,6 +890,7 @@ void baseMP3( JsonObject _config, bool is_delay ){
 }
  
 void systemMP3(char *_check, int _num, int _priority ){
+//   Serial.printf("!!! SystemMP3 %d %d %d\n",(int)jsonConfig["MP3"][_check]["ENABLE"].as<bool>(),_num,_priority);
     if( !jsonConfig["MP3"][_check]["ENABLE"].as<bool>() )return;
 //    if( _busy && EventMP3->State != ES_NONE )return;
     EventMP3->setColor( COLOR_MP3_1 ,0);
@@ -932,3 +938,14 @@ void checkConfig(){
    }
  }
 
+void setStatusRGB1(){
+    if ( isNumStatRGB == false )return;
+    if ( !jsonConfig["RGB1"]["STAT_AP"].isNull() ){
+        EventRGB1->setNumAp(jsonConfig["RGB1"]["STAT_AP"].as<int>());
+    }
+    if ( !jsonConfig["RGB1"]["STAT_STA"].isNull() ){
+        EventRGB1->setNumSta(jsonConfig["RGB1"]["STAT_STA"].as<int>());
+    }
+    isNumStatRGB = false;
+    
+}

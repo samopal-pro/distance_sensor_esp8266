@@ -211,7 +211,7 @@ void taskNet( void *pvParameters ){
     Serial.println(F("!!! WiFi task start"));
 #endif
    WiFi.mode(WIFI_OFF);
-   uint32_t ms2 = 0, ms3 = 0;
+   uint32_t ms1 = 0, ms2 = 0, ms3 = 0;
    EventRGB1->setColor0(COLOR_BLACK);
    EventRGB1->setColor1(COLOR_BLACK);
    Network.onEvent(handleEventWiFi);
@@ -248,9 +248,14 @@ void taskNet( void *pvParameters ){
 //             Serial.println(F("!!! Disable AP"));
              WiFi.enableAP(false);
           }
+          if( ms1 == 0 || ms < ms1 || (ms-ms1)>1000){
+           ms1= ms;
+
+
           if( isSTA && ( curWiFi != WIFI_STA && curWiFi != WIFI_AP_STA) ){
              Serial.println(F("!!! Start STA"));
-             msSTA = ms;
+             systemMP3("60",61,PRIORITY_MP3_MEDIUM);
+              msSTA = ms;
              WiFi_ScanNetwork();
              WiFi.enableSTA(true);
              if( jsonConfig["WIFI"]["DHCP"].as<bool>() == false ){
@@ -269,6 +274,7 @@ void taskNet( void *pvParameters ){
           }      
           if( isSTA && ( curWiFi == WIFI_STA || curWiFi == WIFI_AP_STA) ){
              if( WiFi.status() != WL_CONNECTED && (ms - msSTA)>10000 ){
+                 systemMP3("60",62,PRIORITY_MP3_MEDIUM);
                  Serial.println(F("!!! Error WiFi"));
                  EventRGB1->setColor1(COLOR_WIFI_OFF);
                  WiFi.enableSTA(false);
@@ -279,7 +285,7 @@ void taskNet( void *pvParameters ){
 //             ledSTA( false );
              EventRGB1->setColor1(COLOR_BLACK);
           }
-
+          }
 // Стартуем подключение
 
 /*
@@ -387,18 +393,20 @@ void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
     case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("STA Connected"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       EventRGB1->setColor1(COLOR_WIFI_ON);
+      systemMP3("60",60,PRIORITY_MP3_MEDIUM);
       Serial.println("!!! STA Got IP");
       Serial.println(WiFi.STA);
 //      WiFi.AP.enableNAPT(true);
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
       Serial.println("!!! STA Lost IP");
-      EventRGB1->setColor1(COLOR_WIFI_WAIT);          
+     EventRGB1->setColor1(COLOR_WIFI_WAIT);          
       msSTA = millis();
 //      WiFi.AP.enableNAPT(false);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.println("!!! STA Disconnected");
+//      systemMP3("60",62,PRIORITY_MP3_MEDIUM);
 //      WiFi.AP.enableNAPT(false);
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP: Serial.println("STA Stopped"); break;

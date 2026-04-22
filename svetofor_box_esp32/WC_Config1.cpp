@@ -73,7 +73,7 @@ void configDefault1(){
    jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
    jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 180;
    jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 300;
-
+   jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = true;
 
 
 }
@@ -129,6 +129,10 @@ void configDefault2(){
    jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
    jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 1;
    jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 15;
+
+   jsonConfig["RGB1"]["STAT_AP"]        = LED_STAT_AP2;               // Номер светодиода статуса AP
+   jsonConfig["RGB1"]["STAT_STA"]       = LED_STAT_STA2;              // Номер светодиода статуса STA
+
 
 
 }
@@ -194,7 +198,7 @@ void configDefaultGeneral(){
 // Системные параметры
    jsonConfig["SENSOR"]["TYPE"]        = DEFAULT_SENSOR_TYPE; //Тип установки/срабатывания датчика
    jsonConfig["SENSOR"]["INSTALL"]     = DEFAULT_SENSOR_INSTALL_TYPE; //Тип установки/срабатывания датчика
-   jsonConfig["SYSTEM"]["NAME"]        = deviceNmae(DEVICE_NAME);                //Имя точки доступа устройства  
+   jsonConfig["SYSTEM"]["NAME"]        = deviceName(DEVICE_NAME);                //Имя точки доступа устройства  
    jsonConfig["SYSTEM"]["AP_START"]    = AP_ALWAYS;  
    jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
@@ -260,6 +264,10 @@ void configDefaultGeneral(){
    jsonConfig["RGB1"]["BUSY"]          = COLOR_BUSY_DEFAULT;
    jsonConfig["RGB1"]["IS_NAN_MODE"]   = true;
    jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_IGNORE;
+
+  jsonConfig["RGB1"]["STAT_AP"]        = LED_STAT_AP1;               // Номер светодиода статуса AP
+  jsonConfig["RGB1"]["STAT_STA"]       = LED_STAT_STA1;              // Номер светодиода статуса STA
+
 
 // Настройка подсветки датчика RGB2      
    jsonConfig["RGB2"]["BRIGHTNESS"]    = 5;                          // Яркость ленты 1-10
@@ -373,7 +381,7 @@ void configDefaultGeneral(){
    jsonConfig["MP3"]["88"]["ENABLE"]   = true; 
 
    jsonConfig["MP3"]["70"]["ENABLE"]   = true; 
-
+   jsonConfig["MP3"]["60"]["ENABLE"]   = true;                  //Блок подключения к WiFi
 
 }
 

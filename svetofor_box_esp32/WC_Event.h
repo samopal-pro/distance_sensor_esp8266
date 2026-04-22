@@ -109,6 +109,8 @@ class TEventRGB{
 public:
     TEventRGB( uint8_t _pin, int _num, int _first );
     void set(uint32_t _color1, uint32_t _color2, uint32_t _color11=COLOR_NONE, uint32_t _color12=COLOR_NONE, uint32_t _timer_on=0, uint32_t _timer_off=0 );
+    void setNumAp(int _ap = LED_STAT_AP1 );
+    void setNumSta(int _sta = LED_STAT_STA1 );
     void setColor( uint32_t _color1, uint32_t _color2 );
     void setColor0( uint32_t _color, bool _blink=false );
     void setColor1( uint32_t _color );
@@ -120,6 +122,8 @@ public:
     uint32_t setBrightness(uint32_t color, uint8_t level);
     TEVENT_RGB_TYPE_t  loop();
     TEVENT_STATUS_t State;
+    int NumAp, NumSta;
+
     bool isRainbow;
     bool isMP3;
     bool isBlink0;

@@ -118,13 +118,17 @@ enum SENSOR_STAT_t {
 #define COLOR_WIFI_AP          0x00FF7F    //Цвет "Режим точки доступа"
 #define COLOR_WIFI_AP1         0xFFFFFF    //Цвет "Точка доступа всегда включена"
 
-#define LED_STAT_AP            14
-#define LED_STAT_WIFI          15
+#define LED_STAT_AP2            14
+#define LED_STAT_STA2           15
+#define LED_STAT_AP1            0
+#define LED_STAT_STA1           1
 #define LED_STAT_BRIGHTNESS    1           //Яркость 0-10 для двух светодиодов
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
 #define DEVICE_NAME            "2026_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_NAME_YEAR       "2026"
+
 #define DEVICE_PASSS           "svetoforbox"
 #define DEVICE_PASS0           "superadmin"
 #define DEVICE_PASS1           "admin"
