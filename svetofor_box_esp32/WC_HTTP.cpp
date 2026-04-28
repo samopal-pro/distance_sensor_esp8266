@@ -248,10 +248,14 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += HTTP_User;
   if( WiFi.status() == WL_CONNECTED ){
      out += "<p>WiFi: ";
-     out += jsonConfig["WIFI"]["NAME"].as<String>();
+     out += WiFi.SSID();
      out += " RSSI: ";
      out += WiFi.RSSI();
      out += "</p>\n";
+  }
+  else {
+     out += "<p>WiFi Не подключен</p>\n";
+
   }
 
   char s[20]; 
