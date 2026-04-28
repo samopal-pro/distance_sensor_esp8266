@@ -310,7 +310,7 @@ void taskSensors(void *pvParameters) {
       else if( calibrMode == CM_WAIT_WAIT ){
          if( EventMP3->State == ES_NONE ){
             Serial.printf("!!! Wait clibrate");
-            if( calibrNum >0 )systemMP3(calibrCheck,calibrNum,PRIORITY_MP3_HIGH);
+            if( calibrNum >0 )systemMP3(calibrCheck,calibrNum,PRIORITY_MP3_MAXIMAL);
             startCalibrate(0);
          } 
 
@@ -319,10 +319,17 @@ void taskSensors(void *pvParameters) {
 //         Serial.printf( "!!! Calibr Wait MP3 %d\n",EventMP3->State);
          if( EventMP3->State == ES_NONE ){
             Serial.printf("!!! Start clibrate");
-            if( calibrNum >0 )systemMP3(calibrCheck,calibrNum,PRIORITY_MP3_HIGH);
+            if( calibrNum >0 )systemMP3(calibrCheck,calibrNum,PRIORITY_MP3_MAXIMAL);
             EventCalibrate->reset();
             EventCalibrate->setType(ET_NORMAL);
             EventCalibrate->on(0);            
+         } 
+      }
+      else if( calibrMode == CM_WAIT_END_MP3 ){
+         Serial.printf( "!!! Calibr End Wait MP3 %d\n",EventMP3->State);
+         if( EventMP3->State == ES_NONE ){
+            calibrMode   = CM_NONE;
+            lastSensorOn = SS_NONE;
          } 
       }
       else if( calibrMode == CM_WAIT_REBOOT ){
@@ -350,9 +357,9 @@ void handleSensor(bool _flag){
 #if defined(DEBUG_SERIAL)
    Serial.printf("!!! EventSensor %d %d %d\n",(int)_flag,(int)EventSensor->Type,(int)EventSensor->State);
 #endif
+   EventRelay1->setType((TEVENT_TYPE_t)jsonConfig["RELAY1"]["MODE"].as<int>(),(uint32_t)(jsonConfig["RELAY1"]["T_PULSE"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY1"]["T_PAUSE"].as<float>()*1000));
+   EventRelay2->setType((TEVENT_TYPE_t)jsonConfig["RELAY2"]["MODE"].as<int>(),(uint32_t)(jsonConfig["RELAY2"]["T_PULSE"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY2"]["T_PAUSE"].as<float>()*1000));
    if( _flag ){
-      EventRelay1->setType((TEVENT_TYPE_t)jsonConfig["RELAY1"]["MODE"].as<int>(),(uint32_t)(jsonConfig["RELAY1"]["T_PULSE"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY1"]["T_PAUSE"].as<float>()*1000));
-      EventRelay2->setType((TEVENT_TYPE_t)jsonConfig["RELAY2"]["MODE"].as<int>(),(uint32_t)(jsonConfig["RELAY2"]["T_PULSE"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY2"]["T_PAUSE"].as<float>()*1000));
       EventRelay1->on();
       EventRelay2->on();
    }
@@ -382,6 +389,27 @@ void handleRelay2(bool _flag){
    Serial.println((int)_flag);
 #endif
    setRelay2(_flag);
+}
+
+void resetRelay(){
+   Serial.printf("!!! Reset Relay\n");
+
+   switch(SensorOn){
+      case SS_BUSY:
+         EventRelay1->reset();
+         EventRelay2->reset();
+         setRelay1(false);
+         setRelay2(false);
+         handleSensor(true);
+        break;
+      case SS_FREE:   
+         EventRelay1->reset();
+         EventRelay2->reset();
+         setRelay1(false);
+         setRelay2(false);
+         handleSensor(false);
+         break;
+   }
 }
 
 
@@ -503,8 +531,8 @@ void handleCalibrate(bool _flag){
       Serial.println("!!! Stop calibr");
       if( calibrCount > 0 ){
           bool ret = false;
-          if(calibrError < calibrCount)systemMP3("97",93,PRIORITY_MP3_HIGH);
-          else systemMP3("97",94,PRIORITY_MP3_HIGH);
+          if(calibrError < calibrCount)systemMP3("97",93,PRIORITY_MP3_MAXIMAL);
+          else systemMP3("97",94,PRIORITY_MP3_MAXIMAL);
           EventRGB1->set(COLOR_SAVE,COLOR_SAVE);
           EventRGB2->set(COLOR_SAVE,COLOR_SAVE);
           float x = calibrAvg/calibrCount;
@@ -520,13 +548,13 @@ void handleCalibrate(bool _flag){
      }
      else {
           Serial.println("!!! cal1");
-          systemMP3("97",95,PRIORITY_MP3_HIGH);
+          systemMP3("97",95,PRIORITY_MP3_MAXIMAL);
           Serial.println("!!! cal2");
           EventRGB1->set(COLOR_NAN,COLOR_NAN);
           EventRGB2->set(COLOR_NAN,COLOR_NAN);
      }
-     calibrMode   = CM_NONE;
-     lastSensorOn = SS_NONE;
+     calibrMode   = CM_WAIT_END_MP3;
+//     lastSensorOn = SS_NONE;
 
      vTaskDelay(250);
 
@@ -635,6 +663,8 @@ void checkChangeOn(){
    saveSet(Distance,SensorOn);
 }
 
+
+
 /*
 * Установка состояние реле1
 */
@@ -721,8 +751,7 @@ void taskButton(void *pvParameters){
    bool is_early = false;
    uint32_t tm;
    int btn_count;
-
-
+//   HTTP_begin();
    while(true){
       if(isSensorBlock || calibrMode == CM_WAIT_REBOOT ){ //Сенсор заблокирован до выключения питания
          vTaskDelay(1000);    
@@ -803,7 +832,8 @@ void taskButton(void *pvParameters){
              is_early = false;   
              break;   
       }
-       vTaskDelay(200);
+      HTTP_loop();
+      vTaskDelay(200);
        
    }
 
@@ -818,7 +848,7 @@ void btnPress(uint16_t _count, int _num){
       systemMP3("92",92,PRIORITY_MP3_HIGH);
       EventRGB1->set(COLOR_SAVE,COLOR_SAVE);               
       EventRGB2->set(COLOR_SAVE,COLOR_SAVE);               
-      jsonConfig["SYSTEM"]["NAME"]        = deviceName(DEVICE_NAME);
+      jsonConfig["SYSTEM"]["NAME"]        = deviceName();
       configSave();  
       waitMP3andReboot();
    }   

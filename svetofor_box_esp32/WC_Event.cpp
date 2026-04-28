@@ -59,6 +59,7 @@ bool TEvent::changeState(){
 * Включение события
 */
 void TEvent::on(){
+    if( Type == ET_DISABLE )return;
     if( State == ES_WAIT_ON || State == ES_ON )return;
     msOn = millis();
     if( DelayOn == 0 ){
@@ -79,6 +80,7 @@ void TEvent::on( uint32_t _delay ){
 * Выключение события
 */
 void TEvent::off(){
+    if( Type == ET_DISABLE )return;
     if( State == ES_WAIT_OFF || State == ES_OFF )return;
     msOff = millis();
     if( DelayOff == 0 ){

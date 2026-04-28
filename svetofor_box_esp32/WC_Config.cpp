@@ -43,8 +43,11 @@ void configRead(){
       else if( strcmp(jsonConfig["CONFIG_V"].as<const char *>(),CONFIG_V)!=0 )save_flag = true;
    }
    if( save_flag ){
+      saveDefault();
+      saveSave();
 
       T_CONFIG _config = (T_CONFIG)jsonSave["CONFIG"].as<int>();
+
       configSet(CFG_TEST);
       configDefault();
       configSave();
@@ -55,12 +58,18 @@ void configRead(){
       configDefault();
       configSave();
       configSet(_config);
+      configRead();
    }
+   if( jsonConfig["RGB1"]["STAT_AP"].isNull() )jsonConfig["RGB1"]["STAT_AP"] = LED_STAT_AP1;
+   if( jsonConfig["RGB1"]["STAT_STA"].isNull() )jsonConfig["RGB1"]["STAT_STA"] = LED_STAT_STA1;
 }
 
-String deviceName( char *_name){
-    String s = _name;
-    if( strlen(serNo) >0 )s.replace(DEVICE_NAME_YEAR,serNo);
+String deviceName(){
+    String s = "";
+    if( strlen(serNo) >0 )s += serNo;
+    else s += DEVICE_NAME_YEAR;
+    s += DEVICE_NAM_SUFFIX;
+//    if( strlen(serNo) >0 )s.replace(DEVICE_NAME_YEAR,serNo);
     return s;
 }
 

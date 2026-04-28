@@ -30,9 +30,9 @@ void configDefault(){
 void configDefault1(){
    configDefaultGeneral();
    jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04_75; //Тип датчика 
-   jsonConfig["WIFI"]["NAME"]          = "SVETOFORBOX";                         //Имя сети WiFi
-   jsonConfig["WIFI"]["PASS"]          = "89060725500";                         //Пароль сети WiFi
-   jsonConfig["WIFI"]["POWER"]         = WIFI_POWER_2dBm;           //Уровень сигнала WiFi
+   jsonConfig["WIFI"]["NAME1"]          = "svetoforbox.ru";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS1"]          = "89060725500";                         //Пароль сети WiFi
+//   jsonConfig["WIFI"]["POWER"]         = WIFI_POWER_21dBm;           //Уровень сигнала WiFi
 
    
 // Параметры моединения WiFi
@@ -87,8 +87,8 @@ void configDefault2(){
    jsonConfig["SENSOR"]["DIST_GROUND"] = 2700;       //Высота установки датчика (расстояние до пола)
    jsonConfig["SENSOR"]["DIST_LIMIT"]  = 500;        //Если разница между текущим показанием и высатой установки больше этого значения, то датчик показывает занято
    jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04TM2; //Тип датчика
-   jsonConfig["WIFI"]["NAME"]          = "";                         //Имя сети WiFi
-   jsonConfig["WIFI"]["PASS"]          = "";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["NAME1"]          = "parkingbox.ru";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS1"]          = "89060725500";                         //Пароль сети WiFi
    jsonConfig["NET"]["DOGOVOR_ID"]     = "0000";            
    jsonConfig["CRM_MOSCOW"]["ENABLE"]  = false;                      //посылать информацию на CRM-MOSCOW
    jsonConfig["TB"]["ENABLE"]          = false;                      //Посылать информацию в ThingsBoard
@@ -140,6 +140,18 @@ void configDefault2(){
 void configDefaultTest(){
    configDefaultGeneral();
    jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04_75; //Тип датчика 
+
+#if defined(SAV_CONFIG)
+   jsonConfig["WIFI"]["NAME1"]          = "ASUS_58_2G";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS1"]          = "sav59vas";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["DHCP"]           = false;                       //Брать парметры сети по DHCP
+   jsonConfig["WIFI"]["IP"]["ADDR"]     = "192.168.1.32";             //IP адрес при стаическом режиме
+
+#else
+   jsonConfig["WIFI"]["NAME1"]          = "910";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS1"]          = "89060725500";                         //Пароль сети WiFi
+#endif
+
    jsonConfig["RGB1"]["FREE"]          = COLOR_FREE1;
    jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_IGNORE;
    jsonConfig["SENSOR"]["INSTALL"]     = INSTALL_TYPE_NORMAL; //Тип установки/срабатывания датчика
@@ -161,10 +173,10 @@ void configDefaultTest(){
    jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
    jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;       
 
-   jsonConfig["MP3"]["SHORT_MSG"]      = true;
-   jsonConfig["RGB1"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
-   jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
-   jsonConfig["MP3"]["VOLUME"]         = 13;                          // Громкость 0-30
+   jsonConfig["MP3"]["SHORT_MSG"]          = true;
+   jsonConfig["RGB1"]["BRIGHTNESS"]        = 10;                          // Яркость ленты 1-10
+   jsonConfig["RGB2"]["BRIGHTNESS"]        = 10;                          // Яркость ленты 1-10
+   jsonConfig["MP3"]["VOLUME"]             = 13;                          // Громкость 0-30
 
    jsonConfig["MP3"]["BUSY"]["ENABLE"]     = true;
    jsonConfig["MP3"]["NAN"]["ENABLE"]      = true;
@@ -198,7 +210,7 @@ void configDefaultGeneral(){
 // Системные параметры
    jsonConfig["SENSOR"]["TYPE"]        = DEFAULT_SENSOR_TYPE; //Тип установки/срабатывания датчика
    jsonConfig["SENSOR"]["INSTALL"]     = DEFAULT_SENSOR_INSTALL_TYPE; //Тип установки/срабатывания датчика
-   jsonConfig["SYSTEM"]["NAME"]        = deviceName(DEVICE_NAME);                //Имя точки доступа устройства  
+   jsonConfig["SYSTEM"]["NAME"]        = deviceName();                //Имя точки доступа устройства  
    jsonConfig["SYSTEM"]["AP_START"]    = AP_ALWAYS;  
    jsonConfig["SYSTEM"]["PASS0"]       = DEVICE_PASS0;               //Пароль суперадминистратора
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
@@ -208,6 +220,11 @@ void configDefaultGeneral(){
 
    jsonConfig["WIFI"]["NAME"]              = "";                         //Имя сети WiFi
    jsonConfig["WIFI"]["PASS"]              = "";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["NAME1"]             = "";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["PASS1"]             = "";                         //Пароль сети WiFi
+   jsonConfig["WIFI"]["MODE"]              = STA_AUTO;                         //Имя сети WiFi
+  
+ 
    jsonConfig["WIFI"]["POWER"]             = WIFI_POWER_21dBm;           //Уровень сигнала WiFi
    jsonConfig["WIFI"]["DHCP"]              = true;                       //Брать парметры сети по DHCP
    jsonConfig["WIFI"]["IP"]["ADDR"]        = "192.168.1.10";             //IP адрес при стаическом режиме

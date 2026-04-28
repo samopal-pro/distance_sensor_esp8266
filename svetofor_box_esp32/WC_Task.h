@@ -34,12 +34,13 @@ enum ES_STAT {
 };
 
 enum CALIBRATION_MODE_t {
-   CM_NONE        = 0,
-   CM_WAIT        = 1,
-   CM_WAIT_MP3    = 2,
-   CM_WAIT_WAIT   = 3,
-   CM_WAIT_REBOOT = 4,
-   CM_ON          = 100
+   CM_NONE           = 0,
+   CM_WAIT           = 1,
+   CM_WAIT_MP3       = 2,
+   CM_WAIT_WAIT      = 3,
+   CM_WAIT_END_MP3   = 4,
+   CM_WAIT_REBOOT    = 5,
+   CM_ON             = 100
 };
 
 enum CMD_MP3_t {
@@ -98,6 +99,8 @@ void handleBusy2(  bool _flag  );
 void handleBtnAdd1(  bool _flag  );
 void handleBtnAdd2(  bool _flag  );
 void handleCalibrate(bool _flag);
+void resetRelay();
+
 
 void btnPress(uint16_t _count, int _num);
 bool btnRelease(uint32_t _tm, int _num);

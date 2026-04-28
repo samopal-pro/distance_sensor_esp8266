@@ -28,6 +28,12 @@ typedef enum T_CONFIG {
 };
 
 
+typedef enum T_STA_MODE {
+  STA_OFF           = 0, //Не стартовать AP при загрузке
+  STA_ON            = 1, //Всегда стартовать AP при загрухке
+  STA_AUTO          = 2  //Стартовать AP при первой загрузке
+};
+
 typedef enum T_AP_START_MODE {
   AP_NONE           = 0, //Не стартовать AP при загрузке
   AP_ALWAYS         = 1, //Всегда стартовать AP при загрухке
@@ -48,12 +54,12 @@ enum T_NAN_VALUE_FLAG {
 };
 
 enum T_RELAY_MODE {
-  RELAY_NONE       = 0, //Реле отключено
-  RELAY_NORMAL     = 1, //Реле работает на ON/OFF
-  RELAY_PULSE      = 2, //Реле при срабатывание выдает имульс на заданное время при включении или выключении
-  RELAY_PULSE_OFF  = 3, //Реле при сбрасываниее выдает имульс на заданное время (не используется)
-  RELAY_PWM        = 4,  //Реле при срабатывание выдает имульсы с заданной длительностью и паузой
-  RELAY_PULSE2     = 5  //Реле при срабатывание выдает имульс на заданное время при включение и выключении
+  RELAY_NONE        = 0, //Реле отключено
+  RELAY_NORMAL      = 1, //Реле работает на ON/OFF
+  RELAY_PULSE       = 2, //Реле при срабатывание выдает имульс на заданное время при включении или выключении
+  RELAY_PULSE_OFF   = 3, //Реле при сбрасываниее выдает имульс на заданное время (не используется)
+  RELAY_PWM         = 4,  //Реле при срабатывание выдает имульсы с заданной длительностью и паузой
+  RELAY_PULSE2      = 5  //Реле при срабатывание выдает имульс на заданное время при включение и выключении
 };
 
 void configInit();
@@ -67,7 +73,7 @@ void configDefaultTest();
 void configSet(T_CONFIG _config = CFG_NONE);
 
 void configPrint(char *label);
-String deviceName( char *_name);
+String deviceName();
 void saveRead();
 void saveSave();
 void saveDefault();

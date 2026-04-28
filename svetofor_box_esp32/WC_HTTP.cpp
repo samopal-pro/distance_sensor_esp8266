@@ -573,6 +573,10 @@ void HTTP_printConfigColor(String &out){
 // Блок №1c
   out += "<fieldset>\n";
   out += "<legend>Настройка основной подсветки датчика</legend>\n";
+  out += "<p class='t1'>";
+  HTTP_print_input_checkbox(out,"MP3_SHORT_MSG","1",jsonConfig["MP3"]["SHORT_MSG"].as<bool>());
+  out += "Включить короткие звуковые оповещения";
+
 //  out += "<table width=100%>";
   HTTP_InputInt(out,"Яркость 0-10","Brightness",jsonConfig["RGB1"]["BRIGHTNESS"].as<int>(),0,10,32);
 
@@ -720,6 +724,15 @@ void HTTP_printConfigNet(String &out){
 // Блок №7
   out += "<fieldset>\n";
   HTTP_printTag(out,"legend","Подключение к внешним сервисам по WiFi");
+  out += "<div class='lab2'><p><label>Подключение к WiFi</label>\n";
+  out += "<select name='WiFiMode'>\n";
+  HTTP_printSelectOption(out, "Отключен", (int)STA_OFF,  jsonConfig["WIFI"]["MODE"].as<int>());
+  HTTP_printSelectOption(out, "Включен",  (int)STA_ON,   jsonConfig["WIFI"]["MODE"].as<int>());
+  HTTP_printSelectOption(out, "Авто",     (int)STA_AUTO, jsonConfig["WIFI"]["MODE"].as<int>());
+  
+  out += "</select>\n";
+  out += "</div>\n";
+
   HTTP_printNetworks1(out,"WiFiName");
   HTTP_printInput1(out,"**Введите пароль от вашей WI-FI сети:","WiFiPassword",jsonConfig["WIFI"]["PASS"].as<const char *>(),20,32,HT_PASSWORD);
   HTTP_printWiFiPower(out,jsonConfig["WIFI"]["POWER"].as<int>());
@@ -890,12 +903,33 @@ void HTTP_printConfig2(String &out){
 void HTTP_printConfig4(String &out){
   int Dir = MP3_ADD_DIR;
 
+   out += "<fieldset>\n";
+   HTTP_printTag(out,"legend","Пресет настройки датчика");
+   switch(jsonSave["CONFIG"].as<int>()){
+      case CFG_CARWASH : HTTP_printTag(out,"p","Загружена конфигурация для автомоек"); break;
+      case CFG_PARKING : HTTP_printTag(out,"p","Загружена конфигурация для парковок"); break;
+      default:           HTTP_printTag(out,"p","Загружена тестовая конфигурация"); 
+   }   
+   HTTP_beginTag(out,"p");
+   out += "<table width=100%>";
+   out += "<tr>";
+   out += "<td width = 30%>";
+   HTTP_printSubmit(out,"Config0","Тест","btn",NULL);
+   out += "</td><td width=40%>";
+   HTTP_printSubmit(out,"Config1","Мойка","btn",NULL);
+   out += "</td><td width=40>";
+   HTTP_printSubmit(out,"Config2","Парковка","btn",NULL);
+   out += "</td></tr></table>\n";
+   out += "</fieldset>\n";
+
+
+
   out += "<fieldset>\n";
-  HTTP_printTag(out,"legend","Первый запуск");
-  out += "<table width=100%><tr>";
-  out += "<td>Активировать первый запуск</td>";
-  out += "<td align='right'><input type='submit' name='BOOT0' value='Активировать' class='btn'></td>"; 
-  out += "</tr></table>\n";
+//  HTTP_printTag(out,"legend","Первый запуск");
+//  out += "<table width=100%><tr>";
+//  out += "<td>Активировать первый запуск</td>";
+//  out += "<td align='right'><input type='submit' name='BOOT0' value='Активировать' class='btn'></td>"; 
+//  out += "</tr></table>\n";
   out += "<p class='t1'>";
   HTTP_print_input_checkbox(out,"MP3_99_ENABLE","1",jsonConfig["MP3"]["99"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для первого запуска";
@@ -998,7 +1032,7 @@ void HTTP_printConfig4(String &out){
   HTTP_print_MP3(out,"Кнопка \"Сеть и сенсор\". Дорожка 072.mp3",Dir,72);
   HTTP_print_MP3(out,"Кнопка \"Звуковые оповещения\". Дорожка 073.mp3",Dir,73);
   HTTP_print_MP3(out,"Кнопка \"Стартовые настройки\". Дорожка 074.mp3",Dir,74);
-  HTTP_print_MP3(out,"Кнопка \"Активация первого запуска\". Дорожка 075.mp3",Dir,75);
+//  HTTP_print_MP3(out,"Кнопка \"Активация первого запуска\". Дорожка 075.mp3",Dir,75);
   out += "</table>\n";
   HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n"; 
@@ -1017,24 +1051,6 @@ out += "<fieldset>\n";
   HTTP_printSubmit(out,"Save","Сохранить","btn");
   out += "</fieldset>\n"; 
 
-   out += "<fieldset>\n";
-   HTTP_printTag(out,"legend","Выбор конфигурации сенсора");
-   switch(jsonSave["CONFIG"].as<int>()){
-      case CFG_CARWASH : HTTP_printTag(out,"p","Загружена конфигурация для автомоек"); break;
-      case CFG_PARKING : HTTP_printTag(out,"p","Загружена конфигурация для парковок"); break;
-      default:           HTTP_printTag(out,"p","Загружена тестовая конфигурация"); 
-   }   
-   HTTP_beginTag(out,"p");
-   out += "<table width=100%>";
-   out += "<tr>";
-   out += "<td width = 30%>";
-   HTTP_printSubmit(out,"Config0","Тестовая","btn",NULL);
-   out += "</td><td width=40%>";
-   HTTP_printSubmit(out,"Config1","Для автомоек","btn",NULL);
-   out += "</td><td width=40>";
-   HTTP_printSubmit(out,"Config2","Для парковок","btn",NULL);
-   out += "</td></tr></table>\n";
-   out += "</fieldset>\n";
 
 
 
@@ -1136,7 +1152,7 @@ bool HTTP_checkArgs(int current){
 // Если нажата кнопка "Калибровка"   
    if ( server.hasArg("Config0")  ){
       HTTP_goto("/config4", 2000, "Загрузка тестовой конфигурации..."); 
-      systemMP3("89",76,PRIORITY_MP3_MAXIMAL);
+      systemMP3("89",76,PRIORITY_MP3_HIGH);
       configSet(CFG_TEST);
       configRead();
       isChangeConfig = true;
@@ -1145,17 +1161,27 @@ bool HTTP_checkArgs(int current){
    }
    else if ( server.hasArg("Config1")  ){
       HTTP_goto("/config4", 2000, "Загрузка конфигурации для автомоек..."); 
-      systemMP3("89",77,PRIORITY_MP3_MAXIMAL);
+      systemMP3("89",77,PRIORITY_MP3_HIGH);
       configSet(CFG_CARWASH);
       configRead();
+      jsonSave["BOOT_COUNT"]  = 0;
+      jsonSave["MSG_AUTH"]    = true;
+      saveSave();
+
+
       isChangeConfig = true;
       return true;
    }
    else if ( server.hasArg("Config2")  ){
       HTTP_goto("/config4", 2000, "Загрузка конфигурации для парковок..."); 
-      systemMP3("89",78,PRIORITY_MP3_MAXIMAL);
+      systemMP3("89",78,PRIORITY_MP3_HIGH);
       configSet(CFG_CARWASH);
       configRead();
+
+      jsonSave["BOOT_COUNT"]  = 0;
+      jsonSave["MSG_AUTH"]    = true;
+      saveSave();
+
       isChangeConfig = true;
       return true;
    }
@@ -1194,6 +1220,8 @@ bool HTTP_checkArgs(int current){
        jsonSave["BOOT_COUNT"]  = 0;
        jsonSave["MSG_AUTH"]    = true;
        saveSave();
+       jsonConfig["WIFI"]["MODE"]              = STA_AUTO;                         //Имя сети WiFi
+       configSave();
        
        String header = "HTTP/1.1 301 OK\r\nSet-Cookie: ESP_PASS=\r\nLocation: /\r\nCache-Control: no-cache\r\n\r\n";
        server.sendContent(header);
@@ -1244,6 +1272,11 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("Brightness2")  ){jsonConfig["RGB2"]["BRIGHTNESS"] = server.arg("Brightness2").toInt();isChangeConfig = true;}
 
 // MP3
+      if(server.hasArg("MP3_SHORT_MSG_H")){
+         if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
+         else jsonConfig["MP3"]["SHORT_MSG"] = false;
+      }
+
       if(server.hasArg("FLAG_CONFIG3")  ){
          HTTP_checkArgsMP3("BUSY");
          HTTP_checkArgsMP3("NAN");
@@ -1252,10 +1285,6 @@ bool HTTP_checkArgs(int current){
          HTTP_checkArgsMP3("FREE_NAN");
          HTTP_checkArgsMP3("FREE");
          if(server.hasArg("MP3_VOLUME")){jsonConfig["MP3"]["VOLUME"] = server.arg("MP3_VOLUME").toInt();isChangeConfig = true;}
-         if(server.hasArg("MP3_SHORT_MSG_H")){
-            if(server.hasArg("MP3_SHORT_MSG"))jsonConfig["MP3"]["SHORT_MSG"] = true;
-            else jsonConfig["MP3"]["SHORT_MSG"] = false;
-         }
 
 #if defined(IS_BTN_ADD)
          if(server.hasArg("MP3_BTN_ADD1_TIMER")){jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = server.arg("MP3_BTN_ADD1_TIMER").toInt();}
@@ -1315,6 +1344,7 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("WiFiName")     )jsonConfig["WIFI"]["NAME"]              = server.arg("WiFiName").c_str();
       if(server.hasArg("WiFiPassword") )jsonConfig["WIFI"]["PASS"]              = server.arg("WiFiPassword").c_str();
       if(server.hasArg("WiFiPower")    ){jsonConfig["WIFI"]["POWER"]            = server.arg("WiFiPower").toInt();isChangeConfig = true;}
+      if(server.hasArg("WiFiMode")     ){jsonConfig["WIFI"]["MODE"]             = server.arg("WiFiMode").toInt();isChangeConfig = true;}
    
 
 
@@ -1372,6 +1402,7 @@ bool HTTP_checkArgs(int current){
 //         jsonConfig["RELAY1"]["INVERSE"] = false;
 //         jsonConfig["RELAY2"]["INVERSE"] = false;
 //      }
+
       if(server.hasArg("TMOn1")         )jsonConfig["RELAY1"]["DELAY_ON"]   = server.arg("TMOn1").toInt();
       if(server.hasArg("TMOff1")        )jsonConfig["RELAY1"]["DELAY_OFF"]  = server.arg("TMOff1").toInt();
       if(server.hasArg("ModeRelay1")    )jsonConfig["RELAY1"]["MODE"]       = (T_RELAY_MODE)server.arg("ModeRelay1").toInt();
@@ -1464,6 +1495,12 @@ if( _reboot ){
 //      SaveRGB1->Restore(4);
 //      SaveRGB2->Restore(4);
 //      ledRestoreColor();
+      if(server.hasArg("FLAG_CONFIG1")  ){
+          if( calibrMode == CM_NONE ) {
+              resetRelay();
+          }
+      }
+
       lastSensorOn = SS_RESTORE;
       return true;
    }
@@ -1536,14 +1573,14 @@ int  HTTP_checkAuth(const char *pass){
 
    else if( jsonConfig["SYSTEM"]["PASSS"].as<String>() == pass ){
        UID = 2;
-       HTTP_User = "Права для настроек первого запуска";
+       HTTP_User = "Права администратора";
    }
    else if( jsonConfig["SYSTEM"]["PASS0"].as<String>() == pass ){
-       UID = 1;
-       HTTP_User = "Права суперадминистратора";
+       UID = 2;
+       HTTP_User = "Права администратора";
    }
    else if( jsonConfig["SYSTEM"]["PASS1"].as<String>() == pass ){
-       UID = 0;
+       UID = 2;
        HTTP_User = "Права администратора";
    }
   

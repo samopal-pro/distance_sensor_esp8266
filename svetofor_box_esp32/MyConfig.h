@@ -5,14 +5,17 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
+//#define SAV_CONFIG
+
+
 #define IS_LORA
 #define IS_TOUCH
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.29"
+#define SOFTWARE_V           "10.0.30"
 #define HARDWARE_V           "10.0.1"
-#define CONFIG_V             "10.0.27"
+#define CONFIG_V             "10.0.30"
 
 /*
 #define SENSOR_TYPE_NONE     0
@@ -87,6 +90,7 @@ enum SENSOR_STAT_t {
 #define AP_PASS              ""
 
 
+
 #define DEFAULT_SENSOR_INSTALL_TYPE INSTALL_TYPE_NORMAL
 #define DEFAULT_SENSOR_GROUND       1500
 #define DEFAULT_SENSOR_LIMIT        250
@@ -126,7 +130,7 @@ enum SENSOR_STAT_t {
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
-#define DEVICE_NAME            "2026_SVETOFORBOX.RU_192.168.4.1"
+#define DEVICE_NAM_SUFFIX      "_SVETOFORBOX.RU_192.168.4.1"
 #define DEVICE_NAME_YEAR       "2026"
 
 #define DEVICE_PASSS           "svetoforbox"

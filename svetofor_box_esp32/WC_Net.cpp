@@ -23,10 +23,9 @@ uint8_t loraGate[6];
  */
 
 
- void IRAM_ATTR onLoraIrq() {
+void IRAM_ATTR onLoraIrq() {
    loraIrq = true;
    detachInterrupt(PIN_LORA_DIO1);
-
 }
 
 void initLora(){
@@ -221,6 +220,7 @@ void taskNet( void *pvParameters ){
    bool isSendT = false;
    bool isSendA = false;
    bool isSendCurT = false;
+   int wifiError = 0;
    if( jsonConfig["WIFI"]["POWER"].isNull() )WiFi.setTxPower((wifi_power_t)jsonConfig["WIFI"]["POWER"].as<int>());
 //   HTTP_begin();
    while(true){
@@ -233,8 +233,10 @@ void taskNet( void *pvParameters ){
       if( ms2 == 0 || ms < ms2 || (ms-ms2)>3000){
           ms2 = ms;
           wifi_mode_t curWiFi = WiFi.getMode(); 
-          if( !jsonConfig["WIFI"]["NAME"].isNull() )isSTA = true;
-          else isSTA = false;
+          if( jsonConfig["WIFI"]["MODE"].as<int>() == STA_OFF )isSTA = false;
+          else isSTA = true;  
+//          if( !jsonConfig["WIFI"]["NAME"].isNull() )isSTA = true;
+//          else isSTA = false;
 // Стартуем точку доступа          
           if( isAP && ( curWiFi != WIFI_AP && curWiFi != WIFI_AP_STA) ){
              WiFi_ScanNetwork();
@@ -254,7 +256,6 @@ void taskNet( void *pvParameters ){
 
           if( isSTA && ( curWiFi != WIFI_STA && curWiFi != WIFI_AP_STA) ){
              Serial.println(F("!!! Start STA"));
-             systemMP3("60",61,PRIORITY_MP3_MEDIUM);
               msSTA = ms;
              WiFi_ScanNetwork();
              WiFi.enableSTA(true);
@@ -268,13 +269,26 @@ void taskNet( void *pvParameters ){
                    WiFi.config(ip_addr,ip_gate,ip_mask,ip_dns);
                 }                 
              }
-             WiFi.begin(jsonConfig["WIFI"]["NAME"].as<String>(), jsonConfig["WIFI"]["PASS"].as<String>());
+             if( jsonConfig["WIFI"]["MODE"].as<int>() == STA_ON ){
+                WiFi.begin(jsonConfig["WIFI"]["NAME"].as<String>(), jsonConfig["WIFI"]["PASS"].as<String>());
+             }
+             else if( jsonConfig["WIFI"]["MODE"].as<int>() == STA_AUTO ){
+                WiFi.begin(jsonConfig["WIFI"]["NAME1"].as<String>(), jsonConfig["WIFI"]["PASS1"].as<String>());
+                if( wifiError>3 ){
+                   systemMP3("60",62,PRIORITY_MP3_MEDIUM);
+                   jsonConfig["WIFI"]["MODE"] = STA_OFF;
+                   configSave();               
+                }
+                else {
+                  systemMP3("60",61,PRIORITY_MP3_MEDIUM);
+                   wifiError++;
+                }
+             }
 //             ledSTA(true);
              EventRGB1->setColor1(COLOR_WIFI_WAIT);
           }      
           if( isSTA && ( curWiFi == WIFI_STA || curWiFi == WIFI_AP_STA) ){
              if( WiFi.status() != WL_CONNECTED && (ms - msSTA)>10000 ){
-                 systemMP3("60",62,PRIORITY_MP3_MEDIUM);
                  Serial.println(F("!!! Error WiFi"));
                  EventRGB1->setColor1(COLOR_WIFI_OFF);
                  WiFi.enableSTA(false);
@@ -379,9 +393,10 @@ void taskNet( void *pvParameters ){
          loraIrq = false;
          readLora();
       }
-      HTTP_loop();
+// Перенес в taskButton
+//      HTTP_loop();
       
-      vTaskDelay(50);      
+      vTaskDelay(500);      
    }
 
 
@@ -392,10 +407,18 @@ void handleEventWiFi(arduino_event_id_t event, arduino_event_info_t info) {
     case ARDUINO_EVENT_WIFI_STA_START:     Serial.println("STA Started"); break;
     case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("STA Connected"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      EventRGB1->setColor1(COLOR_WIFI_ON);
-      systemMP3("60",60,PRIORITY_MP3_MEDIUM);
       Serial.println("!!! STA Got IP");
       Serial.println(WiFi.STA);
+      if( jsonConfig["WIFI"]["MODE"].as<int>() == STA_AUTO ){
+         systemMP3("60",60,PRIORITY_MP3_MEDIUM);
+         EventRGB1->setColor1(COLOR_WIFI_ON);
+         jsonConfig["WIFI"]["NAME"] = jsonConfig["WIFI"]["NAME1"];
+         jsonConfig["WIFI"]["PASS"] = jsonConfig["WIFI"]["PASS1"];
+         jsonConfig["WIFI"]["MODE"] = STA_ON;
+         configSave();
+      }
+
+
 //      WiFi.AP.enableNAPT(true);
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
