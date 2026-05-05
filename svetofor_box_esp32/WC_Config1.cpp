@@ -59,9 +59,9 @@ void configDefault1(){
    jsonConfig["MP3"]["VOLUME"]         = 30;                          // Громкость 0-30
 
   
-   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 8;
+   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 12;
    jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
-   jsonConfig["MP3"]["NAN"]["DELAY"]      = 30;
+   jsonConfig["MP3"]["NAN"]["DELAY"]      = 75;
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
    jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 900;
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
@@ -69,9 +69,9 @@ void configDefault1(){
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
    jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 5;
    jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
-   jsonConfig["MP3"]["FREE"]["DELAY"]     = 3;
+   jsonConfig["MP3"]["FREE"]["DELAY"]     = 7;
    jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
-   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 180;
+   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 0;
    jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 300;
    jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = true;
 
@@ -108,14 +108,14 @@ void configDefault2(){
    jsonConfig["MP3"]["NAN"]["ENABLE"]      = false;
    jsonConfig["MP3"]["BUSY1"]["ENABLE"]    = false;
    jsonConfig["MP3"]["BUSY2"]["ENABLE"]    = false;
-   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = false;
+   jsonConfig["MP3"]["FREE_NAN"]["ENABLE"] = true;
    jsonConfig["MP3"]["FREE"]["ENABLE"]     = true;
 
 
    jsonConfig["RGB1"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
    jsonConfig["RGB2"]["BRIGHTNESS"]    = 10;                          // Яркость ленты 1-10
    jsonConfig["MP3"]["VOLUME"]         = 23;                          // Громкость 0-30
-   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 10;
+   jsonConfig["MP3"]["BUSY"]["DELAY"]     = 9;
    jsonConfig["MP3"]["BUSY"]["LOOP"]      = false;
    jsonConfig["MP3"]["NAN"]["DELAY"]      = 5;
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
@@ -123,12 +123,12 @@ void configDefault2(){
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
    jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 25;
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
-   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 2;
+   jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 10;
    jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
-   jsonConfig["MP3"]["FREE"]["DELAY"]     = 3;
+   jsonConfig["MP3"]["FREE"]["DELAY"]     = 7;
    jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
-   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 1;
-   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 15;
+   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 0;
+   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 20;
 
    jsonConfig["RGB1"]["STAT_AP"]        = LED_STAT_AP2;               // Номер светодиода статуса AP
    jsonConfig["RGB1"]["STAT_STA"]       = LED_STAT_STA2;              // Номер светодиода статуса STA
@@ -352,11 +352,20 @@ void configDefaultGeneral(){
 
 #if defined(IS_BTN_ADD)
    jsonConfig["MP3"]["BTN_ADD"]["ENABLE"]    = false;
+   jsonConfig["MP3"]["BTN_ADD"]["OFF"]       = false;
    jsonConfig["MP3"]["BTN_ADD"]["INVERSE"]   = false;
    jsonConfig["MP3"]["BTN_ADD1"]["NUM"]      = 7;
    jsonConfig["MP3"]["BTN_ADD1"]["TIMER"]    = 10;
    jsonConfig["MP3"]["BTN_ADD2"]["NUM"]      = 8;
    jsonConfig["MP3"]["BTN_ADD2"]["TIMER"]    = 300;
+
+   jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"]    = true;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"]       = 9;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["TIMER"]     = 0;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["NUM"]       = 10;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"]     = 20;
+
+
 #endif
 
 // Настройка реле1   

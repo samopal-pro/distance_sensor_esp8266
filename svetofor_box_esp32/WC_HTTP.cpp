@@ -673,7 +673,7 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay1","4",( jsonConfig["RELAY1"]["MODE"].as<int>()  == RELAY_PWM  ), true);
   out +="<br>";
   HTTP_print_input_checkbox(out,"isInverseRelay1","1",jsonConfig["RELAY1"]["INVERSE"].as<bool>());
-  HTTP_printTag(out,"label","<b>Инверсия работы реле занято/свободно</b>");
+  HTTP_printTag(out,"label","<b>Инверсия реле замкнуто/разомкнуто</b>");
   out +="<br><br>";
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия или закрытия ворот в момент заезда и в момент выезда","ModeRelay1","5",( jsonConfig["RELAY1"]["MODE"].as<int>() == RELAY_PULSE2 ), true);
   HTTP_InputInt(out,"           На сколько секунд замкнуть контакты. Для управления кнопкой закрытия или открытия ворот:","TM_PulseRelay1",jsonConfig["RELAY1"]["T_PULSE"].as<int>(),1,30);
@@ -693,7 +693,7 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay4.png","Импульсный режим","ModeRelay2","4",( jsonConfig["RELAY2"]["MODE"].as<int>()  == RELAY_PWM  ), true);
   out +="<br>";
   HTTP_print_input_checkbox(out,"isInverseRelay2","1",jsonConfig["RELAY2"]["INVERSE"].as<bool>());
-  HTTP_printTag(out,"label","<b>Инверсия работы реле занято/свободно</b>");
+  HTTP_printTag(out,"label","<b>Инверсия реле замкнуто/разомкнуто</b>");
   out +="<br><br>";
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия или закрытия ворот в момент заезда и в момент выезда","ModeRelay2","5",( jsonConfig["RELAY2"]["MODE"].as<int>() == RELAY_PULSE2 ), true);
   HTTP_InputInt(out,"           На сколько секунд замкнуть контакты. Для управления кнопкой закрытия или открытия ворот:","TM_PulseRelay2",jsonConfig["RELAY2"]["T_PULSE"].as<int>(),1,30);
@@ -884,14 +884,28 @@ void HTTP_printConfig2(String &out){
   HTTP_printTag(out,"legend","Настройка дополнительного входа");
   out += "<p class='t1'>";  
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_ENABLE","1",jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>());
-  out += "Включить звуковые оповещения для дополнительного входа";
+  out += "Включить звуковые оповещения для дополнительного входа в состоянии занято";
   out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
   out += "<tr><td width='500'>Оповещение</td><td width='100'>Задержка</td><td width='50'>Тест</td><tr>\n";
 
   HTTP_print_MP3_3(out,"Первое срабатывание на замыкание входа. Файл 007.mp3", "BTN_ADD1" );
   HTTP_print_MP3_3(out,"Второе срабатывание на замыкание входа. Файл 008.mp3", "BTN_ADD2" );
   out += "</table>\n";
+
   out += "<p class='t1'>";  
+  HTTP_print_input_checkbox(out,"MP3_BTN_ADD_FREE_ENABLE","1",jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"].as<bool>());
+  out += "Включить звуковые оповещения для дополнительного входа в состоянии свободно";
+  out += "<table border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
+  out += "<tr><td width='500'>Оповещение</td><td width='100'>Задержка</td><td width='50'>Тест</td><tr>\n";
+
+  HTTP_print_MP3_3(out,"Первое срабатывание в режиме свободно. Файл 009.mp3", "BTN_ADD_FREE1" );
+  HTTP_print_MP3_3(out,"Второе срабатывание в режиме свободно. Файл 010.mp3", "BTN_ADD_FREE2" );
+  out += "</table>\n";
+
+  out += "<p class='t1'>";  
+  HTTP_print_input_checkbox(out,"MP3_BTN_ADD_OFF","1",jsonConfig["MP3"]["BTN_ADD"]["OFF"].as<bool>());
+  out += "Отключать звуковую дорожку после отключения входа";
+
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_INVERSE","1",jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>());
   out += "Включить инверсию дополнительного входа";
 
@@ -1297,6 +1311,18 @@ bool HTTP_checkArgs(int current){
             if(server.hasArg("MP3_BTN_ADD_ENABLE"))jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = true;
             else jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = false;
          }
+         if(server.hasArg("MP3_BTN_ADD_FREE1_TIMER")){jsonConfig["MP3"]["BTN_ADD_FREE1"]["TIMER"] = server.arg("MP3_BTN_ADD_FREE1_TIMER").toInt();}
+         if(server.hasArg("MP3_BTN_ADD_FREE2_TIMER")){jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"] = server.arg("MP3_BTN_ADD_FREE2_TIMER").toInt();}
+         if(server.hasArg("MP3_BTN_ADD_FREE_ENABLE_H")){
+            if(server.hasArg("MP3_BTN_ADD_FREE_ENABLE"))jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"] = true;
+            else jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"] = false;
+         }
+
+         if(server.hasArg("MP3_BTN_ADD_OFF_H")){
+            if(server.hasArg("MP3_BTN_ADD_OFF"))jsonConfig["MP3"]["BTN_ADD"]["OFF"] = true;
+            else jsonConfig["MP3"]["BTN_ADD"]["OFF"] = false;
+         }
+
          if(server.hasArg("MP3_BTN_ADD_INVERSE_H")){
             if(server.hasArg("MP3_BTN_ADD_INVERSE"))jsonConfig["MP3"]["BTN_ADD"]["INVERSE"] = true;
             else jsonConfig["MP3"]["BTN_ADD"]["INVERSE"] = false;

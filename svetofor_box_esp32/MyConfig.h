@@ -5,7 +5,7 @@
 #define DEBUG_SENSORS        1
 #define DEBUG_SERIAL
 
-//#define SAV_CONFIG
+#define SAV_CONFIG
 
 
 #define IS_LORA
@@ -13,9 +13,9 @@
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.30"
+#define SOFTWARE_V           "10.0.31"
 #define HARDWARE_V           "10.0.1"
-#define CONFIG_V             "10.0.30"
+#define CONFIG_V             "10.0.31"
 
 /*
 #define SENSOR_TYPE_NONE     0
