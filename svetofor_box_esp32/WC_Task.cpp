@@ -775,7 +775,7 @@ void taskButton(void *pvParameters){
              if(jsonConfig["MP3"]["BTN_ADD2"]["ENABLE"].as<bool>() && (SensorOn == SS_BUSY))EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
              
              if(jsonConfig["MP3"]["BTN_ADD_FREE1"]["ENABLE"].as<bool>() && (SensorOn == SS_FREE))EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD_FREE1"]["TIMER"].as<uint32_t>()*1000);
-             if(jsonConfig["MP3"]["BTN_ADD_FREE2"]["ENABLE"].as<bool>() && (SensorOn == SS_FREE))EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"].as<uint32_t>()*1000);
+             if(jsonConfig["MP3"]["BTN_ADD_FREE2"]["ENABLE"].as<bool>() && (SensorOn == SS_FREE))EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"].as<uint32_t>()*1000);
              break;
           case SB_RELEASE:
              Serial.println(F("!!! release add btn"));

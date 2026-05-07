@@ -956,7 +956,7 @@ void HTTP_printConfig4(String &out){
 
 
   out += "<fieldset>\n";
-//  HTTP_printTag(out,"legend","Первый запуск");
+  HTTP_printTag(out,"legend","Первый запуск");
 //  out += "<table width=100%><tr>";
 //  out += "<td>Активировать первый запуск</td>";
 //  out += "<td align='right'><input type='submit' name='BOOT0' value='Активировать' class='btn'></td>"; 
@@ -1097,7 +1097,7 @@ void HTTP_print_MP3_7(String &out, char *text, char *name){
    HTTP_print_input_checkbox(out,s,"1",jsonConfig["MP3"][name]["ENABLE"].as<bool>());
    out += "</td><td>";
    sprintf(s,"MP3_%s_DELAY",name);
-   HTTP_InputInt1(out,s,jsonConfig["MP3"][name]["DELAY"].as<int>(),1,3600);
+   HTTP_InputInt1(out,s,jsonConfig["MP3"][name]["DELAY"].as<int>(),0,3600);
    out += "</td><td>";
    sprintf(s,"MP3_%s_LOOP",name);
    HTTP_print_input_checkbox(out,s,"1",jsonConfig["MP3"][name]["LOOP"].as<bool>());
@@ -1206,7 +1206,7 @@ bool HTTP_checkArgs(int current){
    else if ( server.hasArg("Config2")  ){
       HTTP_goto("/config4", 2000, "Загрузка конфигурации для парковок..."); 
       systemMP3("89",78,PRIORITY_MP3_HIGH);
-      configSet(CFG_CARWASH);
+      configSet(CFG_PARKING);
       configRead();
 
       jsonSave["BOOT_COUNT"]  = 0;

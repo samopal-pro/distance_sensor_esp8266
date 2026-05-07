@@ -83,7 +83,7 @@ void configDefault2(){
    configDefaultGeneral();
    jsonConfig["RGB1"]["FREE"]          = COLOR_FREE2;
    jsonConfig["RGB2"]["FREE"]          = 0xFFFFFF;
-   jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_FREE;
+   jsonConfig["RGB1"]["NAN_MODE"]      = NAN_VALUE_BUSY;
    jsonConfig["SENSOR"]["INSTALL"]     = INSTALL_TYPE_NORMAL; //Тип установки/срабатывания датчика
    jsonConfig["SENSOR"]["DIST_GROUND"] = 2700;       //Высота установки датчика (расстояние до пола)
    jsonConfig["SENSOR"]["DIST_LIMIT"]  = 500;        //Если разница между текущим показанием и высатой установки больше этого значения, то датчик показывает занято
@@ -105,8 +105,8 @@ void configDefault2(){
    jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
    jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;       
 
-   jsonConfig["RGB1"]["FREE"]          = 0x71F0FF;
-
+ //  jsonConfig["RGB1"]["FREE"]             = 0x71F0FF;
+   jsonConfig["RGB1"]["FREE"]             = COLOR_FREE2;
 
    jsonConfig["MP3"]["BUSY"]["ENABLE"]     = true;
    jsonConfig["MP3"]["NAN"]["ENABLE"]      = false;
@@ -131,8 +131,12 @@ void configDefault2(){
    jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
    jsonConfig["MP3"]["FREE"]["DELAY"]     = 7;
    jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
+
    jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 0;
    jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 20;
+   jsonConfig["MP3"]["BTN_ADD2"]["COLOR"] = 0xFF0000;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["COLOR"] = 0xFF0000;
+
 
    jsonConfig["RGB1"]["STAT_AP"]        = LED_STAT_AP2;               // Номер светодиода статуса AP
    jsonConfig["RGB1"]["STAT_STA"]       = LED_STAT_STA2;              // Номер светодиода статуса STA

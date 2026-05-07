@@ -13,9 +13,9 @@
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.32"
+#define SOFTWARE_V           "10.0.32b"
 #define HARDWARE_V           "10.0.1"
-#define CONFIG_V             "10.0.32"
+#define CONFIG_V             "10.0.32b"
 
 /*
 #define SENSOR_TYPE_NONE     0
@@ -126,7 +126,7 @@ enum SENSOR_STAT_t {
 #define LED_STAT_STA2           15
 #define LED_STAT_AP1            0
 #define LED_STAT_STA1           1
-#define LED_STAT_BRIGHTNESS    1           //Яркость 0-10 для двух светодиодов
+#define LED_STAT_BRIGHTNESS     1           //Яркость 0-10 для двух светодиодов
 
 #define DEFAULT_NAN_VALUE_FLAG NAN_VALUE_IGNORE
 
