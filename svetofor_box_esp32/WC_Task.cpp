@@ -465,10 +465,12 @@ void handleBtnAdd1(bool _flag){
    Serial.println((int)_flag);
 #endif
    if( _flag && (SensorOn == SS_BUSY)){
-      if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+      if(jsonConfig["MP3"]["BTN_ADD1"]["ENABLE"].as<bool>())baseMP3(jsonConfig["MP3"]["BTN_ADD1"]);
+//      playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
    }
    if( _flag && (SensorOn == SS_FREE)){
-      if(jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+      if(jsonConfig["MP3"]["BTN_ADD_FREE1"]["ENABLE"].as<bool>())baseMP3(jsonConfig["MP3"]["BTN_ADD_FREE1"]);
+//      playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
    }
 }
 
@@ -481,10 +483,12 @@ void handleBtnAdd2(bool _flag){
    Serial.println((int)_flag);
 #endif
    if( _flag && (SensorOn == SS_BUSY)){
-      if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+      if(jsonConfig["MP3"]["BTN_ADD2"]["ENABLE"].as<bool>())baseMP3(jsonConfig["MP3"]["BTN_ADD2"]);
+//      playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
    }
    if( _flag && (SensorOn == SS_FREE)){
-      if(jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"].as<bool>())playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD_FREE2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
+      if(jsonConfig["MP3"]["BTN_ADD_FREE2"]["ENABLE"].as<bool>())baseMP3(jsonConfig["MP3"]["BTN_ADD_FREE2"]);
+//      playMP3(MP3_BASE_DIR, jsonConfig["MP3"]["BTN_ADD_FREE2"]["NUM"].as<int>(), PRIORITY_MP3_MINIMAL);
    }
 }
 
@@ -767,14 +771,11 @@ void taskButton(void *pvParameters){
       switch(btn_add.loop()){  
           case SB_PRESS:
              Serial.println(F("!!! press add btn"));
-             if(jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>() && (SensorOn == SS_BUSY)){
-                EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
-                EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
-             }
-             if(jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"].as<bool>() && (SensorOn == SS_FREE)){
-                EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD_FREE1"]["TIMER"].as<uint32_t>()*1000);
-                EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"].as<uint32_t>()*1000);
-             }
+             if(jsonConfig["MP3"]["BTN_ADD1"]["ENABLE"].as<bool>() && (SensorOn == SS_BUSY))EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD1"]["TIMER"].as<uint32_t>()*1000);
+             if(jsonConfig["MP3"]["BTN_ADD2"]["ENABLE"].as<bool>() && (SensorOn == SS_BUSY))EventBtnAdd2->on(jsonConfig["MP3"]["BTN_ADD2"]["TIMER"].as<uint32_t>()*1000);
+             
+             if(jsonConfig["MP3"]["BTN_ADD_FREE1"]["ENABLE"].as<bool>() && (SensorOn == SS_FREE))EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD_FREE1"]["TIMER"].as<uint32_t>()*1000);
+             if(jsonConfig["MP3"]["BTN_ADD_FREE2"]["ENABLE"].as<bool>() && (SensorOn == SS_FREE))EventBtnAdd1->on(jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"].as<uint32_t>()*1000);
              break;
           case SB_RELEASE:
              Serial.println(F("!!! release add btn"));

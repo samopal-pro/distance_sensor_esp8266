@@ -882,6 +882,18 @@ void HTTP_printConfig2(String &out){
 #if defined(IS_BTN_ADD)
   out += "<fieldset>\n";
   HTTP_printTag(out,"legend","Настройка дополнительного входа");
+
+  out += "<table width=\"100%\" border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";
+//  out += "<table class='tab1'>\n";
+  out += "<tr><td width='320'>Оповещение</td><td width='50'>Вкл.</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><td width='50'>Цвет</td><td width='50'>Длит.</td><tr>\n";
+
+  HTTP_print_MP3_7(out,"Первое срабатывание на замыкание входа в режиме занято. Файл 007.mp3", "BTN_ADD1" );
+  HTTP_print_MP3_7(out,"Второе срабатывание на замыкание входа в режиме занято. Файл 008.mp3", "BTN_ADD2" );
+  HTTP_print_MP3_7(out,"Первое срабатывание на замыкание входа в режиме свободно. Файл 009.mp3", "BTN_ADD_FREE1" );
+  HTTP_print_MP3_7(out,"Второе срабатывание на замыкание входа в режиме свободно. Файл 010.mp3", "BTN_ADD_FREE2" );
+  out += "</table>\n";
+/*
+
   out += "<p class='t1'>";  
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_ENABLE","1",jsonConfig["MP3"]["BTN_ADD"]["ENABLE"].as<bool>());
   out += "Включить звуковые оповещения для дополнительного входа в состоянии занято";
@@ -901,11 +913,12 @@ void HTTP_printConfig2(String &out){
   HTTP_print_MP3_3(out,"Первое срабатывание в режиме свободно. Файл 009.mp3", "BTN_ADD_FREE1" );
   HTTP_print_MP3_3(out,"Второе срабатывание в режиме свободно. Файл 010.mp3", "BTN_ADD_FREE2" );
   out += "</table>\n";
-
+*/
   out += "<p class='t1'>";  
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_OFF","1",jsonConfig["MP3"]["BTN_ADD"]["OFF"].as<bool>());
   out += "Отключать звуковую дорожку после отключения входа";
 
+  out += "<p class='t1'>";  
   HTTP_print_input_checkbox(out,"MP3_BTN_ADD_INVERSE","1",jsonConfig["MP3"]["BTN_ADD"]["INVERSE"].as<bool>());
   out += "Включить инверсию дополнительного входа";
 
@@ -1305,6 +1318,11 @@ bool HTTP_checkArgs(int current){
          if(server.hasArg("MP3_VOLUME")){jsonConfig["MP3"]["VOLUME"] = server.arg("MP3_VOLUME").toInt();isChangeConfig = true;}
 
 #if defined(IS_BTN_ADD)
+         HTTP_checkArgsMP3("BTN_ADD1");
+         HTTP_checkArgsMP3("BTN_ADD2");
+         HTTP_checkArgsMP3("BTN_ADD_FREE1");
+         HTTP_checkArgsMP3("BTN_ADD_FREE2");
+/*
          if(server.hasArg("MP3_BTN_ADD1_TIMER")){jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = server.arg("MP3_BTN_ADD1_TIMER").toInt();}
          if(server.hasArg("MP3_BTN_ADD2_TIMER")){jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = server.arg("MP3_BTN_ADD2_TIMER").toInt();}
          if(server.hasArg("MP3_BTN_ADD_ENABLE_H")){
@@ -1317,7 +1335,7 @@ bool HTTP_checkArgs(int current){
             if(server.hasArg("MP3_BTN_ADD_FREE_ENABLE"))jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"] = true;
             else jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"] = false;
          }
-
+*/
          if(server.hasArg("MP3_BTN_ADD_OFF_H")){
             if(server.hasArg("MP3_BTN_ADD_OFF"))jsonConfig["MP3"]["BTN_ADD"]["OFF"] = true;
             else jsonConfig["MP3"]["BTN_ADD"]["OFF"] = false;

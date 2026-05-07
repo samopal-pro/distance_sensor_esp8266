@@ -73,7 +73,8 @@ void configDefault1(){
    jsonConfig["MP3"]["FREE"]["LOOP"]      = false;
    jsonConfig["MP3"]["BTN_ADD1"]["TIMER"] = 0;
    jsonConfig["MP3"]["BTN_ADD2"]["TIMER"] = 300;
-   jsonConfig["MP3"]["BTN_ADD"]["ENABLE"] = true;
+   jsonConfig["MP3"]["BTN_ADD1"]["ENABLE"] = true;
+   jsonConfig["MP3"]["BTN_ADD2"]["ENABLE"] = true;
 
 
 }
@@ -103,6 +104,9 @@ void configDefault2(){
    jsonConfig["RELAY2"]["T_PAUSE"]     = 1;                          // Длительность паузы при импульсном режиме
    jsonConfig["RELAY2"]["DELAY_ON"]    = 1;                          // Залержка при включении реле
    jsonConfig["RELAY2"]["DELAY_OFF"]   = 1;       
+
+   jsonConfig["RGB1"]["FREE"]          = 0x71F0FF;
+
 
    jsonConfig["MP3"]["BUSY"]["ENABLE"]     = true;
    jsonConfig["MP3"]["NAN"]["ENABLE"]      = false;
@@ -157,7 +161,7 @@ void configDefaultTest(){
    jsonConfig["SENSOR"]["INSTALL"]     = INSTALL_TYPE_NORMAL; //Тип установки/срабатывания датчика
    jsonConfig["SENSOR"]["DIST_GROUND"] = 270;       //Высота установки датчика (расстояние до пола)
    jsonConfig["SENSOR"]["DIST_LIMIT"]  = 270;        //Если разница между текущим показанием и высатой установки больше этого значения, то датчик показывает занято
-   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04TM2; //Тип датчика
+   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04_75; //Тип датчика
    jsonConfig["NET"]["DOGOVOR_ID"]     = "8888";            
    jsonConfig["CRM_MOSCOW"]["ENABLE"]  = true;                      //посылать информацию на CRM-MOSCOW
    jsonConfig["TB"]["ENABLE"]          = true;                      //Посылать информацию в ThingsBoard
@@ -351,19 +355,38 @@ void configDefaultGeneral(){
    jsonConfig["MP3"]["FREE"]["COLOR_TM"]     = 4;
 
 #if defined(IS_BTN_ADD)
-   jsonConfig["MP3"]["BTN_ADD"]["ENABLE"]    = false;
    jsonConfig["MP3"]["BTN_ADD"]["OFF"]       = false;
    jsonConfig["MP3"]["BTN_ADD"]["INVERSE"]   = false;
-   jsonConfig["MP3"]["BTN_ADD1"]["NUM"]      = 7;
-   jsonConfig["MP3"]["BTN_ADD1"]["TIMER"]    = 10;
-   jsonConfig["MP3"]["BTN_ADD2"]["NUM"]      = 8;
-   jsonConfig["MP3"]["BTN_ADD2"]["TIMER"]    = 300;
 
-   jsonConfig["MP3"]["BTN_ADD_FREE"]["ENABLE"]    = true;
-   jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"]       = 9;
-   jsonConfig["MP3"]["BTN_ADD_FREE1"]["TIMER"]     = 0;
-   jsonConfig["MP3"]["BTN_ADD_FREE2"]["NUM"]       = 10;
-   jsonConfig["MP3"]["BTN_ADD_FREE2"]["TIMER"]     = 20;
+   jsonConfig["MP3"]["BTN_ADD1"]["ENABLE"]        = true;
+   jsonConfig["MP3"]["BTN_ADD1"]["NUM"]           = 7;
+   jsonConfig["MP3"]["BTN_ADD1"]["DELAY"]         = 0;
+   jsonConfig["MP3"]["BTN_ADD1"]["LOOP"]          = false;
+   jsonConfig["MP3"]["BTN_ADD1"]["COLOR"]         = COLOR_MP3_2;
+   jsonConfig["MP3"]["BTN_ADD1"]["COLOR_TM"]      = 4;
+
+   jsonConfig["MP3"]["BTN_ADD2"]["ENABLE"]        = true;
+   jsonConfig["MP3"]["BTN_ADD2"]["NUM"]           = 8;
+   jsonConfig["MP3"]["BTN_ADD2"]["DELAY"]         = 30;
+   jsonConfig["MP3"]["BTN_ADD2"]["LOOP"]          = false;
+   jsonConfig["MP3"]["BTN_ADD2"]["COLOR"]         = COLOR_MP3_2;
+   jsonConfig["MP3"]["BTN_ADD2"]["COLOR_TM"]      = 4;
+
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["ENABLE"]   = true;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"]      = 9;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["DELAY"]    = 0;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["COLOR"]    = COLOR_MP3_2;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["COLOR_TM"] = 4;
+
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["ENABLE"]   = true;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["NUM"]      = 10;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["DELAY"]    = 30;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["LOOP"]     = false;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["COLOR"]    = COLOR_MP3_2;
+   jsonConfig["MP3"]["BTN_ADD_FREE2"]["COLOR_TM"] = 4;
+
+
 
 
 #endif
