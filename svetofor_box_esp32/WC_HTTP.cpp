@@ -887,9 +887,9 @@ void HTTP_printConfig2(String &out){
 //  out += "<table class='tab1'>\n";
   out += "<tr><td width='320'>Оповещение</td><td width='50'>Вкл.</td><td width='50'>Задержка</td><td width='50'>Повтор</td><td width='50'>Тест</td><td width='50'>Цвет</td><td width='50'>Длит.</td><tr>\n";
 
-  HTTP_print_MP3_7(out,"Первое срабатывание на замыкание входа в режиме занято. Файл 007.mp3", "BTN_ADD1" );
+  HTTP_print_MP3_7(out,"Первое срабатывание на замыкание входа в режиме занято. Файл 009.mp3", "BTN_ADD1" );
   HTTP_print_MP3_7(out,"Второе срабатывание на замыкание входа в режиме занято. Файл 008.mp3", "BTN_ADD2" );
-  HTTP_print_MP3_7(out,"Первое срабатывание на замыкание входа в режиме свободно. Файл 009.mp3", "BTN_ADD_FREE1" );
+  HTTP_print_MP3_7(out,"Первое срабатывание на замыкание входа в режиме свободно. Файл 007.mp3", "BTN_ADD_FREE1" );
   HTTP_print_MP3_7(out,"Второе срабатывание на замыкание входа в режиме свободно. Файл 010.mp3", "BTN_ADD_FREE2" );
   out += "</table>\n";
 /*
