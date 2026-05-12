@@ -363,7 +363,7 @@ void configDefaultGeneral(){
    jsonConfig["MP3"]["BTN_ADD"]["INVERSE"]   = false;
 
    jsonConfig["MP3"]["BTN_ADD1"]["ENABLE"]        = true;
-   jsonConfig["MP3"]["BTN_ADD1"]["NUM"]           = 9;
+   jsonConfig["MP3"]["BTN_ADD1"]["NUM"]           = 7;
    jsonConfig["MP3"]["BTN_ADD1"]["DELAY"]         = 0;
    jsonConfig["MP3"]["BTN_ADD1"]["LOOP"]          = false;
    jsonConfig["MP3"]["BTN_ADD1"]["COLOR"]         = COLOR_MP3_2;
@@ -377,7 +377,7 @@ void configDefaultGeneral(){
    jsonConfig["MP3"]["BTN_ADD2"]["COLOR_TM"]      = 4;
 
    jsonConfig["MP3"]["BTN_ADD_FREE1"]["ENABLE"]   = true;
-   jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"]      = 7;
+   jsonConfig["MP3"]["BTN_ADD_FREE1"]["NUM"]      = 9;
    jsonConfig["MP3"]["BTN_ADD_FREE1"]["DELAY"]    = 0;
    jsonConfig["MP3"]["BTN_ADD_FREE1"]["LOOP"]     = false;
    jsonConfig["MP3"]["BTN_ADD_FREE1"]["COLOR"]    = COLOR_MP3_2;
