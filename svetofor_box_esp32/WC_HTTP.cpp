@@ -1283,7 +1283,7 @@ bool HTTP_checkArgs(int current){
          if( server.hasArg("isFreeBlink"))jsonConfig["RGB1"]["IS_FREE_BLINK"] = true;
          else jsonConfig["RGB1"]["IS_FREE_BLINK"] = false;
       }
-      if( server.hasArg("isColorNan-H")){
+      if( server.hasArg("isColorNan_H")){
          if( server.hasArg("isColorNan") )jsonConfig["RGB1"]["IS_NAN_MODE"] = true;
          else jsonConfig["RGB1"]["IS_NAN_MODE"] = false;
       }

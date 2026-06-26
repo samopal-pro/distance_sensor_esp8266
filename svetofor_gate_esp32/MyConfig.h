@@ -40,7 +40,7 @@ enum SENSOR_STAT_t {
 #define PIN_RGB1             13
 #define PIN_RGB2             15
 
-#define PIN_IR               PIN_RGB2
+#define PIN_IR               27
 
 #define PIN_TX1              25
 #define PIN_RX1              26

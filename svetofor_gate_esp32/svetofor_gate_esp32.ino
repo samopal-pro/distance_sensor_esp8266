@@ -30,7 +30,7 @@ void setup(){
 //  Wire.setClock(100000);
 //  sensor1.init();
 
-  tasksStart();
+ // tasksStart();
 
 }
 
