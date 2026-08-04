@@ -6,7 +6,7 @@ char serNo[33];
 int MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR;
 
 MySensor *sensor;
-TEvent *EventSensor, *EventRelay1, *EventRelay2;
+TEvent *EventSensor, *EventNan, *EventRelay1, *EventRelay2;
 TEvent *EventBusy1, *EventBusy2;
 TEvent *EventBtnAdd1, *EventBtnAdd2;
 TEventRGB *EventRGB1, *EventRGB2, *SaveRGB1, *SaveRGB2;
@@ -35,7 +35,7 @@ bool statRelay1 = false, statRelay2 = false;
 bool inverseRelay1 = false, inverseRelay2 = false;
 uint16_t eventRelay1 = 0, eventRelay2 = 0;
 uint32_t msRelay1 = 0, msRelay2 = 0;
-
+uint32_t msBusy = 0;
 char calibrCheck[5], calibrNum = -1;
 
 CALIBRATION_MODE_t calibrMode = CM_NONE;
@@ -110,6 +110,7 @@ void tasksStart() {
 //  bootSemaphore   = xSemaphoreCreateMutex();
 
    EventSensor         = new TEvent(0,0,handleSensor);
+   EventNan            = new TEvent(0,0,handleNan);
    EventRelay1         = new TEvent((uint32_t)(jsonConfig["RELAY1"]["DELAY_ON"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY1"]["DELAY_OFF"].as<float>()*1000),handleRelay1);
    EventRelay2         = new TEvent((uint32_t)(jsonConfig["RELAY2"]["DELAY_ON"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY2"]["DELAY_OFF"].as<float>()*1000),handleRelay2);
    EventBusy1          = new TEvent(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>(),0,handleBusy1);
@@ -174,6 +175,7 @@ void taskEvents(void *pvParameters) {
       EventBusy2->loop();
       EventBtnAdd1->loop();
       EventBtnAdd2->loop();
+      EventNan->loop();
       vTaskDelay(250);
    }
 }
@@ -601,11 +603,14 @@ void checkChangeOn(){
    uint32_t _color1, _color2;
    if( SensorOn == lastSensorOn )return;
    Serial.printf("!!! Stat is change %d %d\n", (int)SensorOn,(int)lastSensorOn);
+   uint32_t _ms = millis();
    isSendNet = true;
    switch(SensorOn){
       case SS_BUSY:
 //      case SS_NAN_BUSY:   
          if(lastSensorOn!=SS_RESTORE){   
+// Определяем время заезда машины и ставим отсрочку выезда
+            msBusy = _ms + jsonConfig["MP3"]["NAN"]["DELAY1"].as<uint32_t>()*1000;
             EventSensor->on();
             if(EventBusy1->State != ES_WAIT_ON && EventBusy1->State != ES_ON)EventBusy1->on(jsonConfig["MP3"]["BUSY1"]["DELAY"].as<uint32_t>()*1000);
             if(EventBusy2->State != ES_WAIT_ON && EventBusy2->State != ES_ON)EventBusy2->on(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>()*1000);
@@ -617,14 +622,25 @@ void checkChangeOn(){
       case SS_FREE:   
 //      case SS_NAN_FREE:
          if(lastSensorOn!=SS_RESTORE){   
+            Serial.println("!!! Stop Timer NAN");
+            EventNan->reset();
+            msBusy = 0;
             EventSensor->off();
             EventBusy1->reset();
             EventBusy2->reset();
             baseMP3(jsonConfig["MP3"]["FREE"]);
          }
-         if( jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>() )EventRGB1->set(jsonConfig["RGB1"]["FREE"].as<uint32_t>(),jsonConfig["RGB1"]["FREE"].as<uint32_t>(),jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(),jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(),5000,250);
+         if( jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>() )
+            EventRGB1->set(jsonConfig["RGB1"]["FREE"].as<uint32_t>(),
+                           jsonConfig["RGB1"]["FREE"].as<uint32_t>(),
+                           jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(),
+                           jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(),5000,250);
          else EventRGB1->set(jsonConfig["RGB1"]["FREE"].as<uint32_t>(),jsonConfig["RGB1"]["FREE"].as<uint32_t>() );  
-         if( jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>() )EventRGB2->set(jsonConfig["RGB2"]["FREE"].as<uint32_t>(),jsonConfig["RGB2"]["FREE"].as<uint32_t>(),jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(),jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(),5000,250);
+         if( jsonConfig["RGB2"]["IS_FREE_BLINK"].as<bool>() )
+            EventRGB2->set(jsonConfig["RGB2"]["FREE"].as<uint32_t>(),
+                           jsonConfig["RGB2"]["FREE"].as<uint32_t>(),
+                           jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(),
+                           jsonConfig["RGB2"]["FREE_BLINK"].as<uint32_t>(),5000,250);
          else EventRGB2->set(jsonConfig["RGB2"]["FREE"].as<uint32_t>(),jsonConfig["RGB2"]["FREE"].as<uint32_t>() );  
          break;
       case SS_NAN:
@@ -663,8 +679,24 @@ void checkChangeOn(){
             systemMP3("97",95,PRIORITY_MP3_HIGH);
          }
          else if(lastSensorOn!=SS_RESTORE){   
+
             if( lastSensorOn == SS_FREE )baseMP3(jsonConfig["MP3"]["FREE_NAN"]);
-            else baseMP3(jsonConfig["MP3"]["NAN"]);
+// Включаем таймер выдачи сообщения что машина в пене
+            else {
+              Serial.printf("!!! Check Timer Nan %d %d %u %u\n",(int)jsonConfig["MP3"]["NAN"]["ENABLE1"].as<bool>(),(int)EventNan->State,_ms,msBusy); 
+              if(jsonConfig["MP3"]["NAN"]["ENABLE"].as<bool>() ){
+                 if( msBusy != 0 
+                    && msBusy <= _ms
+                    && EventNan->State != ES_WAIT_ON 
+                    && EventNan->State != ES_ON){
+                       Serial.println("!!! Start Timer NAN");
+                       EventNan->on(jsonConfig["MP3"]["NAN"]["DELAY"].as<uint32_t>()*1000);
+                 }
+              }
+            }
+
+//
+//            baseMP3(jsonConfig["MP3"]["NAN"]);
          }
          break;
    }
@@ -673,7 +705,9 @@ void checkChangeOn(){
    saveSet(Distance,SensorOn);
 }
 
-
+void handleNan(bool flag){
+   if( flag )baseMP3(jsonConfig["MP3"]["NAN"]);
+}
 
 /*
 * Установка состояние реле1

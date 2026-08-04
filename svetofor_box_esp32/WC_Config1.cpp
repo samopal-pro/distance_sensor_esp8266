@@ -319,9 +319,11 @@ void configDefaultGeneral(){
    jsonConfig["MP3"]["BUSY"]["COLOR_TM"]  = 4;
 // Датчик NAN (пена) 
    jsonConfig["MP3"]["NAN"]["ENABLE"]     = true;
+   jsonConfig["MP3"]["NAN"]["ENABLE1"]     = true;
 //   jsonConfig["MP3"]["NAN"]["DIR"]        = 1;
    jsonConfig["MP3"]["NAN"]["NUM"]        = 2;
-   jsonConfig["MP3"]["NAN"]["DELAY"]      = 10;
+   jsonConfig["MP3"]["NAN"]["DELAY"]      = 75;
+   jsonConfig["MP3"]["NAN"]["DELAY1"]     = 10;
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
    jsonConfig["MP3"]["NAN"]["COLOR"]      = COLOR_MP3_2;
    jsonConfig["MP3"]["NAN"]["COLOR_TM"]   = 4;

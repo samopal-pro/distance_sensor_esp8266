@@ -78,22 +78,25 @@ void initLora(){
 void readLora(){
 #ifdef IS_LORA   
    if( !isLora )return;
+   Serial.println("!!! Read Lora");
+
    String s;
    uint8_t _buf[MAX_LEN_PAYLOAD];
    setLoraReceive(false);
    int n = radio.getPacketLength();
    if( n > MAX_LEN_PAYLOAD )n= MAX_LEN_PAYLOAD;
    int state = radio.readData(_buf,n);
-   int _rssi = radio.getRSSI();
+   int _rssi = radio.getRSSI(); 
    if (state == RADIOLIB_ERR_NONE) {
       myLora.RX(_buf, n, _rssi);
+      myLora.PrintRX();
       if( myLora.StateRX == NSRX_OK || myLora.StateRX == NSRX_BROADCAST ){
          myLora.PrintRX_V3();
          MyLoRaAddress::Get(curNode,myLora.HeaderRX_V3.AddrTX);
 
-//         serializeJson(myLora.Json,s);
-//         Serial.printf("!!! LORA RX %d: ",n);
-//         Serial.println(s);
+         serializeJson(myLora.Json,s);
+         Serial.printf("!!! LORA RX %d: ",n);
+         Serial.println(s);
          switch( myLora.HeaderRX_V3.Type&B00001111 ){
 // Парсим и печатаем входящий пакет
             case PACKET_V3_TYPE_JSON_TELEMETRY:

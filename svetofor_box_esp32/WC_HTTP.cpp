@@ -871,6 +871,15 @@ void HTTP_printConfig2(String &out){
 
   HTTP_print_MP3_7(out,"Момент заезда автомобиля. Файл 001.mp3", "BUSY" );
   HTTP_print_MP3_7(out,"Датчик перестает видеть расстояние (Машина в пене). Файл 002.mp3", "NAN" );
+// Дополнительный таймер отсрочки срабатывания
+  out += "<tr><td>Таймер отсрочки срабатывания датчика (сбрасывается только когда бокс свободен)</td><td>";
+  HTTP_print_input_checkbox(out,"MP3_NAN_ENABLE1","1",jsonConfig["MP3"]["NAN"]["ENABLE1"].as<bool>());
+  out += "</td><td>";
+  HTTP_InputInt1(out,"MP3_NAN_DELAY1",jsonConfig["MP3"]["NAN"]["DELAY1"].as<int>(),0,3600);
+  out += "</td>";
+  for( int i=0; i<4; i++)out += "<td>&nbsp;</td>";
+  out += "</tr>\n";
+
   HTTP_print_MP3_7(out,"В боксе долго находится автмомбиль. Файл 003.mp3", "BUSY1" );
   HTTP_print_MP3_7(out,"Автомобиль слишком долго в доксе или датчик \"залип\". Файл 004.mp3", "BUSY2" );
   HTTP_print_MP3_7(out,"После выезда автомобиля датчик не видит расстояния. (Под датчиком на полу много пены либо ошибка калибровки). Файл 005.mp3", "FREE_NAN" );
@@ -1311,6 +1320,12 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("FLAG_CONFIG3")  ){
          HTTP_checkArgsMP3("BUSY");
          HTTP_checkArgsMP3("NAN");
+// Два дополнительных поля для включения отсрочки         
+         if( server.hasArg("MP3_NAN_DELAY1") )jsonConfig["MP3"]["NAN"]["DELAY1"] = server.arg("MP3_NAN_DELAY1").toInt();
+         if( server.hasArg("MP3_NAN_ENABLE1") )jsonConfig["MP3"]["NAN"]["ENABLE1"] = true;
+         else jsonConfig["MP3"]["NAN"]["ENABLE1"] = false;
+
+
          HTTP_checkArgsMP3("BUSY1");
          HTTP_checkArgsMP3("BUSY2");
          HTTP_checkArgsMP3("FREE_NAN");

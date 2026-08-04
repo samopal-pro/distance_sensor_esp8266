@@ -60,7 +60,7 @@ void configDefault(){
    jsonConfig["SYSTEM"]["PASS1"]       = DEVICE_PASS1;               //Пароль администратора
    jsonConfig["SYSTEM"]["PASSS"]       = DEVICE_PASSS;               //Пароль светофорбока (мегоадминистратора)
 // Параметры моединения WiFi
-   jsonConfig["WIFI"]["NAME"]              = "ASUS_58_2G";                         //Имя сети WiFi
+   jsonConfig["WIFI"]["NAME"]              = "ZYXEL-24";                         //Имя сети WiFi
    jsonConfig["WIFI"]["PASS"]              = "sav59vas";                         //Пароль сети WiFi
    jsonConfig["WIFI"]["DHCP"]              = false;                       //Брать парметры сети по DHCP
    jsonConfig["WIFI"]["IP"]["ADDR"]        = "192.168.1.35";             //IP адрес при стаическом режиме
