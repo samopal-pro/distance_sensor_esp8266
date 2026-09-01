@@ -905,10 +905,10 @@ bool btnRelease(uint32_t _tm, int _num){
       _ret = false;
       systemMP3("97",97,PRIORITY_MP3_HIGH);
       startCalibrate(jsonConfig["CALIBR"]["DELAY_START"].as<uint32_t>()*1000);
-      if( bootCount>=1 ){
-         if( isAP )isAP = false;
-         else isAP = true; 
-         }
+//      if( bootCount>=1 ){
+//         if( isAP )isAP = false;
+//         else isAP = true; 
+//         }
       }
    else {
       lastSensorOn = SS_RESTORE;
