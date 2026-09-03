@@ -520,6 +520,8 @@ int TEventMP3::state(){
    if( GPIO == ESM_NONE || PIN < 0 ){
       Player->readState();
       _state = Player->readState();
+      if( _state == 512 )_state = 0;
+      if( _state == 513 )_state = 1;
    }
    else if( GPIO == ESM_ENABLE ){
       if( digitalRead(PIN) )_state = 0;
