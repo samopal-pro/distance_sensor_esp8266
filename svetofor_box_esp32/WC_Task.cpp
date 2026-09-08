@@ -583,11 +583,11 @@ void setNanMode(){
          if(isChangeNan)Serial.println(F("!!! NAN. Skiping"));
          break;  
       case NAN_VALUE_BUSY:
-         SensorOn = SS_NAN;
+         SensorOn = SS_BUSY;
          if(isChangeNan)Serial.println(F("!!! NAN. BUSY"));
          break;
       case NAN_VALUE_FREE:
-         SensorOn = SS_NAN;
+         SensorOn = SS_FREE;
          if(isChangeNan)Serial.println(F("!!! NAN. FREE"));
          break;         
    }
