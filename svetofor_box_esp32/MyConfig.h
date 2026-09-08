@@ -7,13 +7,13 @@
 
 //#define SAV_CONFIG
 
-
+#define FDPLAYER_STAT_TM    2000L //Для глючных плееров возвращающих непонятный код - задержка в выдачи статуса. Для нормальных можно закомментарить эту строку 
 #define IS_LORA
 #define IS_TOUCH
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.35"
+#define SOFTWARE_V           "10.0.36"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.33"
 

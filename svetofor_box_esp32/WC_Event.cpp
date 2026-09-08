@@ -517,9 +517,15 @@ void TEventMP3::_replay(uint32_t _delay){
 int TEventMP3::state(){
    int _state = -1;
    int _flag = 0;
+#if defined(FDPLAYER_STAT_TM)
+   uint32_t _ms = millis();
+   if ((uint32_t)(_ms - msOn) < FDPLAYER_STAT_TM) {
+       _state = 1;
+   } else  
+#endif   
    if( GPIO == ESM_NONE || PIN < 0 ){
       Player->readState();
-      _state = Player->readState();
+      _state = Player->readState();     
       if( _state == 512 )_state = 0;
       if( _state == 513 )_state = 1;
    }
@@ -537,6 +543,8 @@ int TEventMP3::state(){
       else {
          Player->readState();
          _state = Player->readState();
+         if( _state == 512 )_state = 0;
+         if( _state == 513 )_state = 1;
          if( _state == 1 )isLowGpio = true;
          else isHighGpio = true;
       }
