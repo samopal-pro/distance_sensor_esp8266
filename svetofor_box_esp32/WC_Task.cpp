@@ -144,7 +144,7 @@ void tasksStart() {
    vTaskDelay(500);
    xTaskCreateUniversal(taskSensors, "sensors", 10000, NULL, 4, NULL, CORE);
    vTaskDelay(500);
-   xTaskCreateUniversal(taskButton, "btn", 4096, NULL, 4, NULL,CORE);
+   xTaskCreateUniversal(taskButton, "btn", 8192, NULL, 4, NULL,CORE);
    vTaskDelay(500);
 //  vTaskDelay(500);
 //   xTaskCreateUniversal(taskLora, "lora", 10000, NULL, 2, NULL, CORE);
