@@ -29,7 +29,7 @@ void configDefault(){
 
 void configDefault1(){
    configDefaultGeneral();
-   jsonConfig["SENSOR"]["TYPE"]        = SENSOR_SR04_75; //Тип датчика 
+   jsonConfig["SENSOR"]["TYPE"]         = SENSOR_SR04T; //Тип датчика 
    jsonConfig["WIFI"]["NAME1"]          = "svetoforbox.ru";                         //Имя сети WiFi
    jsonConfig["WIFI"]["PASS1"]          = "89060725500";                         //Пароль сети WiFi
 //   jsonConfig["WIFI"]["POWER"]         = WIFI_POWER_21dBm;           //Уровень сигнала WiFi
@@ -40,8 +40,6 @@ void configDefault1(){
    jsonConfig["NET"]["DOGOVOR_ID"]     = "0000";            
    jsonConfig["CRM_MOSCOW"]["ENABLE"]  = true;                      //посылать информацию на CRM-MOSCOW
    jsonConfig["TB"]["ENABLE"]          = true;                      //Посылать информацию в ThingsBoard
-
-
 
    jsonConfig["RELAY1"]["MODE"]        = RELAY_NORMAL;               // Режим работы реле
    jsonConfig["RELAY1"]["T_PULSE"]     = 1;                          // Длительность импульса при импульсном режиме
@@ -65,8 +63,8 @@ void configDefault1(){
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
    jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 900;
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
-   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 1800;
-   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = true;
+   jsonConfig["MP3"]["BUSY2"]["DELAY"]    = 1800;
+   jsonConfig["MP3"]["BUSY2"]["LOOP"]     = true;
    jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 5;
    jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
    jsonConfig["MP3"]["FREE"]["DELAY"]     = 7;
@@ -125,8 +123,8 @@ void configDefault2(){
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
    jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 50;
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
-   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 25;
-   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["BUSY2"]["DELAY"]    = 25;
+   jsonConfig["MP3"]["BUSY2"]["LOOP"]     = false;
    jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 10;
    jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
    jsonConfig["MP3"]["FREE"]["DELAY"]     = 7;
@@ -199,8 +197,8 @@ void configDefaultTest(){
    jsonConfig["MP3"]["NAN"]["LOOP"]       = false;
    jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 50;
    jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
-   jsonConfig["MP3"]["BUSY1"]["DELAY"]    = 25;
-   jsonConfig["MP3"]["BUSY1"]["LOOP"]     = false;
+   jsonConfig["MP3"]["BUSY2"]["DELAY"]    = 25;
+   jsonConfig["MP3"]["BUSY2"]["LOOP"]     = false;
    jsonConfig["MP3"]["FREE_NAN"]["DELAY"] = 2;
    jsonConfig["MP3"]["FREE_NAN"]["LOOP"]  = false;
    jsonConfig["MP3"]["FREE"]["DELAY"]     = 1;

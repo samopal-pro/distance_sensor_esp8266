@@ -541,6 +541,7 @@ void handleCalibrate(bool _flag){
    }
    else {
       Serial.println("!!! Stop calibr");
+      waitMP3(DEFAULT_TIMER_MP3);
       if( calibrCount > 0 ){
           bool ret = false;
           if(calibrError < calibrCount)systemMP3("97",93,PRIORITY_MP3_MAXIMAL);
