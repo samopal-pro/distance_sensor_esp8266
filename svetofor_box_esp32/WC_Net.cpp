@@ -1,5 +1,6 @@
 #include "WC_Net.h"
 
+WiFiClient client;
 HTTPClient httpClient;
 bool isWiFiAlways1 = true; 
 uint32_t msSendHttp = 0, msSendTB = 0, msSendLora = 0,msSendLoraAttr = 0, msSendCrm = 0;
@@ -498,7 +499,7 @@ bool sendCrmMoscowParam(){
    str += (int)crc;
 
    Serial.println(str);
-   httpClient.begin(str);
+   httpClient.begin(client,str);
    int httpCode = httpClient.GET();
    Serial.print(F("!!! HTTP send "));
    Serial.println(jsonConfig["CRM_MOSCOW"]["SERVER"].as<String>());
@@ -575,7 +576,7 @@ bool sendHttpParam(){
       str += (int)crc;
       Serial.print(F("!!! HTTP send: "));
       Serial.println(str);
-      httpClient.begin(str);
+      httpClient.begin(client,str);
       int httpCode = httpClient.GET();
    
       if( httpCode == HTTP_CODE_OK ){
@@ -642,7 +643,7 @@ bool sendParamTB(){
     String _data;
     serializeJson(jsonData, _data); 
 
-    httpClient.begin(_url);
+    httpClient.begin(client,_url);
     httpClient.addHeader("Content-Type", "application/json");     
     int httpCode = httpClient.POST(_data);
     Serial.print(F("!!! TB auth send "));
@@ -684,7 +685,7 @@ bool authTB(const char *_key, const char *_secret){
     String _data;
     serializeJson(jsonData, _data); 
 
-    httpClient.begin(_url);
+    httpClient.begin(client,_url);
     httpClient.addHeader("Content-Type", "application/json");     
     int httpCode = httpClient.POST(_data);
     Serial.print(F("!!! TB auth send "));
@@ -735,7 +736,7 @@ bool sendAttributeTB(){
     String _data;
     serializeJson(jsonData, _data); 
 
-    httpClient.begin(_url);
+    httpClient.begin(client,_url);
     httpClient.addHeader("Content-Type", "application/json");     
     int httpCode = httpClient.POST(_data);
     Serial.print(F("!!! TB send token="));
