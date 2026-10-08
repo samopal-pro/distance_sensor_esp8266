@@ -942,7 +942,6 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("NameESP")      && UID == 0 )strcpy(EA_Config.ESP_NAME,      server.arg("NameESP").c_str());
       if(server.hasArg("WiFiName")     )strcpy(EA_Config.AP_SSID,       server.arg("WiFiName").c_str());
       if(server.hasArg("WiFiPassword") )strcpy(EA_Config.AP_PASS,       server.arg("WiFiPassword").c_str());
-      if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
 
       if(server.hasArg("Dogovor")      )strcpy(EA_Config.DOGOVOR_ID,    server.arg("Dogovor").c_str());
       if(server.hasArg("Box")          )strcpy(EA_Config.BOX_ID,        server.arg("Box").c_str());

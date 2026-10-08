@@ -215,8 +215,10 @@ void taskNet( void *pvParameters ){
    EventRGB1->setColor0(COLOR_BLACK);
    EventRGB1->setColor1(COLOR_BLACK);
    Network.onEvent(handleEventWiFi);
-   if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() ||  bootCount<1 )isAP = true;
-   else isAP = false;
+// В версии 10.0.39 AP всегда включена
+//   if( jsonConfig["SYSTEM"]["AP_START"].as<bool>() ||  bootCount<1 )isAP = true;
+//   else isAP = false;
+   isAP = true;
    initLora();
    bool isSendT = false;
    bool isSendA = false;
@@ -247,10 +249,11 @@ void taskNet( void *pvParameters ){
              msAP = millis();                
           }
 // Гасим точку доступа
-          if( !isAP && ( curWiFi == WIFI_AP || curWiFi == WIFI_AP_STA) ){
+/// Отключено в версии 10.0.39
+///          if( !isAP && ( curWiFi == WIFI_AP || curWiFi == WIFI_AP_STA) ){
 //             Serial.println(F("!!! Disable AP"));
-             WiFi.enableAP(false);
-          }
+///             WiFi.enableAP(false);
+///          }
           if( ms1 == 0 || ms < ms1 || (ms-ms1)>1000){
            ms1= ms;
 
