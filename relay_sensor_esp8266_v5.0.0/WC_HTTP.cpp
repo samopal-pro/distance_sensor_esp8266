@@ -901,10 +901,14 @@ bool HTTP_checkArgs(int current){
          EA_Config.ColorBlinkNum = (uint8_t)server.arg("ColorBlink").toInt();
       }
       if( server.hasArg("FLAG_ROOT") ){
-         EA_Config.isColorFreeBlink = false;   
-         if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
-         EA_Config.isColorNan = false;   
-         if( server.hasArg("isColorNan"))EA_Config.isColorNan = true;
+         if( server.hasArg("isFreeBlink_H")){
+            if( server.hasArg("isFreeBlink"))EA_Config.isColorFreeBlink = true;
+            else EA_Config.isColorFreeBlink = false;   
+         }
+         if( server.hasArg("isColorNan_H")){  
+            if( server.hasArg("isColorNan"))EA_Config.isColorNan = true;
+            else EA_Config.isColorNan = false;   
+         }
       }
       if(server.hasArg("Brightness")  )EA_Config.Brightness = server.arg("Brightness").toInt();
 
@@ -951,10 +955,14 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("TM_HTTP_RETRY_ERROR"))EA_Config.TM_HTTP_RETRY_ERROR = server.arg("TM_HTTP_RETRY_ERROR").toInt();
 
       if( server.hasArg("FLAG_CONFIG2") ){
-         EA_Config.isDHCP = true;
-         if( server.hasArg("STATIC_IP"))EA_Config.isDHCP = false;
-         EA_Config.isSendCrmMoscow = false;
-         if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
+         if( server.hasArg("STATIC_IP_H")){
+            if( server.hasArg("STATIC_IP"))EA_Config.isDHCP = false;
+            else EA_Config.isDHCP = true;
+         }
+         if( server.hasArg("SEND_HTTP_H")){
+            if( server.hasArg("SEND_HTTP"))EA_Config.isSendCrmMoscow = true;
+            else EA_Config.isSendCrmMoscow = false;
+         }
       }
 
 //      if(server.hasArg("StaticIP"))
@@ -980,10 +988,14 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("TM_PauseRelay2"))EA_Config.TM_PauseRelay2 = server.arg("TM_PauseRelay2").toInt();   
 
       if( server.hasArg("FLAG_CONFIG1") ){
-         if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
-         else EA_Config.isInverseRelay2 = false;
-         if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
-         else EA_Config.isInverseRelay1 = false;
+         if(server.hasArg("isInverseRelay2_H")){
+            if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
+            else EA_Config.isInverseRelay2 = false;
+         }
+         if(server.hasArg("isInverseRelay1_H")){
+            if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
+            else EA_Config.isInverseRelay1 = false;
+         }
       }
    
       _save = true;
@@ -1271,6 +1283,9 @@ void HTTP_print_input_radio(String &out,char *name, char *value,bool checked){
 }
 
 void HTTP_print_input_checkbox(String &out,char *name, char *value,bool checked){
+  out += "<input type='hidden' name='";
+  out += name;
+  out += "_H' value='1'>";   
   out += "<input type='checkbox' name='";
   out += name;
   out += "' value='";
