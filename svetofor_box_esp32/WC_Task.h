@@ -18,6 +18,9 @@
 #include <esp_heap_caps.h>
 #include <esp_mac.h>
 #include <esp32-hal-touch.h>
+#include <esp_partition.h>
+#include <esp_ota_ops.h>
+
 
 #define DEPTH_DIST_ARRAY 5
 #define SAMPLE_LEN       10
@@ -64,6 +67,7 @@ extern SENSOR_STAT_t SensorOn;
 extern bool isSendNet;
 extern int MP3_ADD_DIR;
 extern bool isNumStatRGB;
+extern uint32_t sizePartition;
 
 void tasksStart();
 void taskEvents(void *pvParameters);

@@ -2,6 +2,7 @@
 char strID[16];
 uint64_t chipID;
 char serNo[33];
+uint32_t sizePartition = 0;
 
 int MP3_ADD_DIR = MP3_SYSTEM_FULL_DIR;
 
@@ -29,6 +30,8 @@ bool isNumStatRGB = true;
 
 float Distance = NAN, lastDistance = NAN;
 SENSOR_STAT_t SensorOn = SS_NONE, lastSensorOn = SS_NONE;  
+uint32_t msSensorOn = 0;
+
 ES_STAT stat1 = STAT_OFF, stat2 = STAT_OFF;
 uint32_t msStat1  = 0, msStat2 = 0;
 bool statRelay1 = false, statRelay2 = false;
@@ -85,7 +88,11 @@ void readID(){
   }
   serNo[32] = '\0';
   Serial.printf("!!! ESP ID=%012llX strID=%s serNO=%s\n",chipID,strID,serNo);
-
+  const esp_partition_t* running = esp_ota_get_running_partition();
+  if (running != NULL) {
+    sizePartition = running->size;
+    Serial.printf("!!! Partition: %s %d bytes\n", running->label,running->size);
+  }
 }
 
 /**
@@ -603,12 +610,13 @@ void setNanMode(){
 void checkChangeOn(){
    uint32_t _color1, _color2;
    if( SensorOn == lastSensorOn )return;
-   Serial.printf("!!! Stat is change %d %d\n", (int)SensorOn,(int)lastSensorOn);
    uint32_t _ms = millis();
+   Serial.printf("!!! Stat is change %d %d\n", (int)SensorOn,(int)lastSensorOn);
    isSendNet = true;
    switch(SensorOn){
       case SS_BUSY:
 //      case SS_NAN_BUSY:   
+         if( _ms - msSensorOn < jsonConfig["DELAY"]["BUSY"].as<uint32_t>()*1000 )return;
          if(lastSensorOn!=SS_RESTORE){   
 // Определяем время заезда машины и ставим отсрочку выезда
             msBusy = _ms + jsonConfig["MP3"]["NAN"]["DELAY1"].as<uint32_t>()*1000;
@@ -621,6 +629,7 @@ void checkChangeOn(){
          EventRGB2->set(jsonConfig["RGB2"]["BUSY"].as<uint32_t>(),jsonConfig["RGB2"]["BUSY"].as<uint32_t>());
          break;
       case SS_FREE:   
+         if( _ms - msSensorOn < jsonConfig["DELAY"]["FREE"].as<uint32_t>()*1000 )return;
 //      case SS_NAN_FREE:
          if(lastSensorOn!=SS_RESTORE){   
             Serial.println("!!! Stop Timer NAN");
@@ -647,6 +656,7 @@ void checkChangeOn(){
       case SS_NAN:
       case SS_NAN_FREE:   
       case SS_NAN_BUSY:   
+         if( _ms - msSensorOn < jsonConfig["DELAY"]["NAN"].as<uint32_t>()*1000 )return;
          if(jsonConfig["RGB1"]["IS_NAN_MODE"].as<bool>()){
             switch(jsonConfig["RGB1"]["NAN_MODE"].as<int>()){
                case NAN_VALUE_IGNORE: 
@@ -702,6 +712,7 @@ void checkChangeOn(){
          break;
    }
    lastSensorOn = SensorOn;
+   msSensorOn   = _ms;
    isPlayMP3 = false;
    saveSet(Distance,SensorOn);
 }

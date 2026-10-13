@@ -370,3 +370,14 @@ void HTTP_printTag(String &out,const char *tag, const char *text, const char *st
    out += text;
    HTTP_endTag(out,tag);
 }
+
+void HTTP_openFieldset(String &out,const char *legend){
+  out += "<fieldset>\n";
+  HTTP_printTag(out,"legend",legend); 
+}
+
+void HTTP_closeFieldset(String &out){
+  HTTP_printSubmit(out,"Save","Сохранить","btn");
+  out += "</fieldset>\n"; 
+
+}

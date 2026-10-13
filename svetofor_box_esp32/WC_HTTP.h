@@ -126,6 +126,9 @@ uint32_t HTMLtoInt(const char *s_color);
 
 bool HTTP_redirect();
 void setJsonArray( String str);
-
+bool argToInt(const char *arg, const char *jtag1, const char *jtag2, const char *jtag3 = nullptr);
+bool argHtmlToInt(const char *arg, const char *jtag1, const char *jtag2, const char *jtag3 = nullptr);
+bool argToBool(const char *arg, const char *jtag1, const char *jtag2, const char *jtag3 = nullptr);
+bool argToStr(const char *arg, const char *jtag1, const char *jtag2, const char *jtag3 = nullptr);
 
 #endif

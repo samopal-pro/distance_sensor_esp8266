@@ -224,6 +224,11 @@ void configDefaultGeneral(){
 // Параметры подключения к CRM.MOSCOW
 //   jsonConfig["NET"]["ENABLE"]            = false;                      //Коннектится по WiFi
 
+// Задержки включения/выключения/NAN (устранение дребезга и помех)
+   jsonConfig["DELAY"]["FREE"]             = 3;
+   jsonConfig["DELAY"]["BUSY"]             = 3;
+   jsonConfig["DELAY"]["NAN"]              = 3;
+
    jsonConfig["WIFI"]["NAME"]              = "";                         //Имя сети WiFi
    jsonConfig["WIFI"]["PASS"]              = "";                         //Пароль сети WiFi
    jsonConfig["WIFI"]["NAME1"]             = "";                         //Имя сети WiFi

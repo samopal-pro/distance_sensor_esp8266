@@ -37,4 +37,9 @@ void HTTP_beginTag(String &out,const char *tag,const char *style=NULL,bool is_nl
 void HTTP_endTag(String &out,const char *tag,bool is_nl=true);
 void HTTP_style(String &out,const char *style);
 void HTTP_printTag(String &out, const char *tag, const char *_text, const char *style=NULL);
+
+void HTTP_openFieldset(String &out,const char *legend);
+void HTTP_closeFieldset(String &out);
+
+
 #endif
