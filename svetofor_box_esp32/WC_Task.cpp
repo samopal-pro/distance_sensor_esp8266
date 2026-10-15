@@ -609,8 +609,11 @@ void setNanMode(){
 */
 void checkChangeOn(){
    uint32_t _color1, _color2;
-   if( SensorOn == lastSensorOn )return;
    uint32_t _ms = millis();
+   if( SensorOn == lastSensorOn ){
+      msSensorOn   = _ms;
+      return;
+   }
    Serial.printf("!!! Stat is change %d %d\n", (int)SensorOn,(int)lastSensorOn);
    isSendNet = true;
    switch(SensorOn){
@@ -656,7 +659,7 @@ void checkChangeOn(){
       case SS_NAN:
       case SS_NAN_FREE:   
       case SS_NAN_BUSY:   
-         if( _ms - msSensorOn < jsonConfig["DELAY"]["NAN"].as<uint32_t>()*1000 )return;
+//         if( _ms - msSensorOn < jsonConfig["DELAY"]["NAN"].as<uint32_t>()*1000 )return;
          if(jsonConfig["RGB1"]["IS_NAN_MODE"].as<bool>()){
             switch(jsonConfig["RGB1"]["NAN_MODE"].as<int>()){
                case NAN_VALUE_IGNORE: 

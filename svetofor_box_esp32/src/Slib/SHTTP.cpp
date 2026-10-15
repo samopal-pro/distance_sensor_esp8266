@@ -207,10 +207,35 @@ void  HTTP_print_td_color(String &out, uint32_t color, char *name, uint8_t value
 
 
 void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1, bool check){
-   char s[64];
    out += "<tr><td colspan=5>&nbsp;</td></tr>\n";
-
    out += "<tr>\n";
+   HTTP_print_color3_check(out, label, name1, check);
+   HTTP_print_color3_main(out, color, label, color1, color2);
+   out += "</tr>\n"; 
+}
+
+void HTTP_print_color3_delay(String &out, uint32_t color, char *name, char *label, uint32_t color1, uint32_t color2, char *name1, bool check, char *name2, char *label2, int val2 ){
+ //  out += "<tr><td colspan=6>&nbsp;</td></tr>\n";
+   out += "<tr>\n";
+   HTTP_print_color3_check(out, label, name1, check);
+   HTTP_print_color3_main(out, color, name, color1, color2);
+   if( name2 == NULL ){
+      out += "<td colspqn=2>&nbsp;</td>\n";
+   }
+   else {
+      out += "<td>";
+      out += label2;     
+      out += "</td>";
+      out += "<td>";
+      HTTP_InputInt1(out,name2,val2,0,60);     
+      out += "</td>";
+   }
+
+   out += "</tr>\n"; 
+}
+
+
+void HTTP_print_color3_check(String &out, char *label, char *name1, bool check){
    if( name1 == NULL ){
       out += "<td colspan=2>";
       out += label, 
@@ -224,6 +249,10 @@ void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uin
       out += label, 
       out += "</td>";
    }
+}
+
+void HTTP_print_color3_main(String &out, uint32_t color, char *name, uint32_t color1, uint32_t color2){
+   char s[20];
    sprintf(s,"%06lX",color1);
    out += "<td><button style=\"background-color: ";
    out += s;
@@ -248,8 +277,8 @@ void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uin
    out += "' name='";
    out += name;
    out += "'></td>\n";
-   out += "</tr>\n"; 
 }
+
 
 void HTTP_print_color(String &out, uint32_t color, char *name){
    char s[64];

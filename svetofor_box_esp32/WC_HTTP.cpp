@@ -578,11 +578,11 @@ void HTTP_printConfigColor(String &out){
   char s[50];
 // Блок №1c
 
-  HTTP_openFieldset(out,"Настройка задержек срабатывания режимов (защита от помех)"); 
-  HTTP_InputInt(out,"Задержка режима \"Свободно\"","DELAY_FREE",jsonConfig["DELAY"]["FREE"].as<int>(),0,10,32);
-  HTTP_InputInt(out,"Задержка режима \"Занято\"",  "DELAY_BUSY",jsonConfig["DELAY"]["BUSY"].as<int>(),0,10,32);
-  HTTP_InputInt(out,"Задержка режима \"Пена\" (NAN)","DELAY_NAN",jsonConfig["DELAY"]["NAN"].as<int>(),0,10,32);
-  HTTP_closeFieldset(out);
+//  HTTP_openFieldset(out,"Настройка задержек срабатывания режимов (защита от помех)"); 
+//  HTTP_InputInt(out,"Задержка режима \"Свободно\"","DELAY_FREE",jsonConfig["DELAY"]["FREE"].as<int>(),0,10,32);
+//  HTTP_InputInt(out,"Задержка режима \"Занято\"",  "DELAY_BUSY",jsonConfig["DELAY"]["BUSY"].as<int>(),0,10,32);
+//  HTTP_InputInt(out,"Задержка режима \"Пена\" (NAN)","DELAY_NAN",jsonConfig["DELAY"]["NAN"].as<int>(),0,10,32);
+//  HTTP_closeFieldset(out);
 
   HTTP_openFieldset(out,"Настройка основной подсветки датчика");
   out += "<p class='t1'>";
@@ -594,13 +594,22 @@ void HTTP_printConfigColor(String &out){
 
 //  out += "</table>\n";
   out += "<table width=100%>";
-  HTTP_print_color3(out, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), "ColorFree", "Цвет в режиме \"Свободно\"", COLOR_FREE1, COLOR_FREE2);
+  HTTP_print_color3_delay(out, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), "ColorFree", "Цвет в режиме \"Свободно\"", COLOR_FREE1, COLOR_FREE2, 
+                         NULL, false,  "DELAY_FREE", "Задержка", jsonConfig["DELAY"]["FREE"].as<int>() );
+
+  HTTP_print_color3_delay(out, jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2,
+                        "isFreeBlink", jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
+
+  HTTP_print_color3_delay(out, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), "ColorBusy", "Цвет в режиме \"Занято\"", COLOR_BUSY1, COLOR_BUSY2,
+                         NULL, false,  "DELAY_BUSY", "Задержка", jsonConfig["DELAY"]["BUSY"].as<int>() );
+
+///  HTTP_print_color3(out, jsonConfig["RGB1"]["FREE"].as<uint32_t>(), "ColorFree", "Цвет в режиме \"Свободно\"", COLOR_FREE1, COLOR_FREE2);
 //  out += "<tr><td colspan=4>";
 //  HTTP_print_input_checkbox(out,"isFreeBlink","1",jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
 //  out += "</td></tr>\n";
 
-  HTTP_print_color3(out, jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2,"isFreeBlink",jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
-  HTTP_print_color3(out, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), "ColorBusy", "Цвет в режиме \"Занято\"", COLOR_BUSY1, COLOR_BUSY2);
+///  HTTP_print_color3(out, jsonConfig["RGB1"]["FREE_BLINK"].as<uint32_t>(), "ColorBlink", "Мигание в режиме \"Свободно\"", COLOR_BLINK1, COLOR_BLINK2,"isFreeBlink",jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>());
+///  HTTP_print_color3(out, jsonConfig["RGB1"]["BUSY"].as<uint32_t>(), "ColorBusy", "Цвет в режиме \"Занято\"", COLOR_BUSY1, COLOR_BUSY2);
 
   out += "</table>";
   HTTP_closeFieldset(out);
