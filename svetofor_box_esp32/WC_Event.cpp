@@ -69,6 +69,7 @@ void TEvent::on(){
     else {
        State = ES_WAIT_ON;
     }
+//    Serial.printf("!!! Relay on %d %d %d\n,State  ")
 }
 
 void TEvent::on( uint32_t _delay ){
@@ -82,6 +83,7 @@ void TEvent::on( uint32_t _delay ){
 void TEvent::off(){
     if( Type == ET_DISABLE )return;
     if( State == ES_WAIT_OFF || State == ES_OFF )return;
+
     msOff = millis();
     if( DelayOff == 0 ){
        State = ES_OFF;
@@ -90,6 +92,7 @@ void TEvent::off(){
     else {
        State = ES_WAIT_OFF;
     }
+    Serial.printf("!!! event off %d %d\n",(int)DelayOff,(int)State);
 }
 
 void TEvent::off( uint32_t _delay ){

@@ -702,7 +702,7 @@ void HTTP_printConfigRelay(String &out){
   HTTP_print_img_radio(out,"/relay5.png","Управление кнопкой открытия или закрытия ворот в момент заезда и в момент выезда","ModeRelay2","5",( jsonConfig["RELAY2"]["MODE"].as<int>() == RELAY_PULSE2 ), true);
   HTTP_InputInt(out,"           На сколько секунд замкнуть контакты. Для управления кнопкой закрытия или открытия ворот:","TM_PulseRelay2",jsonConfig["RELAY2"]["T_PULSE"].as<int>(),1,30);
   HTTP_InputInt(out,"           На сколько секунд разамкнуть контакты. Только для импульсного режима:","TM_PauseRelay2",jsonConfig["RELAY2"]["T_PAUSE"].as<int>(),1,30);
-  HTTP_printSubmit(out,"Save","Сохранить","btn");
+//  HTTP_printSubmit(out,"Save","Сохранить","btn");
   HTTP_closeFieldset(out);
 
 }
@@ -1361,7 +1361,7 @@ bool HTTP_checkArgs(int current){
 
       if(server.hasArg("LORA_GATEWAY")      )jsonConfig["LORA"]["GATEWAY"]       = strtoull(server.arg("LORA_GATEWAY").c_str(), nullptr, 16); 
 
-      argToBool("STATIC_IP_H", "WIFI", "DHCP");
+      argToBool("STATIC_IP_H", "WIFI", "DHCP", nullptr, true);
       argToStr("IPAddr", "WIFI", "IP", "ADDR");
       argToStr("IPMask", "WIFI", "IP", "MASK");
       argToStr("IPGate", "WIFI", "IP", "GW");
@@ -1439,7 +1439,7 @@ bool argHtmlToInt(const char *arg, const char *jtag1, const char *jtag2, const c
     return false;
 }
 
-bool argToBool(const char *arg, const char *jtag1, const char *jtag2, const char *jtag3) {
+bool argToBool(const char *arg, const char *jtag1, const char *jtag2, const char *jtag3, bool reverse) {
     bool ret = server.hasArg(arg);
     if(ret){
        int l = strlen(arg);
@@ -1447,12 +1447,13 @@ bool argToBool(const char *arg, const char *jtag1, const char *jtag2, const char
        strncpy(arg1, arg, l-2);
        arg1[l-2] = '\0';
        if( jtag3 == nullptr ){
-          if (server.hasArg(arg1)) jsonConfig[jtag1][jtag2] = true;
-          else jsonConfig[jtag1][jtag2] = false;
+          if (server.hasArg(arg1)) jsonConfig[jtag1][jtag2] = !reverse;
+          else jsonConfig[jtag1][jtag2] = reverse;
+//          Serial.printf("!!! argTiBool %s %s %d\n", jtag1, jtag2, (int)jsonConfig[jtag1][jtag2].as<bool>());
        }
        else {
-          if (server.hasArg(arg1)) jsonConfig[jtag1][jtag2][jtag3] = true;
-          else jsonConfig[jtag1][jtag2][jtag3] = false;
+          if (server.hasArg(arg1)) jsonConfig[jtag1][jtag2][jtag3] = !reverse;
+          else jsonConfig[jtag1][jtag2][jtag3] = reverse;
 
        }
        free(arg1);

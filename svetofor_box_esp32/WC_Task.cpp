@@ -172,9 +172,9 @@ void taskEvents(void *pvParameters) {
       EventSensor->loop();
 //      if( EventSensor->changeState()  )Serial.printf("!!! EventSensor Loop %d %d \n",(int)EventSensor->Type,(int)EventSensor->State);
       EventRelay1->loop();
-      if( EventRelay1->changeState()  )Serial.printf("!!! EventRelay1 Loop %d %d \n",(int)EventRelay1->Type,(int)EventRelay1->State);
+      if( EventRelay1->changeState()  )Serial.printf("!!! EventRelay1 Loop %d %d %d %d\n",(int)EventRelay1->Type,(int)EventRelay1->State,(int)EventRelay1->DelayOn,(int)EventRelay1->DelayOff);
       EventRelay2->loop();
-      if( EventRelay2->changeState()  )Serial.printf("!!! EventRelay2 Loop %d %d \n",(int)EventRelay2->Type,(int)EventRelay2->State);
+      if( EventRelay2->changeState()  )Serial.printf("!!! EventRelay2 Loop %d %d %d %d\n",(int)EventRelay2->Type,(int)EventRelay2->State,(int)EventRelay2->DelayOn,(int)EventRelay2->DelayOff);
 //      EventRGB1->loop();
 //      EventRGB2->loop();
       EventCalibrate->loop();
@@ -369,12 +369,12 @@ void handleSensor(bool _flag){
    EventRelay1->setType((TEVENT_TYPE_t)jsonConfig["RELAY1"]["MODE"].as<int>(),(uint32_t)(jsonConfig["RELAY1"]["T_PULSE"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY1"]["T_PAUSE"].as<float>()*1000));
    EventRelay2->setType((TEVENT_TYPE_t)jsonConfig["RELAY2"]["MODE"].as<int>(),(uint32_t)(jsonConfig["RELAY2"]["T_PULSE"].as<float>()*1000),(uint32_t)(jsonConfig["RELAY2"]["T_PAUSE"].as<float>()*1000));
    if( _flag ){
-      EventRelay1->on();
-      EventRelay2->on();
+      EventRelay1->on( jsonConfig["RELAY1"]["DELAY_ON"].as<uint32_t>()*1000 );
+      EventRelay2->on( jsonConfig["RELAY2"]["DELAY_ON"].as<uint32_t>()*1000 );
    }
    else {
-      EventRelay1->off();
-      EventRelay2->off();
+      EventRelay1->off( jsonConfig["RELAY1"]["DELAY_OFF"].as<uint32_t>()*1000 );
+      EventRelay2->off( jsonConfig["RELAY2"]["DELAY_OFF"].as<uint32_t>()*1000 );
    }
 }
 
