@@ -9,11 +9,12 @@
 
 #define FDPLAYER_STAT_TM    2000L //Для глючных плееров возвращающих непонятный код - задержка в выдачи статуса. Для нормальных можно закомментарить эту строку 
 #define IS_LORA
+#define RADIOLIB_NEW
 #define IS_TOUCH
 #define IS_BTN_ADD
 #define TOUCH_THRESHOLD      500
 
-#define SOFTWARE_V           "10.0.42"
+#define SOFTWARE_V           "10.0.43"
 #define HARDWARE_V           "10.0.1"
 #define CONFIG_V             "10.0.40"
 

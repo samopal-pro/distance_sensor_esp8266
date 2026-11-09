@@ -213,6 +213,33 @@ TEventRGB::TEventRGB( uint8_t _pin, int _num, int _first ){
    NumSta       = LED_STAT_STA1;
 }
 
+TEventRGB::TEventRGB(){
+
+   Strip        = NULL;
+   Num          = 0;
+   First        = 0;
+   TimerOn      = 0;
+   TimerOff     = 0;
+   Color1       = COLOR_NONE;
+   Color2       = COLOR_NONE;
+   ColorBlink1  = COLOR_NONE;
+   ColorBlink2  = COLOR_NONE;
+   ColorMP3     = COLOR_NONE;
+   State        = ES_NONE;
+   msOn         = 0;
+   msOff        = 0;
+   isRainbow    = false;
+   isMP3        = false;
+   HueRainbow   = 0;
+   IncRainbow   = 0;
+   isBlink0     = false;
+   BlinkCount   = 0;
+   TimerRainbow = 0;
+   NumAp        = LED_STAT_AP1;
+   NumSta       = LED_STAT_STA1;
+}
+
+
 
 void TEventRGB::setColor(uint32_t _color1, uint32_t _color2){
    for( int i=0; i<Num; i++){

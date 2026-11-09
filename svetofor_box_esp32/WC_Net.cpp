@@ -35,14 +35,25 @@ void initLora(){
 
    Serial.print(F("!!! LoRa init "));   
    LoraSPI.begin(PIN_LORA_SCK, PIN_LORA_MISO, PIN_LORA_MOSI);
+   
+#if defined(RADIOLIB_NEW)
+   ConfigLoRa_t config;
+   config.frequency       = RADIOLIB_UNIT_MEGA(868);
+   config.spreadingFactor = 7;
+   config.bandwidth       = RADIOLIB_UNIT_KILO(125);
+   config.codingRate      = 5;
+   int state = radio.begin(config);
+#else   
    int state = radio.begin();
+   radio.setFrequency(868.0);
+   radio.setSpreadingFactor(7);
+   radio.setBandwidth(125.0);
+   radio.setCodingRate(5);
+#endif
+
    if (state == RADIOLIB_ERR_NONE) {
       Serial.println(F("success!"));
       isLora = true;
-      radio.setFrequency(868.0);
-      radio.setSpreadingFactor(7);
-      radio.setBandwidth(125.0);
-      radio.setCodingRate(5);
 //      radio.invertIQ(true);
 //      radio.
       MyLoRaAddress::Set(myLora.Addr,chipID);

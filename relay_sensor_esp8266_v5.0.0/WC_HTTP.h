@@ -77,7 +77,7 @@ void HTTP_handlePngRelay2(void);
 void HTTP_handlePngRelay3(void);
 void HTTP_handlePngRelay4(void);
 void HTTP_handlePngRelay5(void);
-
+void HTTP_handleBlinkLED();
 
 void HTTP_printCSS(String &out);
 bool HTTP_login(String &out);

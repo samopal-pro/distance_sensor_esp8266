@@ -210,7 +210,7 @@ void HTTP_print_color3(String &out, uint32_t color, char *name, char *label, uin
    out += "<tr><td colspan=5>&nbsp;</td></tr>\n";
    out += "<tr>\n";
    HTTP_print_color3_check(out, label, name1, check);
-   HTTP_print_color3_main(out, color, label, color1, color2);
+   HTTP_print_color3_main(out, color, name, color1, color2);
    out += "</tr>\n"; 
 }
 

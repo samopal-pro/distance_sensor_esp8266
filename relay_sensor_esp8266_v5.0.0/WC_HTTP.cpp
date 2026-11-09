@@ -147,6 +147,8 @@ void HTTP_begin(void){
    server.on ( "/relay3.png", HTTP_handlePngRelay3 );
    server.on ( "/relay4.png", HTTP_handlePngRelay4 );
    server.on ( "/relay5.png", HTTP_handlePngRelay5 );
+   server.on ( "/blink", HTTP_handleBlinkLED );
+
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -178,6 +180,17 @@ void HTTP_handlePngRelay2(){  server.send_P(200, PSTR("image/png"), relay2_png, 
 void HTTP_handlePngRelay3(){  server.send_P(200, PSTR("image/png"), relay3_png, sizeof(relay3_png));}
 void HTTP_handlePngRelay4(){  server.send_P(200, PSTR("image/png"), relay4_png, sizeof(relay4_png));}
 void HTTP_handlePngRelay5(){  server.send_P(200, PSTR("image/png"), relay5_png, sizeof(relay5_png));}
+
+void HTTP_handleBlinkLED(){
+   Serial.println("!!! >>> Blink Led <<<");
+   for( int i=0; i<5; i++ ){
+       ledSetBaseMode(LED_BASE_SAVE);
+       delay(250);
+       ledSetBaseMode(LED_BASE_NONE);
+       delay(250);
+   }
+   ledRestoreMode();
+}
 
 /**
  * Обработчик событий WEB-сервера
@@ -257,7 +270,7 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += " <div class=\"main\" id=\"main\">\n  "; 
   out += "<h2>ДАТЧИК ПРИСУТСТВИЯ</h2>";
   out += "<p><img src=/logo.png></p>\n";
-
+  out += "<p><input type='button' value='Помигать подсветкой' style='font-size:14pt;color:#000088;' onclick=\"fetch('/blink')\"></p>";
   //out += "<p><br>Сенсор: ";
   //out += EA_Config.ESP_NAME;
   //out += " ";
@@ -340,14 +353,20 @@ void HTTP_handleDistance(void) {
   out += "<style>\n";
   out += "body { background-color:#cccccc; color:#000088;}\n";
   out += "input[type=submit] {font-size: 1.2em;color:#000088;}\n";
+  out += ".dst  {font-weight:bold;text-align: center;}\n";
+  out += ".dst1 {font-size:14pt;}\n";
+  out += ".dst2 {color:#000;font-size:30pt;}\n";
+
   out += "</style>\n";    
   out += "<body>\n";
   out += "<form action='/distance' method='PUT'>\n";
   if( isnan(Distance) )strcpy(str,"NAN");
   else sprintf(str,"%d", (int)Distance );
-  out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
+if( isnan(Distance) )strcpy(str,"NAN");
+  else sprintf(str,"%d", (int)Distance );
+  out += "<div class='dst'><div class='dst1'>Расстояние от датчика до препятствия сейчас (мм):</div><div class='dst2'>";
   out += str;
-  out += "</h3>";
+  out += "</div></div>";
   out += "<input type='submit' value='Обновить' class='btn'>"; 
 
   out += "</form>\n";
@@ -377,7 +396,7 @@ void HTTP_handleRoot(void) {
 // Блок №1
   out += "<fieldset>\n";
 
-  out += "<iframe src='/distance' width=100% height=80 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
+  out += "<iframe src='/distance' width=100% height=100 allowtransparency frameborder=0 scrolling='no'></iframe>\n"; 
   out += "<p class='t1'> расстояние NAN и датчик светится розовым, то сенсор не видит расстояние или поврежден.";
   out += "Если датчик светится МАЛИНОВЫМ - НЕ ОБНОВЛЯЙТЕ СТРАНИЦУ Сначала расположите датчик так, чтобы он стабильно замерял, видел расстояние и не светился малиновым.</p>";
   out += "</fieldset>\n";
@@ -395,7 +414,7 @@ void HTTP_handleRoot(void) {
    if( UID >= 0 ){
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_InputHidden(out,"FLAG_ROOT");
-      HTTP_printConfigColor(out);
+//     HTTP_printConfigColor(out);
       HTTP_printConfig(out);
       out += "</form>\n";
       out += "<p><form action='/update' method='GET'><input type='submit' value='Обновление прошивки' class='btn1'></form>\n";
@@ -569,6 +588,47 @@ void HTTP_printConfigColor(String &out){
 */
 void HTTP_printConfig(String &out){
   char s[32];
+
+// Блок №2.5 
+  out += "<fieldset>\n";
+  out += "<legend>Автокалибровка</legend>\n";
+  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка расстояния' class='btn'>"; 
+
+// Блок №3 
+  sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
+  HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
+  HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += "</fieldset>\n";
+
+// Блок №6
+  out += "<fieldset>\n";
+  out += "<legend>Режимы определения препятствия</legend>\n"; 
+  HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL ),true);
+  sprintf(s,"%d",EA_Config.GroundLevel);
+  HTTP_printInput1(out,"*Расстояние от датчика до пола (мм):","GroundLevel",s,20,32,HT_TEXT);
+  sprintf(s,"%d",EA_Config.LimitDistance);
+  HTTP_printInput1(out,"Минимальная высота на срабатывание (мм):","LimitDistance",s,16,32,HT_NUMBER);
+
+  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE ), true);
+  sprintf(s,"%d",EA_Config.MinDistance1);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance1);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",s,16,32,HT_NUMBER);
+ 
+  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE ), true);
+  sprintf(s,"%d",EA_Config.MinDistance2);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",s,16,32,HT_NUMBER);
+  sprintf(s,"%d",EA_Config.MaxDistance2);
+  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",s,16,32,HT_NUMBER);
+
+  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
+  out += " </fieldset>\n";
+
+
+  HTTP_printConfigColor(out);
+
 // Блок №2
   out += "<fieldset>\n";
   out += "<legend>Конфигурация WI-FI</legend>\n";
@@ -583,18 +643,6 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";
 
-// Блок №2.5 
-  out += "<fieldset>\n";
-  out += "<legend>Автокалибровка</legend>\n";
-  out += "<p><input type='submit' name='Calibrate' value='Автоматическая калибровка расстояния' class='btn'>"; 
-
-// Блок №3 
-  sprintf(s,"%d",EA_Config.TM_BEGIN_CALIBRATE);
-  HTTP_printInput1(out,"Задержка начала калибровки (сек):","TMCalibr",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.SAMPLES_CLIBRATE);
-  HTTP_printInput1(out,"Количество тестовых замеров для калибровки:","NumCalibr",s,16,32,HT_NUMBER);
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += "</fieldset>\n";
 //#ifdef HTTP_FRAGMETATION
 //   Serial.printf("!!! HTTP Fragment 3a %d\n", out.length());  
 //   server.sendContent(out);
@@ -622,29 +670,6 @@ void HTTP_printConfig(String &out){
   out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
   out += "</fieldset>\n";
 
-// Блок №6
-  out += "<fieldset>\n";
-  out += "<legend>Режимы определения препятствия</legend>\n"; 
-  HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( EA_Config.MeasureType  == MEASURE_TYPE_NORMAL ),true);
-  sprintf(s,"%d",EA_Config.GroundLevel);
-  HTTP_printInput1(out,"*Расстояние от датчика до пола (мм):","GroundLevel",s,20,32,HT_TEXT);
-  sprintf(s,"%d",EA_Config.LimitDistance);
-  HTTP_printInput1(out,"Минимальная высота на срабатывание (мм):","LimitDistance",s,16,32,HT_NUMBER);
-
-  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( EA_Config.MeasureType  == MEASURE_TYPE_OUTSIDE ), true);
-  sprintf(s,"%d",EA_Config.MinDistance1);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.MaxDistance1);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",s,16,32,HT_NUMBER);
- 
-  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( EA_Config.MeasureType  == MEASURE_TYPE_INSIDE ), true);
-  sprintf(s,"%d",EA_Config.MinDistance2);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",s,16,32,HT_NUMBER);
-  sprintf(s,"%d",EA_Config.MaxDistance2);
-  HTTP_printInput1(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",s,16,32,HT_NUMBER);
-
-  out += "<p><input type='submit' name='Save' value='Сохранить' class='btn'>"; 
-  out += " </fieldset>\n";
 
 
 //         if( n_ssid[i] == EA_Config.AP_SSID )out+=" selected";
@@ -988,13 +1013,13 @@ bool HTTP_checkArgs(int current){
       if(server.hasArg("TM_PauseRelay2"))EA_Config.TM_PauseRelay2 = server.arg("TM_PauseRelay2").toInt();   
 
       if( server.hasArg("FLAG_CONFIG1") ){
-         if(server.hasArg("isInverseRelay2_H")){
-            if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
-            else EA_Config.isInverseRelay2 = false;
-         }
          if(server.hasArg("isInverseRelay1_H")){
             if(server.hasArg("isInverseRelay1"))EA_Config.isInverseRelay1 = true;
             else EA_Config.isInverseRelay1 = false;
+         }
+         if(server.hasArg("isInverseRelay2_H")){
+            if(server.hasArg("isInverseRelay2"))EA_Config.isInverseRelay2 = true;
+            else EA_Config.isInverseRelay2 = false;
          }
       }
    

@@ -108,6 +108,7 @@ private:
 class TEventRGB{
 public:
     TEventRGB( uint8_t _pin, int _num, int _first );
+    TEventRGB();
     void set(uint32_t _color1, uint32_t _color2, uint32_t _color11=COLOR_NONE, uint32_t _color12=COLOR_NONE, uint32_t _timer_on=0, uint32_t _timer_off=0 );
     void setNumAp(int _ap = LED_STAT_AP1 );
     void setNumSta(int _sta = LED_STAT_STA1 );

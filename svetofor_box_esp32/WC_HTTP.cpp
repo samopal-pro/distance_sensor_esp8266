@@ -96,6 +96,7 @@ void HTTP_begin(void){
    server.on ( "/relay4.png", HTTP_handlePngRelay4 );
    server.on ( "/relay5.png", HTTP_handlePngRelay5 );
    server.on ( "/playMP3", HTTP_handlePlayMP3 );
+   server.on ( "/blink", HTTP_handleBlinkLED );
    server.onNotFound ( HTTP_handleRoot );
   //here the list of headers to be recorded
    const char * headerkeys[] = {"User-Agent","Cookie"} ;
@@ -131,6 +132,20 @@ void HTTP_handlePngRelay3(){  server.send_P(200, PSTR("image/png"), relay3_png, 
 void HTTP_handlePngRelay4(){  server.send_P(200, PSTR("image/png"), relay4_png, sizeof(relay4_png));}
 void HTTP_handlePngRelay5(){  server.send_P(200, PSTR("image/png"), relay5_png, sizeof(relay5_png));}
 
+
+void HTTP_handleBlinkLED(void){
+   Serial.printf("!!! Blink Led");
+   TEventRGB save1;
+   TEventRGB save2;
+   EventRGB1->copyTo(&save1);
+   EventRGB2->copyTo(&save2);
+   EventRGB1->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);               
+   EventRGB2->set(COLOR_SAVE,COLOR_SAVE,COLOR_BLACK,COLOR_BLACK,250,250);     
+   vTaskDelay(3000);
+   save1.copyTo(EventRGB1);
+   save2.copyTo(EventRGB2);
+}
+
 /**
  * Обработчик событий WEB-сервера
  */
@@ -151,6 +166,7 @@ void HTTP_printJS(String &out){
    out += "function setColorVal(id,color){  event.preventDefault();document.getElementById(id).value = color; }\n";
 
 //   out += "function playMP3(dir,num){ fetch(\"/playMP3?DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
+   out += "function blinkLed(){ fetch(\"/blink\", {method: \"GET\" }); }\n";
    out += "function playMP3c(dir,num,color){ fetch(\"/playMP3?COLOR=\"+color+\"&DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
    out += "function playMP3(dir,num){ fetch(\"/playMP3?DIR=\"+dir+\"&NUM=\"+num, {method: \"GET\" }); }\n";
    out += "function systemMP3(check,num){ fetch(\"/playMP3?CHECK=\"+check+\"&NUM=\"+num, {method: \"GET\" }); }\n";
@@ -176,6 +192,8 @@ void HTTP_printCSS(String &out){
     out += " .main fieldset {border-color:#000088; font-size:14pt;}\n";
     out += " .main h2 {font-size:14pt;}\n";
     out += " .main h3 {font-size:12pt;}\n";
+// Показать дистанцию
+
     out += " .t1 {font-size:10pt;}\n";
     out += " .main legend {font-size:20px;font-weight:bold;}\n";
     out += " .td1 {color:#000088;align:center;}\n";
@@ -233,7 +251,9 @@ void HTTP_printHeader(String &out,const char *title, uint16_t refresh){
   out += " <div class=\"main\" id=\"main\">\n  "; 
   out += "<h2>ДАТЧИК ПРИСУТСТВИЯ</h2>";
   out += "<p><img src=/logo.png></p>\n";
-  
+  out += "<p><input type='button' value='Помигать подсветкой' style='font-size:14pt;color:#000088;' onClick='blinkLed();'></p>";
+
+//  HTTP_printSubmit(out,"Save","Сохранить","btn");
   //out += "<p><br>Сенсор: ";
   //out += EA_Config.ESP_NAME;
   //out += " ";
@@ -341,17 +361,22 @@ void HTTP_handleDistance(void) {
 //  out += "<meta http-equiv='refresh' content='5'>\n";
 
   out += "<title>Расстояние от датчика</title>";
+
   out += "<style>\n";
-  out += "body { background-color:#cccccc; color:#000088;}\n";
-  out += "input[type=submit] {font-size: 1.2em;color:#000088;}\n";
+  out += " body { background-color:#cccccc; color:#000088;}\n";
+  out += " input[type=submit] {font-size: 14pt;color:#000088;}\n";
+  out += " .dst  {font-weight:bold;text-align: center;}\n";
+  out += " .dst1 {font-size:14pt;}\n";
+  out += " .dst2 {color:#000;font-size:30pt;}\n";
   out += "</style>\n";    
+
   out += "<body>\n";
   out += "<form action='/distance' method='PUT'>\n";
   if( isnan(Distance) )strcpy(str,"NAN");
   else sprintf(str,"%d", (int)Distance );
-  out += "<h3>Расстояние от датчика до препятствия сейчас (мм): ";
+  out += "<div class='dst'><div class='dst1'>Расстояние от датчика до препятствия сейчас (мм):</div><div class='dst2'>";
   out += str;
-  out += "</h3>";
+  out += "</div></div>";
   out += "<input type='submit' value='Обновить' name='Refresh' class='btn'>"; 
 
   out += "</form>\n";
@@ -410,8 +435,8 @@ void HTTP_handleRoot(void) {
    if( UID >= 0 ){
       out += "<form action='";out += pages[numPage];out += "' method='PUT'>\n";
       HTTP_InputHidden(out,"FLAG_ROOT");
-      HTTP_printConfigColor(out);
       HTTP_printConfig(out);
+     
       out += "</form>\n";
       HTTP_printBottomMenu(out);
    }
@@ -630,6 +655,20 @@ void HTTP_printConfig(String &out){
   HTTP_InputInt(out,"Количество тестовых замеров для калибровки:","NumCalibr",jsonConfig["CALIBR"]["NUMBER"].as<int>(),0,60);
   HTTP_closeFieldset(out);
 
+  HTTP_openFieldset(out,"Режимы определения препятствия");   
+  HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_NORMAL ),true);
+  HTTP_InputInt(out,"*Расстояние от датчика до пола (мм):","GroundLevel",jsonConfig["SENSOR"]["DIST_GROUND"].as<int>(),10,10000);
+  HTTP_InputInt(out,"Минимальная высота на срабатывание (мм):","LimitDistance",jsonConfig["SENSOR"]["DIST_LIMIT"].as<int>(),10,10000);
+  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_OUTSIDE ), true);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",jsonConfig["SENSOR"]["DIST_MIN1"].as<int>(),10,10000);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",jsonConfig["SENSOR"]["DIST_MAX1"].as<int>(),10,10000);
+  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_INSIDE ), true);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",jsonConfig["SENSOR"]["DIST_MIN2"].as<int>(),10,10000);
+  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>(),10,10000);
+  HTTP_closeFieldset(out);
+
+  HTTP_printConfigColor(out);
+
   HTTP_openFieldset(out,"Если датчик не видит расстояние");   
   out += "<table>";
   HTTP_print_img_radio(out,"/stat2.png","Для автомобильной мойки, парковки. Если не видит расстояние - не переключается. (в этот момент мигает фиолетовым)","NoneMode","1",( jsonConfig["RGB1"]["NAN_MODE"].as<int>()  == NAN_VALUE_IGNORE ),false);
@@ -644,17 +683,6 @@ void HTTP_printConfig(String &out){
   HTTP_InputInt(out,"Задержка между циклами опроса сенсора (сек):","TMLoop",jsonConfig["SENSOR"]["T_LOOP"].as<int>(),1,30);
   HTTP_closeFieldset(out);
 
-  HTTP_openFieldset(out,"Режимы определения препятствия");   
-  HTTP_print_img_radio(out,"/type1.png","Установка датчика на потолке","MeasureType","1",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_NORMAL ),true);
-  HTTP_InputInt(out,"*Расстояние от датчика до пола (мм):","GroundLevel",jsonConfig["SENSOR"]["DIST_GROUND"].as<int>(),10,10000);
-  HTTP_InputInt(out,"Минимальная высота на срабатывание (мм):","LimitDistance",jsonConfig["SENSOR"]["DIST_LIMIT"].as<int>(),10,10000);
-  HTTP_print_img_radio(out,"/type2.png","Определяет как &quot;занято&quot; в заданном диапазоне:","MeasureType","2",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_OUTSIDE ), true);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance1",jsonConfig["SENSOR"]["DIST_MIN1"].as<int>(),10,10000);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance1",jsonConfig["SENSOR"]["DIST_MAX1"].as<int>(),10,10000);
-  HTTP_print_img_radio(out,"/type3.png","Определяет как &quot;свободно&quot; в заданном диапазоне:","MeasureType","3",( jsonConfig["SENSOR"]["INSTALL"].as<int>()  == INSTALL_TYPE_INSIDE ), true);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀От (мм):","MinDistance2",jsonConfig["SENSOR"]["DIST_MIN2"].as<int>(),10,10000);
-  HTTP_InputInt(out,"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀До (мм):","MaxDistance2",jsonConfig["SENSOR"]["DIST_MAX2"].as<int>(),10,10000);
-  HTTP_closeFieldset(out);
 
   HTTP_openFieldset(out,"Номера статусных светодиодов");   
   HTTP_InputInt(out,"Номер светодиода статуса точки доступа","STAT_AP",jsonConfig["RGB1"]["STAT_AP"].as<int>(),0,COUNT_RGB1);
