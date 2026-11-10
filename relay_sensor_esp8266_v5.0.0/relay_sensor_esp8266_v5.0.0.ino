@@ -199,12 +199,13 @@ void loop() {
 //   if( w_stat2 == EWS_AP_MODE )it1 = LoopIntervalAP;
 #if !defined(NOT_SENSOR)
    if( ( ms1 == 0 || cur_ms < ms1 || (cur_ms - ms1) > LoopInterval )&& !is_btn_click && msLoad == 0 && is_load_page == false  ){
-      ms1 = cur_ms;
+
 // Проверяем дистанцию, устанавливаем значение реле и ленты      
       ProcessingDistance();
       WS_setDistance();
       Relay_setDistance1();
       Relay_setDistance2();
+      ms1 = millis();      
 //      if( RTCFlag ){
 //          RTC_Time = GetRTClock();
 //          Time     = RTC_Time;
