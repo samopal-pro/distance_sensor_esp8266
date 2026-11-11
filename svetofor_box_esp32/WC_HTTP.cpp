@@ -876,6 +876,7 @@ void HTTP_printConfig2(String &out){
 
     HTTP_openFieldset(out,"Настройка оповещения");
   HTTP_InputInt(out,"Громкость звука 0-30","MP3_VOLUME",jsonConfig["MP3"]["VOLUME"].as<int>(),0,30,32);
+  HTTP_InputInt(out,"Если состояние \"Занято\" было меньше этого времени, то сообщение \"Свободно\" не проигрывается, сек","MP3_TM_BUSY_FREE",jsonConfig["MP3"]["TM_BUSY_FREE"].as<int>(),0,300,32);
 
 
   out += "<table width=\"100%\" border=\"1\" style=\"border-collapse: collapse; border: 1px solid black;\">\n";

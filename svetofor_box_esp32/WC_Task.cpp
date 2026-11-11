@@ -17,7 +17,6 @@ TEventRGB *EventRGB1, *EventRGB2, *SaveRGB1, *SaveRGB2;
    SBTN btn_add(PIN_BTN_ADD,250,false);
 #endif
 
-
 TEventMP3 *EventMP3 = NULL;
 TEvent *EventCalibrate; 
 
@@ -39,6 +38,7 @@ bool inverseRelay1 = false, inverseRelay2 = false;
 uint16_t eventRelay1 = 0, eventRelay2 = 0;
 uint32_t msRelay1 = 0, msRelay2 = 0;
 uint32_t msBusy = 0;
+uint32_t msBusyFree = 0;
 char calibrCheck[5], calibrNum = -1;
 
 CALIBRATION_MODE_t calibrMode = CM_NONE;
@@ -628,6 +628,7 @@ void checkChangeOn(){
             if(EventBusy2->State != ES_WAIT_ON && EventBusy2->State != ES_ON)EventBusy2->on(jsonConfig["MP3"]["BUSY2"]["DELAY"].as<uint32_t>()*1000);
             if(lastSensorOn != SS_NAN) baseMP3(jsonConfig["MP3"]["BUSY"]);
          }
+         msBusyFree = millis();
          EventRGB1->set(jsonConfig["RGB1"]["BUSY"].as<uint32_t>(),jsonConfig["RGB1"]["BUSY"].as<uint32_t>());
          EventRGB2->set(jsonConfig["RGB2"]["BUSY"].as<uint32_t>(),jsonConfig["RGB2"]["BUSY"].as<uint32_t>());
          break;
@@ -641,8 +642,16 @@ void checkChangeOn(){
             EventSensor->off();
             EventBusy1->reset();
             EventBusy2->reset();
-            baseMP3(jsonConfig["MP3"]["FREE"]);
+            uint32_t _mss = jsonConfig["MP3"]["TM_BUSY_FREE"].as<uint32_t>()*1000;
+            if( msBusyFree == 0 || _mss==0 || millis() - msBusyFree > _mss){
+               baseMP3(jsonConfig["MP3"]["FREE"]);
+            }
+            else {
+               EventMP3->stop();
+               Serial.println("??? No MP3 Free");
+            }
          }
+         msBusyFree = 0;
          if( jsonConfig["RGB1"]["IS_FREE_BLINK"].as<bool>() )
             EventRGB1->set(jsonConfig["RGB1"]["FREE"].as<uint32_t>(),
                            jsonConfig["RGB1"]["FREE"].as<uint32_t>(),
@@ -659,6 +668,7 @@ void checkChangeOn(){
       case SS_NAN:
       case SS_NAN_FREE:   
       case SS_NAN_BUSY:   
+         msBusyFree = 0;
 //         if( _ms - msSensorOn < jsonConfig["DELAY"]["NAN"].as<uint32_t>()*1000 )return;
          if(jsonConfig["RGB1"]["IS_NAN_MODE"].as<bool>()){
             switch(jsonConfig["RGB1"]["NAN_MODE"].as<int>()){

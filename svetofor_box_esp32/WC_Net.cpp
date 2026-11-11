@@ -513,6 +513,7 @@ bool sendCrmMoscowParam(){
    str += (int)crc;
 
    Serial.println(str);
+   httpClient.end();
    httpClient.begin(client,str);
    int httpCode = httpClient.GET();
    Serial.print(F("!!! HTTP send "));
@@ -590,6 +591,7 @@ bool sendHttpParam(){
       str += (int)crc;
       Serial.print(F("!!! HTTP send: "));
       Serial.println(str);
+      httpClient.end();
       httpClient.begin(client,str);
       int httpCode = httpClient.GET();
    
@@ -656,6 +658,7 @@ bool sendParamTB(){
     if( serNo[0] != '\0' )jsonData["SN"] = serNo;
     String _data;
     serializeJson(jsonData, _data); 
+   httpClient.end();
 
     httpClient.begin(client,_url);
     httpClient.addHeader("Content-Type", "application/json");     
@@ -698,6 +701,7 @@ bool authTB(const char *_key, const char *_secret){
     jsonData["provisionDeviceSecret"] = _secret;
     String _data;
     serializeJson(jsonData, _data); 
+   httpClient.end();
 
     httpClient.begin(client,_url);
     httpClient.addHeader("Content-Type", "application/json");     
